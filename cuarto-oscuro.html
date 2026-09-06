@@ -1105,15 +1105,24 @@ async function enhanceWithAI(it){
 
   const resultTensor = tf.tidy(()=>{
     const img = tf.browser.fromPixels(srcCanvas).toFloat();           // [h,w,3]
-    const up = tf.image.resizeBilinear(img.expandDims(0), [outH, outW], true); // [1,outH,outW,3]
-    // Same sharpen kernel already used elsewhere in this app, just run as a
-    // GPU convolution instead of a per-pixel JS loop.
+    let up = tf.image.resizeBilinear(img.expandDims(0), [outH, outW], true); // [1,outH,outW,3]
+
+    // "Clarity"-style local contrast boost: blur widely to get the
+    // low-frequency version, subtract it to isolate the mid-size detail
+    // (this is what shows up on skin/skies, not just hard edges), then add
+    // that detail back in, amplified.
+    const blurred = tf.avgPool(up, [9,9], [1,1], 'same');
+    const clarityDetail = up.sub(blurred);
+    up = up.add(clarityDetail.mul(1.3));
+
+    // Fine edge sharpen on top (same kernel used elsewhere in this app),
+    // run as a GPU convolution instead of a per-pixel JS loop.
     const kernelData = [0,-1,0, -1,5,-1, 0,-1,0];
     const base = tf.tensor4d(kernelData, [3,3,1,1]);
     const filter = base.tile([1,1,3,1]);                              // [3,3,3,1]
     const sharpened = tf.depthwiseConv2d(up, filter, 1, 'same');
-    const amt = 0.5;
-    const blended = up.add(sharpened.sub(up).mul(amt));
+    const blended = up.add(sharpened.sub(up).mul(0.6));
+
     return blended.clipByValue(0,255).toInt().squeeze([0]);
   });
 
