@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cuarto Oscuro Digital</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+  :root{
+    --bg:#14120F;
+    --panel:#1D1915;
+    --panel-2:#26211B;
+    --line:#3A3128;
+    --text:#EDE6DC;
+    --text-dim:#A69A8A;
+    --safelight:#C1272D;
+    --safelight-dim:#7A1E22;
+    --amber:#D89B4A;
+    --mono:'JetBrains Mono', 'Courier New', monospace;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+    min-height:100vh;
+  }
+  header{
+    padding:22px 28px 16px; border-bottom:1px solid var(--line);
+    display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;
+  }
+  header h1{
+    font-size:20px; font-weight:600; margin:0; letter-spacing:0.2px;
+  }
+  header .sub{ color:var(--text-dim); font-size:13px; font-family:var(--mono); }
+  .layout{
+    display:grid; grid-template-columns: 190px 1fr 300px; gap:0;
+    min-height:calc(100vh - 70px);
+  }
+  @media (max-width:900px){ .layout{ grid-template-columns:1fr; } }
+
+  /* filmstrip */
+  .filmstrip{
+    background:#0F0D0B; border-right:1px solid var(--line);
+    padding:14px 10px; display:flex; flex-direction:column; gap:10px;
+    overflow-y:auto; max-height:calc(100vh - 70px);
+  }
+  .drop{
+    border:1.5px dashed var(--line); border-radius:2px; padding:16px 8px;
+    text-align:center; font-size:12px; color:var(--text-dim); cursor:pointer;
+    transition:border-color .15s;
+  }
+  .drop:hover, .drop.drag{ border-color:var(--safelight); color:var(--text); }
+  .frame{
+    position:relative; cursor:pointer; border-radius:2px; overflow:hidden;
+    border:1px solid var(--line); background:#000;
+  }
+  .frame.active{ border-color:var(--safelight); box-shadow:0 0 0 1px var(--safelight); }
+  .frame img{ display:block; width:100%; height:60px; object-fit:cover; opacity:.85; }
+  .frame .holes{
+    position:absolute; top:0; bottom:0; left:0; width:6px;
+    background-image:radial-gradient(circle, #000 2px, transparent 2.2px);
+    background-size:6px 10px; background-position:center;
+  }
+  .frame .holes.r{ left:auto; right:0; }
+  .frame .tag{
+    position:absolute; bottom:2px; right:4px; font-family:var(--mono);
+    font-size:9px; color:var(--amber); background:rgba(0,0,0,.55); padding:1px 3px;
+  }
+  .frame .done{ position:absolute; top:2px; left:8px; font-size:10px; color:#7BC67E; }
+
+  /* main canvas area */
+  .stage{
+    display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
+    padding:24px; gap:14px; overflow:auto;
+  }
+  .stage-empty{ margin:auto; color:var(--text-dim); font-size:14px; text-align:center; }
+  .canvas-wrap{
+    position:relative; max-width:100%; background:repeating-conic-gradient(#1a1a1a 0% 25%, #111 0% 50%) 50% / 16px 16px;
+    border:1px solid var(--line);
+  }
+  canvas{ display:block; max-width:100%; touch-action:none; }
+  .view-toggle{
+    display:flex; gap:6px; background:var(--panel); padding:4px; border-radius:3px; border:1px solid var(--line);
+  }
+  .view-toggle button{ flex:1; }
+  .stage-hint{ font-size:11.5px; color:var(--text-dim); font-family:var(--mono); text-align:center; }
+
+  /* controls */
+  .controls{
+    background:var(--panel); border-left:1px solid var(--line);
+    padding:20px; overflow-y:auto; max-height:calc(100vh - 70px);
+    display:flex; flex-direction:column; gap:20px;
+  }
+  .stage-num{
+    font-family:var(--mono); color:var(--safelight); font-size:11px; letter-spacing:1px;
+  }
+  .group{ display:flex; flex-direction:column; gap:10px; }
+  .group h3{ margin:0; font-size:13px; font-weight:600; }
+  .row{ display:flex; flex-direction:column; gap:4px; }
+  .row label{ font-size:11.5px; color:var(--text-dim); display:flex; justify-content:space-between; }
+  .row label span.val{ font-family:var(--mono); color:var(--text); }
+  input[type=range]{
+    -webkit-appearance:none; width:100%; height:3px; background:var(--line); border-radius:2px; outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:13px; height:13px; border-radius:50%;
+    background:var(--amber); cursor:pointer; border:2px solid #14120F;
+  }
+  hr{ border:none; border-top:1px solid var(--line); margin:2px 0; }
+  button{
+    font-family:inherit; font-size:12.5px; padding:9px 12px; border-radius:2px;
+    border:1px solid var(--line); background:var(--panel-2); color:var(--text);
+    cursor:pointer; transition:border-color .15s, background .15s;
+  }
+  button:hover{ border-color:var(--amber); }
+  button.primary{ background:var(--safelight); border-color:var(--safelight); color:#fff; font-weight:600; }
+  button.primary:hover{ background:#a91f24; }
+  button:disabled{ opacity:.4; cursor:not-allowed; }
+  .btn-row{ display:flex; flex-direction:column; gap:8px; }
+  .checkbox-row{ display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text-dim); }
+  input[type=file]{ display:none; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Cuarto Oscuro Digital</h1>
+  <span class="sub">recorte · revelado · balance · nitidez</span>
+</header>
+
+<div class="layout">
+  <div class="filmstrip" id="filmstrip">
+    <div class="drop" id="drop">
+      Arrastrá tus fotos<br>o hacé click<br><span style="opacity:.6">(JPG, PNG o RAW: CR3/CR2/NEF/ARW/DNG…)</span>
+    </div>
+    <input type="file" id="fileInput" accept=".jpg,.jpeg,.png,.webp,.cr3,.cr2,.crw,.nef,.arw,.raf,.rw2,.orf,.dng,.pef,.srw" multiple>
+  </div>
+
+  <div class="stage" id="stage">
+    <div class="stage-empty" id="stageEmpty">Subí una o más fotos de tus negativos<br>para empezar.</div>
+  </div>
+
+  <div class="controls" id="controls" style="display:none">
+
+    <div class="group">
+      <span class="stage-num">01 — RECORTE</span>
+      <p style="font-size:12px;color:var(--text-dim);margin:0">
+        Al subir la foto se intenta recortar sola. Si no quedó bien, arrastrá los 4 puntos a mano o volvé a intentar la detección automática.
+      </p>
+      <button id="resetCorners">Resetear esquinas</button>
+      <button id="autoCrop">Detectar recorte automático</button>
+    </div>
+
+    <hr>
+
+    <div class="group">
+      <span class="stage-num">02 — REVELADO</span>
+      <div class="checkbox-row">
+        <input type="checkbox" id="isNegative" checked>
+        <label for="isNegative">Es negativo color (invertir + quitar naranja)</label>
+      </div>
+    </div>
+
+    <hr>
+
+    <div class="group">
+      <span class="stage-num">03 — BALANCE</span>
+      <div class="row">
+        <label>Brillo <span class="val" id="v-brightness">0</span></label>
+        <input type="range" id="brightness" min="-60" max="60" value="0">
+      </div>
+      <div class="row">
+        <label>Contraste <span class="val" id="v-contrast">0</span></label>
+        <input type="range" id="contrast" min="-60" max="60" value="0">
+      </div>
+      <div class="row">
+        <label>Saturación <span class="val" id="v-saturation">0</span></label>
+        <input type="range" id="saturation" min="-60" max="60" value="0">
+      </div>
+    </div>
+
+    <hr>
+
+    <div class="group">
+      <span class="stage-num">04 — RESTAURACIÓN</span>
+      <div class="row">
+        <label>Nitidez <span class="val" id="v-sharpen">30</span></label>
+        <input type="range" id="sharpen" min="0" max="100" value="30">
+      </div>
+      <div class="row">
+        <label>Quitar polvo / rayones <span class="val" id="v-despeckle">15</span></label>
+        <input type="range" id="despeckle" min="0" max="100" value="15">
+      </div>
+      <div class="row">
+        <label>Reducción de grano <span class="val" id="v-grain">25</span></label>
+        <input type="range" id="grain" min="0" max="100" value="25">
+      </div>
+    </div>
+
+    <hr>
+
+    <div class="group btn-row">
+      <button class="primary" id="processOne">Procesar esta foto</button>
+      <button id="copyToAll">Copiar ajustes a todas</button>
+      <button id="processAll">Procesar todas</button>
+      <hr>
+      <button id="downloadOne" disabled>Descargar esta</button>
+      <button id="downloadAll" disabled>Descargar todas (.zip)</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ---------- state ----------
+let items = [];      // {id,name,img,natW,natH,corners:[[x,y]x4],processedCanvas,settings}
+let activeId = null;
+let viewMode = 'original'; // 'original' | 'processed'
+let dragCorner = -1;
+let scaleFactor = 1; // canvas display scale relative to natural image px
+
+const els = {
+  fileInput: document.getElementById('fileInput'),
+  drop: document.getElementById('drop'),
+  filmstrip: document.getElementById('filmstrip'),
+  stage: document.getElementById('stage'),
+  stageEmpty: document.getElementById('stageEmpty'),
+  controls: document.getElementById('controls'),
+  brightness: document.getElementById('brightness'),
+  contrast: document.getElementById('contrast'),
+  saturation: document.getElementById('saturation'),
+  sharpen: document.getElementById('sharpen'),
+  despeckle: document.getElementById('despeckle'),
+  grain: document.getElementById('grain'),
+  isNegative: document.getElementById('isNegative'),
+};
+
+function defaultSettings(){
+  return { brightness:0, contrast:0, saturation:0, sharpen:30, despeckle:15, grain:25, isNegative:true };
+}
+
+// ---------- file loading ----------
+els.drop.addEventListener('click', ()=>els.fileInput.click());
+els.filmstrip.addEventListener('dragover', e=>{ e.preventDefault(); els.drop.classList.add('drag'); });
+els.filmstrip.addEventListener('dragleave', ()=>els.drop.classList.remove('drag'));
+els.filmstrip.addEventListener('drop', e=>{
+  e.preventDefault(); els.drop.classList.remove('drag');
+  handleFiles(e.dataTransfer.files);
+});
+els.fileInput.addEventListener('change', e=>handleFiles(e.target.files));
+
+const RAW_EXTS = ['cr3','cr2','crw','nef','arw','raf','rw2','orf','dng','pef','srw'];
+
+async function handleFiles(fileList){
+  for(const file of [...fileList]){
+    const ext = (file.name.split('.').pop()||'').toLowerCase();
+    if(RAW_EXTS.includes(ext)){
+      loadingFiles.push(file.name); renderFilmstrip();
+      try{
+        const {canvas,w,h} = await decodeRawFile(file);
+        addItem(file.name, canvas, w, h);
+      }catch(err){
+        console.error(err);
+        alert(
+          'No pude decodificar "'+file.name+'" (RAW).\n\n'+
+          'Revisá que server.py esté corriendo (ventana de la terminal abierta, sin errores).\n\n'+
+          'Si el servidor está corriendo y sigue fallando, plan B: convertila a JPG o TIFF con un '+
+          'programa gratuito (Canon Digital Photo Professional, RawTherapee o darktable) y subí ese archivo acá.\n\n'+
+          'Detalle técnico: '+(err&&err.message?err.message:err)
+        );
+      }
+      loadingFiles = loadingFiles.filter(n=>n!==file.name);
+      renderFilmstrip();
+    } else if(file.type.startsWith('image/') || ['jpg','jpeg','png','webp'].includes(ext)){
+      await new Promise(resolve=>{
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = ()=>{ addItem(file.name, img, img.naturalWidth, img.naturalHeight); resolve(); };
+        img.onerror = ()=>{ alert('No pude abrir "'+file.name+'".'); resolve(); };
+        img.src = url;
+      });
+    }
+  }
+}
+
+function addItem(name, source, w, h){
+  const id = 'f'+Math.random().toString(36).slice(2,9);
+  const inset = 0.06;
+  const corners = [
+    [w*inset, h*inset],
+    [w*(1-inset), h*inset],
+    [w*(1-inset), h*(1-inset)],
+    [w*inset, h*(1-inset)]
+  ];
+  const tw = 200, th = Math.max(1,Math.round(200*h/w));
+  const thumbCanvas = document.createElement('canvas');
+  thumbCanvas.width=tw; thumbCanvas.height=th;
+  thumbCanvas.getContext('2d').drawImage(source,0,0,tw,th);
+  const thumbSrc = thumbCanvas.toDataURL('image/jpeg',0.75);
+  const item = {
+    id, name, img:source, natW:w, natH:h, corners,
+    processedCanvas:null, settings:defaultSettings(), thumbSrc
+  };
+  autoDetectCrop(item); // intenta recortar sola; si no puede, se queda con el recorte por defecto de arriba
+  items.push(item);
+  renderFilmstrip();
+  if(activeId===null) selectItem(id);
+}
+
+// ---------- decodificación RAW vía servidor Python local (rawpy/LibRaw) ----------
+// El navegador ya no intenta decodificar el RAW: se lo manda al servidor local
+// (server.py), que usa rawpy (bindings nativos de LibRaw) y devuelve un PNG.
+async function decodeRawFile(file){
+  const fd = new FormData();
+  fd.append('file', file, file.name);
+  let res;
+  try{
+    res = await fetch('/api/decode-raw', { method:'POST', body: fd });
+  }catch(err){
+    throw new Error('No pude conectar con el servidor Python local (server.py). ¿Está corriendo? Detalle: '+err.message);
+  }
+  if(!res.ok){
+    const detail = await res.text().catch(()=>'');
+    throw new Error('El servidor no pudo decodificar el RAW (HTTP '+res.status+'). '+detail);
+  }
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  return new Promise((resolve, reject)=>{
+    const img = new Image();
+    img.onload = ()=>{
+      resolve({canvas: img, w: img.naturalWidth, h: img.naturalHeight});
+      URL.revokeObjectURL(url);
+    };
+    img.onerror = ()=>{
+      URL.revokeObjectURL(url);
+      reject(new Error('El servidor respondió, pero el navegador no pudo abrir la imagen decodificada.'));
+    };
+    img.src = url;
+  });
+}
+
+// ---------- filmstrip ----------
+let loadingFiles = [];
+
+function renderFilmstrip(){
+  [...els.filmstrip.querySelectorAll('.frame')].forEach(n=>n.remove());
+  loadingFiles.forEach(name=>{
+    const div = document.createElement('div');
+    div.className = 'frame';
+    div.innerHTML = `<div style="padding:20px 4px;text-align:center;font-size:10px;color:var(--amber)">&#9203; decodificando<br>${name.slice(0,16)}</div>`;
+    els.filmstrip.appendChild(div);
+  });
+  items.forEach(it=>{
+    const div = document.createElement('div');
+    div.className = 'frame' + (it.id===activeId?' active':'');
+    div.innerHTML = `
+      <div class="holes"></div>
+      <img src="${it.thumbSrc}">
+      <div class="holes r"></div>
+      ${it.processedCanvas? '<div class="done">&#10003;</div>':''}
+      <div class="tag">${(it.name||'').slice(0,10)}</div>
+    `;
+    div.addEventListener('click', ()=>selectItem(it.id));
+    els.filmstrip.appendChild(div);
+  });
+}
+
+function selectItem(id){
+  activeId = id; viewMode='original';
+  els.controls.style.display='flex';
+  els.stageEmpty.style.display='none';
+  const it = items.find(i=>i.id===id);
+  els.brightness.value=it.settings.brightness; els.contrast.value=it.settings.contrast;
+  els.saturation.value=it.settings.saturation; els.sharpen.value=it.settings.sharpen;
+  els.despeckle.value=it.settings.despeckle; els.grain.value=it.settings.grain; els.isNegative.checked=it.settings.isNegative;
+  updateValLabels();
+  document.getElementById('downloadOne').disabled = !it.processedCanvas;
+  renderFilmstrip();
+  buildStage();
+}
+
+function currentItem(){ return items.find(i=>i.id===activeId); }
+
+function updateValLabels(){
+  document.getElementById('v-brightness').textContent = els.brightness.value;
+  document.getElementById('v-contrast').textContent = els.contrast.value;
+  document.getElementById('v-saturation').textContent = els.saturation.value;
+  document.getElementById('v-sharpen').textContent = els.sharpen.value;
+  document.getElementById('v-despeckle').textContent = els.despeckle.value;
+  document.getElementById('v-grain').textContent = els.grain.value;
+}
+[els.brightness,els.contrast,els.saturation,els.sharpen,els.despeckle,els.grain].forEach(s=>{
+  s.addEventListener('input', ()=>{ updateValLabels(); saveSettings(); });
+});
+els.isNegative.addEventListener('change', saveSettings);
+function saveSettings(){
+  const it = currentItem(); if(!it) return;
+  it.settings = {
+    brightness:+els.brightness.value, contrast:+els.contrast.value,
+    saturation:+els.saturation.value, sharpen:+els.sharpen.value,
+    despeckle:+els.despeckle.value, grain:+els.grain.value, isNegative:els.isNegative.checked
+  };
+}
+
+// ---------- stage: original view with draggable corners ----------
+let stageCanvas, stageCtx;
+function buildStage(){
+  els.stage.innerHTML='';
+  const wrap = document.createElement('div'); wrap.className='canvas-wrap';
+  stageCanvas = document.createElement('canvas');
+  wrap.appendChild(stageCanvas);
+  els.stage.appendChild(wrap);
+
+  const toggle = document.createElement('div'); toggle.className='view-toggle';
+  toggle.innerHTML = `<button id="tOrig">Original</button><button id="tProc">Resultado</button>`;
+  els.stage.appendChild(toggle);
+  document.getElementById('tOrig').onclick=()=>{ viewMode='original'; drawStage(); };
+  document.getElementById('tProc').onclick=()=>{
+    const it=currentItem();
+    if(!it.processedCanvas){ alert('Primero procesá esta foto.'); return; }
+    viewMode='processed'; drawStage();
+  };
+
+  const hint = document.createElement('div'); hint.className='stage-hint';
+  hint.textContent = 'Arrastrá los 4 puntos rojos para ajustar el recorte del negativo';
+  els.stage.appendChild(hint);
+
+  drawStage();
+
+  stageCanvas.addEventListener('pointerdown', onPointerDown);
+  stageCanvas.addEventListener('pointermove', onPointerMove);
+  window.addEventListener('pointerup', ()=>{ dragCorner=-1; });
+}
+
+function drawStage(){
+  const it = currentItem(); if(!it) return;
+  if(viewMode==='processed' && it.processedCanvas){
+    const maxW = Math.min(760, els.stage.clientWidth-40);
+    const s = maxW / it.processedCanvas.width;
+    stageCanvas.width = it.processedCanvas.width*s;
+    stageCanvas.height = it.processedCanvas.height*s;
+    const ctx = stageCanvas.getContext('2d');
+    ctx.drawImage(it.processedCanvas,0,0,stageCanvas.width,stageCanvas.height);
+    return;
+  }
+  const maxW = Math.min(760, els.stage.clientWidth-40);
+  scaleFactor = maxW / it.natW;
+  stageCanvas.width = it.natW*scaleFactor;
+  stageCanvas.height = it.natH*scaleFactor;
+  stageCtx = stageCanvas.getContext('2d');
+  stageCtx.clearRect(0,0,stageCanvas.width,stageCanvas.height);
+  stageCtx.drawImage(it.img,0,0,stageCanvas.width,stageCanvas.height);
+  // draw quad
+  stageCtx.strokeStyle = '#C1272D'; stageCtx.lineWidth=1.5;
+  stageCtx.beginPath();
+  it.corners.forEach((c,i)=>{
+    const x=c[0]*scaleFactor, y=c[1]*scaleFactor;
+    if(i===0) stageCtx.moveTo(x,y); else stageCtx.lineTo(x,y);
+  });
+  stageCtx.closePath(); stageCtx.stroke();
+  it.corners.forEach(c=>{
+    const x=c[0]*scaleFactor, y=c[1]*scaleFactor;
+    stageCtx.fillStyle='#C1272D';
+    stageCtx.beginPath(); stageCtx.arc(x,y,7,0,7); stageCtx.fill();
+    stageCtx.fillStyle='#fff';
+    stageCtx.beginPath(); stageCtx.arc(x,y,2.5,0,7); stageCtx.fill();
+  });
+}
+
+function onPointerDown(e){
+  if(viewMode!=='original') return;
+  const it = currentItem(); if(!it) return;
+  const rect = stageCanvas.getBoundingClientRect();
+  const mx = e.clientX-rect.left, my = e.clientY-rect.top;
+  let best=-1, bestD=18;
+  it.corners.forEach((c,i)=>{
+    const x=c[0]*scaleFactor, y=c[1]*scaleFactor;
+    const d=Math.hypot(mx-x,my-y);
+    if(d<bestD){ bestD=d; best=i; }
+  });
+  dragCorner = best;
+}
+function onPointerMove(e){
+  if(dragCorner<0 || viewMode!=='original') return;
+  const it = currentItem(); if(!it) return;
+  const rect = stageCanvas.getBoundingClientRect();
+  const mx = e.clientX-rect.left, my = e.clientY-rect.top;
+  it.corners[dragCorner] = [
+    Math.max(0,Math.min(it.natW, mx/scaleFactor)),
+    Math.max(0,Math.min(it.natH, my/scaleFactor))
+  ];
+  drawStage();
+}
+
+document.getElementById('resetCorners').addEventListener('click', ()=>{
+  const it = currentItem(); if(!it) return;
+  const inset=0.06, w=it.natW, h=it.natH;
+  it.corners = [[w*inset,h*inset],[w*(1-inset),h*inset],[w*(1-inset),h*(1-inset)],[w*inset,h*(1-inset)]];
+  drawStage();
+});
+
+// ---------- recorte automático ----------
+// Idea: el fondo (mesa de luz o borde del negativo) suele ser bastante liso
+// (poca variación entre píxeles vecinos), mientras que la foto en sí tiene
+// mucha "actividad" (bordes, texturas, detalle). Buscamos, fila por fila y
+// columna por columna, dónde arranca esa actividad para encontrar el marco
+// real de la imagen.
+function autoDetectCrop(it){
+  const maxSide = 500; // se analiza en baja resolución, alcanza y sobra y es rápido
+  const scale = Math.min(1, maxSide / Math.max(it.natW, it.natH));
+  const sw = Math.max(1, Math.round(it.natW*scale)), sh = Math.max(1, Math.round(it.natH*scale));
+
+  const tmp = document.createElement('canvas');
+  tmp.width = sw; tmp.height = sh;
+  const tctx = tmp.getContext('2d');
+  tctx.drawImage(it.img, 0, 0, sw, sh);
+  const data = tctx.getImageData(0,0,sw,sh).data;
+
+  // luminancia en escala de grises
+  const gray = new Float32Array(sw*sh);
+  for(let i=0, p=0; i<data.length; i+=4, p++){
+    gray[p] = 0.299*data[i] + 0.587*data[i+1] + 0.114*data[i+2];
+  }
+
+  // "actividad" = gradiente local (cuánto cambia el pixel respecto a sus vecinos)
+  const rowAct = new Float64Array(sh);
+  const colAct = new Float64Array(sw);
+  for(let y=0; y<sh; y++){
+    for(let x=0; x<sw; x++){
+      const idx = y*sw+x;
+      const gx = x<sw-1 ? Math.abs(gray[idx]-gray[idx+1]) : 0;
+      const gy = y<sh-1 ? Math.abs(gray[idx]-gray[idx+sw]) : 0;
+      rowAct[y] += gx+gy;
+      colAct[x] += gx+gy;
+    }
+  }
+  for(let y=0;y<sh;y++) rowAct[y] /= sw;
+  for(let x=0;x<sw;x++) colAct[x] /= sh;
+
+  // umbral automático: busca el salto más grande entre valores ordenados
+  // (separa "filas/columnas de fondo, tranquilas" de "filas/columnas con foto")
+  function autoThreshold(arr){
+    const sorted = Array.from(arr).sort((a,b)=>a-b);
+    const lo = Math.floor(sorted.length*0.05), hi = Math.floor(sorted.length*0.95);
+    let bestGap=-1, bestIdx=Math.floor(sorted.length/2);
+    for(let i=lo;i<hi;i++){
+      const gap = sorted[i+1]-sorted[i];
+      if(gap>bestGap){ bestGap=gap; bestIdx=i; }
+    }
+    return (sorted[bestIdx]+sorted[bestIdx+1])/2;
+  }
+
+  const rowThr = autoThreshold(rowAct);
+  const colThr = autoThreshold(colAct);
+
+  function firstAbove(arr, thr){
+    for(let i=0;i<arr.length;i++) if(arr[i]>thr) return i;
+    return 0;
+  }
+  function lastAbove(arr, thr){
+    for(let i=arr.length-1;i>=0;i--) if(arr[i]>thr) return i;
+    return arr.length-1;
+  }
+
+  let top = firstAbove(rowAct, rowThr);
+  let bottom = lastAbove(rowAct, rowThr);
+  let left = firstAbove(colAct, colThr);
+  let right = lastAbove(colAct, colThr);
+
+  if(right<=left || bottom<=top){
+    return false; // no se encontró un recorte razonable, mejor no tocar nada
+  }
+
+  // volver a coordenadas de la imagen a resolución completa
+  const invScale = 1/scale;
+  top *= invScale; bottom *= invScale; left *= invScale; right *= invScale;
+
+  it.corners = [
+    [left, top], [right, top], [right, bottom], [left, bottom]
+  ];
+  return true;
+}
+
+document.getElementById('autoCrop').addEventListener('click', ()=>{
+  const it = currentItem(); if(!it) return;
+  const ok = autoDetectCrop(it);
+  drawStage();
+  if(!ok){
+    alert('No pude detectar el recorte automáticamente para esta foto. Ajustá las esquinas a mano.');
+  }
+});
+
+// ---------- image processing pipeline ----------
+function computeHomography(src,dst){
+  const A=[], b=[];
+  for(let i=0;i<4;i++){
+    const [x,y]=src[i], [u,v]=dst[i];
+    A.push([x,y,1,0,0,0,-x*u,-y*u]); b.push(u);
+    A.push([0,0,0,x,y,1,-x*v,-y*v]); b.push(v);
+  }
+  for(let col=0; col<8; col++){
+    let piv=col;
+    for(let r=col+1;r<8;r++) if(Math.abs(A[r][col])>Math.abs(A[piv][col])) piv=r;
+    [A[col],A[piv]]=[A[piv],A[col]]; [b[col],b[piv]]=[b[piv],b[col]];
+    for(let r=0;r<8;r++){
+      if(r===col) continue;
+      const f=A[r][col]/A[col][col];
+      for(let c=col;c<8;c++) A[r][c]-=f*A[col][c];
+      b[r]-=f*b[col];
+    }
+  }
+  const h=A.map((row,i)=>b[i]/row[i]);
+  return [h[0],h[1],h[2],h[3],h[4],h[5],h[6],h[7],1];
+}
+function applyH(H,x,y){
+  const w=H[6]*x+H[7]*y+H[8];
+  return [(H[0]*x+H[1]*y+H[2])/w, (H[3]*x+H[4]*y+H[5])/w];
+}
+
+function warpQuadToRect(srcData, srcW, srcH, corners, outW, outH){
+  const dstRect=[[0,0],[outW,0],[outW,outH],[0,outH]];
+  const Hinv = computeHomography(dstRect, corners); // out -> src
+  const out = new Uint8ClampedArray(outW*outH*4);
+  const sd = srcData.data;
+  for(let y=0;y<outH;y++){
+    for(let x=0;x<outW;x++){
+      const [sx,sy] = applyH(Hinv,x,y);
+      const px = bilinear(sd, srcW, srcH, sx, sy);
+      const o=(y*outW+x)*4;
+      out[o]=px[0]; out[o+1]=px[1]; out[o+2]=px[2]; out[o+3]=255;
+    }
+  }
+  return new ImageData(out, outW, outH);
+}
+function bilinear(data,w,h,x,y){
+  if(x<0||y<0||x>=w-1||y>=h-1){
+    const cx=Math.max(0,Math.min(w-1,Math.round(x))), cy=Math.max(0,Math.min(h-1,Math.round(y)));
+    const i=(cy*w+cx)*4; return [data[i],data[i+1],data[i+2]];
+  }
+  const x0=Math.floor(x), y0=Math.floor(y), fx=x-x0, fy=y-y0;
+  const i00=(y0*w+x0)*4, i10=(y0*w+x0+1)*4, i01=((y0+1)*w+x0)*4, i11=((y0+1)*w+x0+1)*4;
+  const r=[0,0,0];
+  for(let c=0;c<3;c++){
+    const top = data[i00+c]*(1-fx)+data[i10+c]*fx;
+    const bot = data[i01+c]*(1-fx)+data[i11+c]*fx;
+    r[c] = top*(1-fy)+bot*fy;
+  }
+  return r;
+}
+
+function invertAndAutoLevels(imgData){
+  const d = imgData.data, n = d.length/4;
+  for(let i=0;i<d.length;i+=4){ d[i]=255-d[i]; d[i+1]=255-d[i+1]; d[i+2]=255-d[i+2]; }
+  for(let c=0;c<3;c++){
+    const hist = new Uint32Array(256);
+    for(let i=c;i<d.length;i+=4) hist[d[i]]++;
+    const lo = percentile(hist,n,0.006), hi = percentile(hist,n,0.994);
+    const range = Math.max(1,hi-lo);
+    for(let i=c;i<d.length;i+=4){
+      d[i] = clamp255((d[i]-lo)/range*255);
+    }
+  }
+  return imgData;
+}
+function percentile(hist,n,p){
+  const target = n*p; let acc=0;
+  for(let v=0; v<256; v++){ acc+=hist[v]; if(acc>=target) return v; }
+  return 255;
+}
+function clamp255(v){ return v<0?0:v>255?255:v; }
+
+function adjustBCS(imgData, brightness, contrast, saturation){
+  const d = imgData.data;
+  const cf = (259*(contrast+255))/(255*(259-contrast));
+  const sf = 1 + saturation/100;
+  for(let i=0;i<d.length;i+=4){
+    let r=d[i],g=d[i+1],b=d[i+2];
+    r = clamp255(cf*(r-128)+128+brightness);
+    g = clamp255(cf*(g-128)+128+brightness);
+    b = clamp255(cf*(b-128)+128+brightness);
+    const gray = 0.299*r+0.587*g+0.114*b;
+    r = clamp255(gray + (r-gray)*sf);
+    g = clamp255(gray + (g-gray)*sf);
+    b = clamp255(gray + (b-gray)*sf);
+    d[i]=r; d[i+1]=g; d[i+2]=b;
+  }
+  return imgData;
+}
+
+function despeckle(imgData, w, h, strength){
+  if(strength<=0) return imgData;
+  const d = imgData.data;
+  const src = new Uint8ClampedArray(d);
+  const amt = strength/100;
+  const win=[];
+  for(let y=1;y<h-1;y++){
+    for(let x=1;x<w-1;x++){
+      const i=(y*w+x)*4;
+      for(let c=0;c<3;c++){
+        win.length=0;
+        for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){
+          win.push(src[((y+dy)*w+(x+dx))*4+c]);
+        }
+        win.sort((a,b)=>a-b);
+        const med = win[4];
+        const orig = src[i+c];
+        // only pull outliers toward median (preserves detail, kills dust/scratches)
+        if(Math.abs(orig-med) > 25){
+          d[i+c] = orig + (med-orig)*Math.min(1,amt*1.4);
+        }
+      }
+    }
+  }
+  return imgData;
+}
+
+// A diferencia de despeckle (que solo toca manchas puntuales muy fuera de rango),
+// esto empuja TODOS los píxeles hacia la mediana de su entorno 3x3, en proporción
+// a "strength". Ataca el ruido/grano fino generalizado, no solo el polvo aislado.
+function reduceGrain(imgData, w, h, strength){
+  if(strength<=0) return imgData;
+  const d = imgData.data;
+  const src = new Uint8ClampedArray(d);
+  const amt = strength/100;
+  const win=[];
+  for(let y=1;y<h-1;y++){
+    for(let x=1;x<w-1;x++){
+      const i=(y*w+x)*4;
+      for(let c=0;c<3;c++){
+        win.length=0;
+        for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){
+          win.push(src[((y+dy)*w+(x+dx))*4+c]);
+        }
+        win.sort((a,b)=>a-b);
+        const med = win[4];
+        const orig = src[i+c];
+        d[i+c] = orig + (med-orig)*amt;
+      }
+    }
+  }
+  return imgData;
+}
+
+function unsharpMask(imgData, w, h, amount){
+  if(amount<=0) return imgData;
+  const d = imgData.data;
+  const src = new Uint8ClampedArray(d);
+  const amt = amount/100*1.6;
+  const kernel = [0,-1,0,-1,5,-1,0,-1,0];
+  for(let y=1;y<h-1;y++){
+    for(let x=1;x<w-1;x++){
+      const i=(y*w+x)*4;
+      for(let c=0;c<3;c++){
+        let sum=0, k=0;
+        for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){
+          sum += src[((y+dy)*w+(x+dx))*4+c]*kernel[k++];
+        }
+        const sharpened = sum;
+        d[i+c] = clamp255(src[i+c] + (sharpened-src[i+c])*amt);
+      }
+    }
+  }
+  return imgData;
+}
+
+function processItem(it){
+  const srcCanvas = document.createElement('canvas');
+  srcCanvas.width=it.natW; srcCanvas.height=it.natH;
+  const sctx = srcCanvas.getContext('2d');
+  sctx.drawImage(it.img,0,0);
+  const srcData = sctx.getImageData(0,0,it.natW,it.natH);
+
+  // output size from quad bounding box, capped at 1800 max dim for perf
+  const xs=it.corners.map(c=>c[0]), ys=it.corners.map(c=>c[1]);
+  let outW = Math.round(Math.max(...xs)-Math.min(...xs));
+  let outH = Math.round(Math.max(...ys)-Math.min(...ys));
+  const maxDim = 1800;
+  const scale = Math.min(1, maxDim/Math.max(outW,outH));
+  outW = Math.max(10,Math.round(outW*scale)); outH = Math.max(10,Math.round(outH*scale));
+
+  let warped = warpQuadToRect(srcData, it.natW, it.natH, it.corners, outW, outH);
+
+  if(it.settings.isNegative) warped = invertAndAutoLevels(warped);
+  warped = adjustBCS(warped, it.settings.brightness, it.settings.contrast, it.settings.saturation);
+  warped = despeckle(warped, outW, outH, it.settings.despeckle);
+  warped = reduceGrain(warped, outW, outH, it.settings.grain);
+  warped = unsharpMask(warped, outW, outH, it.settings.sharpen);
+
+  const out = document.createElement('canvas');
+  out.width=outW; out.height=outH;
+  out.getContext('2d').putImageData(warped,0,0);
+  it.processedCanvas = out;
+}
+
+document.getElementById('processOne').addEventListener('click', ()=>{
+  const it = currentItem(); if(!it) return;
+  saveSettings();
+  processItem(it);
+  viewMode='processed'; drawStage();
+  document.getElementById('downloadOne').disabled=false;
+  document.getElementById('downloadAll').disabled = !items.some(i=>i.processedCanvas);
+  renderFilmstrip();
+});
+
+document.getElementById('copyToAll').addEventListener('click', ()=>{
+  saveSettings();
+  const s = currentItem().settings;
+  items.forEach(it=> it.settings = {...s});
+  alert('Ajustes copiados a las '+items.length+' fotos.');
+});
+
+document.getElementById('processAll').addEventListener('click', ()=>{
+  saveSettings();
+  items.forEach(it=> processItem(it));
+  document.getElementById('downloadAll').disabled=false;
+  document.getElementById('downloadOne').disabled=false;
+  drawStage(); renderFilmstrip();
+});
+
+document.getElementById('downloadOne').addEventListener('click', ()=>{
+  const it = currentItem(); if(!it || !it.processedCanvas) return;
+  const a = document.createElement('a');
+  a.download = 'restaurada_'+(it.name||'foto')+'.png';
+  a.href = it.processedCanvas.toDataURL('image/png');
+  a.click();
+});
+
+document.getElementById('downloadAll').addEventListener('click', async ()=>{
+  const zip = new JSZip();
+  items.filter(i=>i.processedCanvas).forEach(it=>{
+    const dataUrl = it.processedCanvas.toDataURL('image/png').split(',')[1];
+    zip.file('restaurada_'+(it.name||'foto')+'.png', dataUrl, {base64:true});
+  });
+  const blob = await zip.generateAsync({type:'blob'});
+  const a = document.createElement('a');
+  a.download = 'negativos_restaurados.zip';
+  a.href = URL.createObjectURL(blob);
+  a.click();
+});
+
+window.addEventListener('resize', ()=>{ if(activeId) drawStage(); });
+</script>
+</body>
+</html>
