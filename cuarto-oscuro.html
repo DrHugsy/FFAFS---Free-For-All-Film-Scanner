@@ -318,7 +318,7 @@
           <span class="step-num">5 — AI ENHANCE</span>
           <div class="checkbox-row">
             <input type="checkbox" id="aiEnhance">
-            <label for="aiEnhance"><strong>Improve quality with AI</strong> — slower, downloads a real AI model the first time (can take a bit)</label>
+            <label for="aiEnhance"><strong>Improve quality with AI</strong> — slower (can take a minute or more per photo), downloads a real AI model the first time</label>
           </div>
         </div>
 
@@ -1067,10 +1067,29 @@ function loadTransformersJS(){
 async function getUpscalerPipeline(){
   if(_upscalerPipeline) return _upscalerPipeline;
   const { pipeline } = await loadTransformersJS();
+  // Real-world x4 variant (not "lightweight"): heavier, but trained
+  // specifically on camera-style degradation (noise, compression) instead
+  // of clean academic benchmark images — a better match for phone/camera
+  // photos of negatives.
+  const MODEL_ID = 'Xenova/swin2SR-realworld-sr-x4-64-bsrgan-psnr';
+  const hasWebGPU = typeof navigator !== 'undefined' && !!navigator.gpu;
   try{
-    _upscalerPipeline = await pipeline('image-to-image', 'Xenova/swin2SR-lightweight-x2-64', { dtype: 'fp32' });
+    _upscalerPipeline = hasWebGPU
+      ? await pipeline('image-to-image', MODEL_ID, { dtype: 'fp32', device: 'webgpu' })
+      : await pipeline('image-to-image', MODEL_ID, { dtype: 'fp32' });
   }catch(err){
-    throw new Error('[AI model] Could not download/initialize the super-resolution model: '+err.message);
+    if(hasWebGPU){
+      // WebGPU claimed to be available but failed to actually initialize for
+      // this model/browser — fall back to the normal (slower) CPU path
+      // instead of failing outright.
+      try{
+        _upscalerPipeline = await pipeline('image-to-image', MODEL_ID, { dtype: 'fp32' });
+      }catch(err2){
+        throw new Error('[AI model] Could not download/initialize the super-resolution model: '+err2.message);
+      }
+    } else {
+      throw new Error('[AI model] Could not download/initialize the super-resolution model: '+err.message);
+    }
   }
   return _upscalerPipeline;
 }
@@ -1080,9 +1099,9 @@ async function enhanceWithAI(it){
 
   // This model is trained on small image patches — feeding it a full-size
   // photo is both very slow and can overflow its internal calculations.
-  // Shrink it down first so the AI only has to work on a small image;
-  // the model then upscales that back up 2x.
-  const maxSide = 480;
+  // Shrink it down first so the AI only has to work on a manageable image;
+  // the model then upscales that 4x.
+  const maxSide = 720;
   const srcCanvas = it.processedCanvas;
   const scale = Math.min(1, maxSide / Math.max(srcCanvas.width, srcCanvas.height));
   let inputCanvas = srcCanvas;
@@ -1111,10 +1130,22 @@ async function enhanceWithAI(it){
     }
   }
   const imgData = new ImageData(rgba, width, height);
-  const outCanvas = document.createElement('canvas');
-  outCanvas.width = width; outCanvas.height = height;
-  outCanvas.getContext('2d').putImageData(imgData, 0, 0);
-  it.processedCanvas = outCanvas;
+  const rawCanvas = document.createElement('canvas');
+  rawCanvas.width = width; rawCanvas.height = height;
+  rawCanvas.getContext('2d').putImageData(imgData, 0, 0);
+
+  // Cap the final size so a 4x jump doesn't produce an unreasonably huge
+  // download — this still keeps far more detail than the non-AI pipeline.
+  const finalCap = 2000;
+  if(Math.max(width, height) > finalCap){
+    const s = finalCap / Math.max(width, height);
+    const finalCanvas = document.createElement('canvas');
+    finalCanvas.width = Math.round(width*s); finalCanvas.height = Math.round(height*s);
+    finalCanvas.getContext('2d').drawImage(rawCanvas, 0, 0, finalCanvas.width, finalCanvas.height);
+    it.processedCanvas = finalCanvas;
+  } else {
+    it.processedCanvas = rawCanvas;
+  }
 }
 
 async function processItem(it){
