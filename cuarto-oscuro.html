@@ -1,69 +1,90 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FFAFS — Free For All Film Scanner</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=VT323&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
   :root{
-    --bg:#EFEAF7;
-    --panel:#FFFDF9;
-    --panel-2:#F6F1FC;
-    --line:#C9BFE8;
-    --text:#332E4A;
-    --text-dim:#746D91;
-    --safelight:#8A7FC9;
-    --safelight-dim:#D8CFF2;
-    --amber:#E8A34D;
-    --display:'Fredoka', 'Comic Sans MS', sans-serif;
-    --mono:'VT323', 'Courier New', monospace;
+    --desktop-a:#8FB4F5;
+    --desktop-b:#3E6FD9;
+    --titlebar-1:#3E7BEB;
+    --titlebar-2:#1E4FC4;
+    --titlebar-3:#0F3AA8;
+    --window:#ECE9D8;
+    --window-edge:#0A246A;
+    --ink:#000000;
+    --ink-dim:#4B4B4B;
+    --btnface:#ECE9D8;
+    --btn-hi:#FFFFFF;
+    --btn-lo:#ACA899;
+    --field:#FFFFFF;
+    --accent:#316AC5;
+    --done:#1E7A2E;
+    --warn:#B5651D;
+    --font:Tahoma, 'Segoe UI', Verdana, sans-serif;
   }
-  *{box-sizing:border-box;}
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
   body{
-    margin:0; background:var(--bg); color:var(--text);
-    font-family:Verdana, Geneva, sans-serif;
-    min-height:100vh;
+    margin:0; font-family:var(--font); font-size:12.5px; color:var(--ink);
+    min-height:100vh; padding:14px; position:relative;
+    cursor:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><path d="M3 2 L3 26 L10 20 L14 29 L18 27 L14 18 L23 18 Z" fill="white" stroke="black" stroke-width="1.6" stroke-linejoin="round"/></svg>') 3 2, default;
   }
-  header{
-    padding:16px 28px; border-bottom:3px solid var(--text);
-    background:linear-gradient(180deg,#FFFFFF,var(--panel));
-    display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;
-  }
-  header a.back{
-    font-family:var(--mono); font-size:16px; color:var(--text-dim); text-decoration:none;
-  }
-  header a.back:hover{ color:var(--safelight); }
-  header h1{
-    font-size:22px; font-weight:600; margin:0; letter-spacing:0.3px; font-family:var(--display); color:#6A5EB0;
-  }
-  header .sub{ color:var(--text-dim); font-size:15px; font-family:var(--mono); }
-  .layout{
-    display:grid; grid-template-columns: 190px 1fr 300px; gap:0;
-    min-height:calc(100vh - 70px);
-  }
-  @media (max-width:900px){ .layout{ grid-template-columns:1fr; } }
+  .bg-scene{ position:fixed; inset:0; width:100%; height:100%; z-index:-1; }
 
-  /* filmstrip */
-  .filmstrip{
-    background:var(--panel-2); border-right:3px solid var(--text);
-    padding:14px 10px; display:flex; flex-direction:column; gap:10px;
-    overflow-y:auto; max-height:calc(100vh - 70px);
+  /* generic "window" chrome, reused for header + the 3 panels */
+  .win{
+    background:var(--window); border:2px solid var(--window-edge); border-radius:7px 7px 3px 3px;
+    box-shadow:2px 3px 8px rgba(0,0,0,.4);
+  }
+  .win-title{
+    background:linear-gradient(180deg, var(--titlebar-1) 0%, var(--titlebar-2) 45%, var(--titlebar-2) 60%, var(--titlebar-3) 100%);
+    color:#fff; font-weight:bold; font-size:13px; padding:4px 6px 4px 10px; border-radius:5px 5px 0 0;
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    text-shadow:1px 1px 1px rgba(0,0,0,.45);
+  }
+  .win-title .capbtns{ display:flex; gap:3px; }
+  .win-title .capbtns span{
+    width:19px; height:17px; border-radius:3px; display:inline-flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:bold; color:#5A3A00; text-shadow:none;
+    background:linear-gradient(180deg,#FFDA8C,#E8A33D 55%,#C9720A); border:1px solid #7A4A05;
+  }
+  .win-body{ padding:10px; }
+
+  a.linklike{ color:#00298A; text-decoration:underline; cursor:pointer; }
+  a.linklike:visited{ color:#00298A; }
+
+  .page{ max-width:1180px; margin:0 auto; display:flex; flex-direction:column; gap:14px; }
+
+  .top-titlebar .sub{ font-weight:normal; font-size:11px; opacity:.9; }
+
+  .layout{
+    display:grid; grid-template-columns: 210px 1fr 300px; gap:14px; align-items:start;
+  }
+  @media (max-width:960px){ .layout{ grid-template-columns:1fr; } }
+
+  /* ---- left: filmstrip ---- */
+  .filmstrip-body{
+    display:flex; flex-direction:column; gap:8px; padding:8px;
+    max-height:70vh; overflow-y:auto; background:var(--field);
+    border:1px solid var(--btn-lo); margin:8px;
   }
   .drop{
-    border:2.5px dashed var(--line); border-radius:10px; padding:16px 8px;
-    text-align:center; font-size:12px; color:var(--text-dim); cursor:pointer;
-    transition:border-color .15s; background:var(--panel);
+    flex:0 0 auto;
+    border:2px dashed #8394B8; border-radius:4px; padding:12px 6px;
+    text-align:center; font-size:11px; color:var(--ink-dim); cursor:pointer;
+    background:#F5F6FA;
   }
-  .drop:hover, .drop.drag{ border-color:var(--safelight); color:var(--text); }
+  .drop:hover, .drop.drag{ border-color:var(--accent); color:var(--ink); background:#EAF0FF; }
   .frame{
-    position:relative; cursor:pointer; border-radius:8px; overflow:hidden;
-    border:2px solid var(--line); background:#000;
+    flex:0 0 auto;
+    position:relative; cursor:pointer; border-radius:3px; overflow:hidden;
+    border:2px solid #999; background:#000; height:60px;
   }
-  .frame.active{ border-color:var(--safelight); box-shadow:0 0 0 2px var(--safelight); }
-  .frame img{ display:block; width:100%; height:60px; object-fit:cover; opacity:.9; }
+  .frame.active{ border-color:var(--accent); box-shadow:0 0 0 2px var(--accent); }
+  .frame img{ display:block; width:100%; height:60px; object-fit:cover; }
   .frame .holes{
     position:absolute; top:0; bottom:0; left:0; width:6px;
     background-image:radial-gradient(circle, #000 2px, transparent 2.2px);
@@ -71,158 +92,233 @@
   }
   .frame .holes.r{ left:auto; right:0; }
   .frame .tag{
-    position:absolute; bottom:2px; right:4px; font-family:var(--mono);
-    font-size:11px; color:var(--butter,#E8A34D); background:rgba(51,46,74,.7); padding:1px 4px; border-radius:3px;
+    position:absolute; bottom:2px; right:4px; font-size:10px;
+    color:#FFDA8C; background:rgba(0,0,0,.65); padding:1px 4px; border-radius:2px;
   }
-  .frame .done{ position:absolute; top:2px; left:8px; font-size:10px; color:#4F9B6E; }
+  .frame .done{
+    position:absolute; top:2px; left:6px; font-size:9px; font-weight:bold; color:#fff;
+    background:var(--done); border-radius:2px; padding:0 3px;
+  }
+  .frame .loading-label{ padding:20px 4px; text-align:center; font-size:10px; color:var(--warn); }
 
-  /* main canvas area */
-  .stage{
-    display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
-    padding:24px; gap:14px; overflow:auto;
+  /* ---- how to photograph negatives (shown when nothing uploaded yet) ---- */
+  .tips{
+    background:#F5F6FA; border:1px solid var(--btn-lo); border-radius:4px; padding:12px 14px; margin:0 8px 8px;
+    font-size:11.5px; color:var(--ink-dim);
   }
-  .stage-empty{ margin:auto; color:var(--text-dim); font-size:14px; text-align:center; }
+  .tips h4{ margin:0 0 6px; font-size:12px; color:var(--ink); }
+  .tips ul{ margin:0; padding-left:0; list-style:none; }
+  .tips li{ margin-bottom:6px; display:flex; align-items:flex-start; gap:6px; }
+  .tip-icon{ width:18px; height:18px; flex:none; margin-top:1px; }
+
+  /* ---- middle: stage ---- */
+  .stage-body{
+    display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
+    padding:16px; gap:12px; min-height:420px;
+  }
+  .stage-empty{ margin:auto; color:var(--ink-dim); font-size:13px; text-align:center; max-width:420px; }
   .canvas-wrap{
-    position:relative; max-width:100%; background:repeating-conic-gradient(#EAE3F6 0% 25%, #F6F1FC 0% 50%) 50% / 16px 16px;
-    border:2.5px solid var(--text); border-radius:6px;
+    position:relative; max-width:100%; background:repeating-conic-gradient(#DADADA 0% 25%, #EFEFEF 0% 50%) 50% / 16px 16px;
+    border:2px inset #8394B8;
   }
   canvas{ display:block; max-width:100%; touch-action:none; }
   .view-toggle{
-    display:flex; gap:6px; background:var(--panel); padding:4px; border-radius:8px; border:2px solid var(--line);
+    display:flex; gap:4px; background:var(--btnface); padding:3px; border:1px solid var(--btn-lo);
   }
   .view-toggle button{ flex:1; }
-  .stage-hint{ font-size:12.5px; color:var(--text-dim); font-family:var(--mono); text-align:center; }
+  .stage-hint{ font-size:11px; color:var(--ink-dim); text-align:center; }
 
-  /* controls */
-  .controls{
-    background:var(--panel); border-left:3px solid var(--text);
-    padding:20px; overflow-y:auto; max-height:calc(100vh - 70px);
-    display:flex; flex-direction:column; gap:20px;
+  /* ---- right: controls ---- */
+  .controls-body{
+    padding:14px; display:flex; flex-direction:column; gap:16px;
+    max-height:70vh; overflow-y:auto;
   }
-  .stage-num{
-    font-family:var(--mono); color:var(--safelight); font-size:15px; letter-spacing:0.5px;
-  }
-  .group{ display:flex; flex-direction:column; gap:10px; }
-  .group h3{ margin:0; font-size:13px; font-weight:600; font-family:var(--display); }
-  .row{ display:flex; flex-direction:column; gap:4px; }
-  .row label{ font-size:12px; color:var(--text-dim); display:flex; justify-content:space-between; }
-  .row label span.val{ font-family:var(--mono); color:var(--text); font-size:14px; }
+  .step-num{ font-weight:bold; color:var(--accent); font-size:12px; }
+  .group{ display:flex; flex-direction:column; gap:8px; }
+  .group h3{ margin:0; font-size:12.5px; font-weight:bold; }
+  .row{ display:flex; flex-direction:column; gap:3px; }
+  .row label{ font-size:11.5px; color:var(--ink-dim); display:flex; justify-content:space-between; }
+  .row label span.val{ color:var(--ink); font-weight:bold; }
   input[type=range]{
-    -webkit-appearance:none; width:100%; height:5px; background:var(--line); border-radius:3px; outline:none;
+    -webkit-appearance:none; width:100%; height:5px; background:#B9B9B9; border:1px solid #7A7A7A; outline:none;
   }
   input[type=range]::-webkit-slider-thumb{
-    -webkit-appearance:none; width:16px; height:16px; border-radius:50%;
-    background:var(--amber); cursor:pointer; border:2px solid var(--text);
+    -webkit-appearance:none; width:14px; height:16px; border-radius:2px;
+    background:linear-gradient(180deg,#fff,#D8D8D8 55%,#B4B4B4); cursor:pointer; border:1px solid #556;
   }
-  hr{ border:none; border-top:2px dashed var(--line); margin:2px 0; }
+  hr{ border:none; border-top:1px solid var(--btn-lo); border-bottom:1px solid #fff; margin:2px 0; }
   button{
-    font-family:var(--display); font-weight:500; font-size:13px; padding:9px 12px; border-radius:9px;
-    border:2px solid var(--text); background:var(--panel-2); color:var(--text);
-    cursor:pointer; transition:transform .1s; box-shadow:3px 3px 0 var(--line);
+    font-family:var(--font); font-size:12px; padding:6px 12px; min-height:24px;
+    border:1px solid #556; border-radius:3px; color:var(--ink); cursor:pointer;
+    background:linear-gradient(180deg,#FDFDFD 0%, #ECECEC 45%, #DCDCDC 55%, #C9C9C9 100%);
   }
-  button:hover{ transform:translate(1px,1px); box-shadow:2px 2px 0 var(--line); }
-  button.primary{ background:var(--safelight); border-color:var(--text); color:#fff; font-weight:600; box-shadow:3px 3px 0 #6A5EB0; }
-  button.primary:hover{ background:#7A6FC0; }
-  button:disabled{ opacity:.4; cursor:not-allowed; box-shadow:none; }
-  .btn-row{ display:flex; flex-direction:column; gap:8px; }
-  .checkbox-row{ display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text-dim); }
+  button:hover{ border-color:var(--accent); background:linear-gradient(180deg,#FFFFFF 0%, #EAF2FF 45%, #D6E6FF 55%, #BFDAFF 100%); }
+  button:active{ background:linear-gradient(180deg,#C9C9C9,#DCDCDC); }
+  button.primary{ font-weight:bold; }
+  button:disabled{ opacity:.5; cursor:not-allowed; background:#DCDCDC; }
+  .btn-row{ display:flex; flex-direction:column; gap:7px; }
+  .checkbox-row{ display:flex; align-items:center; gap:7px; font-size:12px; color:var(--ink-dim); }
   input[type=file]{ display:none; }
+
+  .site-footer{
+    text-align:center; font-size:11px; color:#0F3AA8; padding:2px 0 8px;
+    text-shadow:1px 1px 1px rgba(255,255,255,.5);
+  }
+  .site-footer a{ color:#0F3AA8; }
 </style>
 </head>
 <body>
 
-<header>
-  <h1>✦ FFAFS ✦</h1>
-  <span class="sub">recorte · revelado · balance · nitidez</span>
-  <a class="back" href="index.html">‹ volver al inicio</a>
-</header>
+<svg class="bg-scene" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4E86E0"/>
+      <stop offset="70%" stop-color="#9CC7F5"/>
+      <stop offset="100%" stop-color="#DCEEFB"/>
+    </linearGradient>
+    <linearGradient id="hillBack" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#5FAE55"/>
+      <stop offset="100%" stop-color="#3E8E3C"/>
+    </linearGradient>
+    <linearGradient id="hillFront" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#7FCB68"/>
+      <stop offset="100%" stop-color="#57A63F"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="100" height="100" fill="url(#sky)"/>
+  <g fill="#FFFFFF" opacity="0.85">
+    <ellipse cx="16" cy="16" rx="8" ry="3.2"/><ellipse cx="21" cy="14" rx="6" ry="2.6"/><ellipse cx="11" cy="14.5" rx="5" ry="2.3"/>
+    <ellipse cx="72" cy="9" rx="7" ry="2.8"/><ellipse cx="77" cy="7.5" rx="5" ry="2.2"/><ellipse cx="67" cy="8" rx="4.5" ry="2"/>
+    <ellipse cx="45" cy="20" rx="6" ry="2.4"/><ellipse cx="49" cy="18.5" rx="4.5" ry="2"/>
+  </g>
+  <path d="M0,62 Q15,48 32,60 T65,58 T100,55 L100,100 L0,100 Z" fill="url(#hillBack)"/>
+  <path d="M0,78 Q20,62 40,76 T78,74 T100,70 L100,100 L0,100 Z" fill="url(#hillFront)"/>
+</svg>
 
-<div class="layout">
-  <div class="filmstrip" id="filmstrip">
-    <div class="drop" id="drop">
-      Arrastrá tus fotos<br>o hacé click<br><span style="opacity:.6">(JPG, PNG o RAW: CR3/CR2/NEF/ARW/DNG…)</span>
+<div class="page">
+
+  <div class="win top-titlebar">
+    <div class="win-title">
+      <span>FFAFS — Free For All Film Scanner</span>
+      <div class="capbtns"><span>_</span><span>□</span><span>×</span></div>
     </div>
-    <input type="file" id="fileInput" accept=".jpg,.jpeg,.png,.webp,.cr3,.cr2,.crw,.nef,.arw,.raf,.rw2,.orf,.dng,.pef,.srw" multiple>
   </div>
 
-  <div class="stage" id="stage">
-    <div class="stage-empty" id="stageEmpty">Subí una o más fotos de tus negativos<br>para empezar.</div>
+  <div class="layout">
+
+    <div class="win">
+      <div class="win-title"><span>Film Roll</span></div>
+      <div class="filmstrip-body" id="filmstrip">
+        <div class="drop" id="drop">
+          Drag your photos here<br>or click to choose<br>
+          <span style="opacity:.7">(JPG, PNG or RAW: CR3/CR2/NEF/ARW/DNG…)</span>
+        </div>
+        <input type="file" id="fileInput" accept=".jpg,.jpeg,.png,.webp,.cr3,.cr2,.crw,.nef,.arw,.raf,.rw2,.orf,.dng,.pef,.srw" multiple>
+      </div>
+      <div class="tips" id="tips">
+        <h4>How to photograph a negative</h4>
+        <ul>
+          <li><svg class="tip-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" fill="#FFE27A" stroke="#000" stroke-width="1.3"/><g stroke="#000" stroke-width="1.3"><line x1="12" y1="1" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="23"/><line x1="1" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="23" y2="12"/><line x1="4" y1="4" x2="6" y2="6"/><line x1="18" y1="18" x2="20" y2="20"/><line x1="20" y1="4" x2="18" y2="6"/><line x1="6" y1="18" x2="4" y2="20"/></g></svg> Backlight it evenly — a lightbox, a tablet showing a plain white screen, or a bright overcast window all work.</li>
+          <li><svg class="tip-icon" viewBox="0 0 24 24"><circle cx="10" cy="10" r="7" fill="#DCEEFB" stroke="#000" stroke-width="1.3"/><line x1="15" y1="15" x2="22" y2="22" stroke="#000" stroke-width="2"/></svg> Get close (macro or close-focus mode) so the negative fills as much of the frame as possible.</li>
+          <li><svg class="tip-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#000" stroke-width="1.3"/><circle cx="12" cy="12" r="5" fill="none" stroke="#000" stroke-width="1.3"/><circle cx="12" cy="12" r="1.5" fill="#C1272D"/></svg> Focus manually on the film grain itself, not on the light behind it.</li>
+          <li><svg class="tip-icon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="1.5" fill="#fff" stroke="#000" stroke-width="1.3"/><text x="12" y="15" font-size="7" font-weight="bold" text-anchor="middle" fill="#316AC5">RAW</text></svg> Shoot RAW if your camera can — it decodes better here than a JPG copy.</li>
+          <li><svg class="tip-icon" viewBox="0 0 24 24"><path d="M13 2 L5 14 h5 l-2 8 9-13h-5z" fill="#FCEAA8" stroke="#000" stroke-width="1.2"/><line x1="2" y1="22" x2="22" y2="2" stroke="#C1272D" stroke-width="2"/></svg> Turn off flash and any "scene" color correction — a plain, flat capture works best.</li>
+          <li><svg class="tip-icon" viewBox="0 0 24 24"><rect x="3" y="14" width="18" height="4" rx="1" fill="#8394B8" stroke="#000" stroke-width="1"/><path d="M4 14 L9 3 L11 3 L8 14 Z" fill="#DCEEFB" stroke="#000" stroke-width="1"/></svg> Keep the negative flat (glass or a film holder) and wipe dust off it and the lens first.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="win">
+      <div class="win-title"><span>Preview</span></div>
+      <div class="stage-body" id="stage">
+        <div class="stage-empty" id="stageEmpty">Upload one or more negative photos above to get started.</div>
+      </div>
+    </div>
+
+    <div class="win">
+      <div class="win-title"><span>Controls</span></div>
+      <div class="controls-body" id="controls" style="display:none">
+
+        <div class="group">
+          <span class="step-num">1 — CROP</span>
+          <p style="font-size:11.5px;color:var(--ink-dim);margin:0">
+            Each photo is cropped automatically on upload. If it's off, drag the 4 corners by hand or try auto-detect again.
+          </p>
+          <button id="resetCorners">Reset corners</button>
+          <button id="autoCrop">Auto-detect crop</button>
+        </div>
+
+        <hr>
+
+        <div class="group">
+          <span class="step-num">2 — DEVELOP</span>
+          <div class="checkbox-row">
+            <input type="checkbox" id="isNegative" checked>
+            <label for="isNegative">This is a color negative (invert + remove orange mask)</label>
+          </div>
+        </div>
+
+        <hr>
+
+        <div class="group">
+          <span class="step-num">3 — BALANCE</span>
+          <div class="row">
+            <label>Brightness <span class="val" id="v-brightness">0</span></label>
+            <input type="range" id="brightness" min="-60" max="60" value="0">
+          </div>
+          <div class="row">
+            <label>Contrast <span class="val" id="v-contrast">0</span></label>
+            <input type="range" id="contrast" min="-60" max="60" value="0">
+          </div>
+          <div class="row">
+            <label>Saturation <span class="val" id="v-saturation">0</span></label>
+            <input type="range" id="saturation" min="-60" max="60" value="0">
+          </div>
+        </div>
+
+        <hr>
+
+        <div class="group">
+          <span class="step-num">4 — RESTORATION</span>
+          <div class="row">
+            <label>Sharpen <span class="val" id="v-sharpen">30</span></label>
+            <input type="range" id="sharpen" min="0" max="100" value="30">
+          </div>
+          <div class="row">
+            <label>Remove dust / scratches <span class="val" id="v-despeckle">15</span></label>
+            <input type="range" id="despeckle" min="0" max="100" value="15">
+          </div>
+          <div class="row">
+            <label>Grain reduction <span class="val" id="v-grain">25</span></label>
+            <input type="range" id="grain" min="0" max="100" value="25">
+          </div>
+        </div>
+
+        <hr>
+
+        <div class="group btn-row">
+          <button class="primary" id="processOne">Process this photo</button>
+          <button id="copyToAll">Copy settings to all</button>
+          <button id="processAll">Process all</button>
+          <hr>
+          <button id="downloadOne" disabled>Download this one</button>
+          <button id="downloadAll" disabled>Download all (.zip)</button>
+        </div>
+
+      </div>
+    </div>
+
   </div>
 
-  <div class="controls" id="controls" style="display:none">
-
-    <div class="group">
-      <span class="stage-num">01 — RECORTE</span>
-      <p style="font-size:12px;color:var(--text-dim);margin:0">
-        Al subir la foto se intenta recortar sola. Si no quedó bien, arrastrá los 4 puntos a mano o volvé a intentar la detección automática.
-      </p>
-      <button id="resetCorners">Resetear esquinas</button>
-      <button id="autoCrop">Detectar recorte automático</button>
-    </div>
-
-    <hr>
-
-    <div class="group">
-      <span class="stage-num">02 — REVELADO</span>
-      <div class="checkbox-row">
-        <input type="checkbox" id="isNegative" checked>
-        <label for="isNegative">Es negativo color (invertir + quitar naranja)</label>
-      </div>
-    </div>
-
-    <hr>
-
-    <div class="group">
-      <span class="stage-num">03 — BALANCE</span>
-      <div class="row">
-        <label>Brillo <span class="val" id="v-brightness">0</span></label>
-        <input type="range" id="brightness" min="-60" max="60" value="0">
-      </div>
-      <div class="row">
-        <label>Contraste <span class="val" id="v-contrast">0</span></label>
-        <input type="range" id="contrast" min="-60" max="60" value="0">
-      </div>
-      <div class="row">
-        <label>Saturación <span class="val" id="v-saturation">0</span></label>
-        <input type="range" id="saturation" min="-60" max="60" value="0">
-      </div>
-    </div>
-
-    <hr>
-
-    <div class="group">
-      <span class="stage-num">04 — RESTAURACIÓN</span>
-      <div class="row">
-        <label>Nitidez <span class="val" id="v-sharpen">30</span></label>
-        <input type="range" id="sharpen" min="0" max="100" value="30">
-      </div>
-      <div class="row">
-        <label>Quitar polvo / rayones <span class="val" id="v-despeckle">15</span></label>
-        <input type="range" id="despeckle" min="0" max="100" value="15">
-      </div>
-      <div class="row">
-        <label>Reducción de grano <span class="val" id="v-grain">25</span></label>
-        <input type="range" id="grain" min="0" max="100" value="25">
-      </div>
-    </div>
-
-    <hr>
-
-    <div class="group btn-row">
-      <button class="primary" id="processOne">Procesar esta foto</button>
-      <button id="copyToAll">Copiar ajustes a todas</button>
-      <button id="processAll">Procesar todas</button>
-      <hr>
-      <button id="downloadOne" disabled>Descargar esta</button>
-      <button id="downloadAll" disabled>Descargar todas (.zip)</button>
-    </div>
-
+  <div class="site-footer">
+    © 2026 FFAFS — Free For All Film Scanner. <a class="linklike" href="terms.html">Terms of Service</a>.
   </div>
+
 </div>
 
 <script>
 // ---------- state ----------
-let items = [];      // {id,name,img,natW,natH,corners:[[x,y]x4],processedCanvas,settings}
+let items = [];      // {id,name,img,natW,natH,corners:[[x,y]x4],processedCanvas,settings,thumbSrc}
 let activeId = null;
 let viewMode = 'original'; // 'original' | 'processed'
 let dragCorner = -1;
@@ -232,6 +328,7 @@ const els = {
   fileInput: document.getElementById('fileInput'),
   drop: document.getElementById('drop'),
   filmstrip: document.getElementById('filmstrip'),
+  tips: document.getElementById('tips'),
   stage: document.getElementById('stage'),
   stageEmpty: document.getElementById('stageEmpty'),
   controls: document.getElementById('controls'),
@@ -271,11 +368,11 @@ async function handleFiles(fileList){
       }catch(err){
         console.error(err);
         alert(
-          'No pude decodificar "'+file.name+'" (RAW).\n\n'+
-          'Revisá que server.py esté corriendo (ventana de la terminal abierta, sin errores).\n\n'+
-          'Si el servidor está corriendo y sigue fallando, plan B: convertila a JPG o TIFF con un '+
-          'programa gratuito (Canon Digital Photo Professional, RawTherapee o darktable) y subí ese archivo acá.\n\n'+
-          'Detalle técnico: '+(err&&err.message?err.message:err)
+          'Could not decode "'+file.name+'" (RAW).\n\n'+
+          'Check that the server is running (its terminal window should be open, with no errors).\n\n'+
+          'If the server is running and this keeps failing, plan B: convert it to JPG or TIFF with a '+
+          'free program (Canon Digital Photo Professional, RawTherapee, or darktable) and upload that instead.\n\n'+
+          'Technical detail: '+(err&&err.message?err.message:err)
         );
       }
       loadingFiles = loadingFiles.filter(n=>n!==file.name);
@@ -285,11 +382,19 @@ async function handleFiles(fileList){
         const url = URL.createObjectURL(file);
         const img = new Image();
         img.onload = ()=>{ addItem(file.name, img, img.naturalWidth, img.naturalHeight); resolve(); };
-        img.onerror = ()=>{ alert('No pude abrir "'+file.name+'".'); resolve(); };
+        img.onerror = ()=>{ alert('Could not open "'+file.name+'".'); resolve(); };
         img.src = url;
       });
     }
   }
+}
+
+function makeThumb(source, w, h){
+  const tw = 200, th = Math.max(1, Math.round(200*h/w));
+  const c = document.createElement('canvas');
+  c.width = tw; c.height = th;
+  c.getContext('2d').drawImage(source, 0, 0, tw, th);
+  return c.toDataURL('image/jpeg', 0.75);
 }
 
 function addItem(name, source, w, h){
@@ -301,24 +406,20 @@ function addItem(name, source, w, h){
     [w*(1-inset), h*(1-inset)],
     [w*inset, h*(1-inset)]
   ];
-  const tw = 200, th = Math.max(1,Math.round(200*h/w));
-  const thumbCanvas = document.createElement('canvas');
-  thumbCanvas.width=tw; thumbCanvas.height=th;
-  thumbCanvas.getContext('2d').drawImage(source,0,0,tw,th);
-  const thumbSrc = thumbCanvas.toDataURL('image/jpeg',0.75);
   const item = {
     id, name, img:source, natW:w, natH:h, corners,
-    processedCanvas:null, settings:defaultSettings(), thumbSrc
+    processedCanvas:null, settings:defaultSettings(), thumbSrc: makeThumb(source, w, h)
   };
-  autoDetectCrop(item); // intenta recortar sola; si no puede, se queda con el recorte por defecto de arriba
+  autoDetectCrop(item); // tries to crop it automatically; keeps the default crop above if it can't
   items.push(item);
   renderFilmstrip();
-  if(activeId===null) selectItem(id);
+  selectItem(id); // newly uploaded photo becomes the one you're editing
 }
 
-// ---------- decodificación RAW vía servidor Python local (rawpy/LibRaw) ----------
-// El navegador ya no intenta decodificar el RAW: se lo manda al servidor local
-// (server.py), que usa rawpy (bindings nativos de LibRaw) y devuelve un PNG.
+// ---------- RAW decoding via the local Python server (rawpy/LibRaw) ----------
+// The browser never tries to decode RAW itself: it sends the file to the
+// server (server.py / server_prod.py), which uses rawpy (native LibRaw
+// bindings) and returns a PNG.
 async function decodeRawFile(file){
   const fd = new FormData();
   fd.append('file', file, file.name);
@@ -326,11 +427,11 @@ async function decodeRawFile(file){
   try{
     res = await fetch('/api/decode-raw', { method:'POST', body: fd });
   }catch(err){
-    throw new Error('No pude conectar con el servidor Python local (server.py). ¿Está corriendo? Detalle: '+err.message);
+    throw new Error('Could not reach the Python server. Is it running? Detail: '+err.message);
   }
   if(!res.ok){
     const detail = await res.text().catch(()=>'');
-    throw new Error('El servidor no pudo decodificar el RAW (HTTP '+res.status+'). '+detail);
+    throw new Error('The server could not decode the RAW file (HTTP '+res.status+'). '+detail);
   }
   const blob = await res.blob();
   const url = URL.createObjectURL(blob);
@@ -342,7 +443,7 @@ async function decodeRawFile(file){
     };
     img.onerror = ()=>{
       URL.revokeObjectURL(url);
-      reject(new Error('El servidor respondió, pero el navegador no pudo abrir la imagen decodificada.'));
+      reject(new Error('The server responded, but the browser could not open the decoded image.'));
     };
     img.src = url;
   });
@@ -352,11 +453,12 @@ async function decodeRawFile(file){
 let loadingFiles = [];
 
 function renderFilmstrip(){
+  els.tips.style.display = items.length ? 'none' : 'block';
   [...els.filmstrip.querySelectorAll('.frame')].forEach(n=>n.remove());
   loadingFiles.forEach(name=>{
     const div = document.createElement('div');
     div.className = 'frame';
-    div.innerHTML = `<div style="padding:20px 4px;text-align:center;font-size:10px;color:var(--amber)">&#9203; decodificando<br>${name.slice(0,16)}</div>`;
+    div.innerHTML = `<div class="loading-label">&#9203; decoding<br>${name.slice(0,16)}</div>`;
     els.filmstrip.appendChild(div);
   });
   items.forEach(it=>{
@@ -366,7 +468,7 @@ function renderFilmstrip(){
       <div class="holes"></div>
       <img src="${it.thumbSrc}">
       <div class="holes r"></div>
-      ${it.processedCanvas? '<div class="done">&#10003;</div>':''}
+      ${it.processedCanvas? '<div class="done">DONE</div>':''}
       <div class="tag">${(it.name||'').slice(0,10)}</div>
     `;
     div.addEventListener('click', ()=>selectItem(it.id));
@@ -421,17 +523,17 @@ function buildStage(){
   els.stage.appendChild(wrap);
 
   const toggle = document.createElement('div'); toggle.className='view-toggle';
-  toggle.innerHTML = `<button id="tOrig">Original</button><button id="tProc">Resultado</button>`;
+  toggle.innerHTML = `<button id="tOrig">Original</button><button id="tProc">Result</button>`;
   els.stage.appendChild(toggle);
   document.getElementById('tOrig').onclick=()=>{ viewMode='original'; drawStage(); };
   document.getElementById('tProc').onclick=()=>{
     const it=currentItem();
-    if(!it.processedCanvas){ alert('Primero procesá esta foto.'); return; }
+    if(!it.processedCanvas){ alert('Process this photo first.'); return; }
     viewMode='processed'; drawStage();
   };
 
   const hint = document.createElement('div'); hint.className='stage-hint';
-  hint.textContent = 'Arrastrá los 4 puntos rojos para ajustar el recorte del negativo';
+  hint.textContent = 'Drag the 4 red dots to adjust the negative crop';
   els.stage.appendChild(hint);
 
   drawStage();
@@ -508,14 +610,14 @@ document.getElementById('resetCorners').addEventListener('click', ()=>{
   drawStage();
 });
 
-// ---------- recorte automático ----------
-// Idea: el fondo (mesa de luz o borde del negativo) suele ser bastante liso
-// (poca variación entre píxeles vecinos), mientras que la foto en sí tiene
-// mucha "actividad" (bordes, texturas, detalle). Buscamos, fila por fila y
-// columna por columna, dónde arranca esa actividad para encontrar el marco
-// real de la imagen.
+// ---------- auto crop ----------
+// Idea: the background (lightbox or negative edge) tends to be fairly flat
+// (little variation between neighboring pixels), while the actual photo has
+// a lot of "activity" (edges, texture, detail). We scan row by row and
+// column by column to find where that activity starts, to locate the
+// image's real frame.
 function autoDetectCrop(it){
-  const maxSide = 500; // se analiza en baja resolución, alcanza y sobra y es rápido
+  const maxSide = 500; // analyzed at low res, plenty for this and fast
   const scale = Math.min(1, maxSide / Math.max(it.natW, it.natH));
   const sw = Math.max(1, Math.round(it.natW*scale)), sh = Math.max(1, Math.round(it.natH*scale));
 
@@ -525,13 +627,13 @@ function autoDetectCrop(it){
   tctx.drawImage(it.img, 0, 0, sw, sh);
   const data = tctx.getImageData(0,0,sw,sh).data;
 
-  // luminancia en escala de grises
+  // grayscale luminance
   const gray = new Float32Array(sw*sh);
   for(let i=0, p=0; i<data.length; i+=4, p++){
     gray[p] = 0.299*data[i] + 0.587*data[i+1] + 0.114*data[i+2];
   }
 
-  // "actividad" = gradiente local (cuánto cambia el pixel respecto a sus vecinos)
+  // "activity" = local gradient (how much a pixel differs from its neighbors)
   const rowAct = new Float64Array(sh);
   const colAct = new Float64Array(sw);
   for(let y=0; y<sh; y++){
@@ -546,8 +648,8 @@ function autoDetectCrop(it){
   for(let y=0;y<sh;y++) rowAct[y] /= sw;
   for(let x=0;x<sw;x++) colAct[x] /= sh;
 
-  // umbral automático: busca el salto más grande entre valores ordenados
-  // (separa "filas/columnas de fondo, tranquilas" de "filas/columnas con foto")
+  // automatic threshold: find the biggest jump between sorted values
+  // (splits "quiet background" rows/columns from "has photo" rows/columns)
   function autoThreshold(arr){
     const sorted = Array.from(arr).sort((a,b)=>a-b);
     const lo = Math.floor(sorted.length*0.05), hi = Math.floor(sorted.length*0.95);
@@ -577,10 +679,10 @@ function autoDetectCrop(it){
   let right = lastAbove(colAct, colThr);
 
   if(right<=left || bottom<=top){
-    return false; // no se encontró un recorte razonable, mejor no tocar nada
+    return false; // no reasonable crop found, better to leave it alone
   }
 
-  // volver a coordenadas de la imagen a resolución completa
+  // back to full-resolution image coordinates
   const invScale = 1/scale;
   top *= invScale; bottom *= invScale; left *= invScale; right *= invScale;
 
@@ -595,7 +697,7 @@ document.getElementById('autoCrop').addEventListener('click', ()=>{
   const ok = autoDetectCrop(it);
   drawStage();
   if(!ok){
-    alert('No pude detectar el recorte automáticamente para esta foto. Ajustá las esquinas a mano.');
+    alert('Could not auto-detect the crop for this photo. Adjust the corners by hand instead.');
   }
 });
 
@@ -723,9 +825,9 @@ function despeckle(imgData, w, h, strength){
   return imgData;
 }
 
-// A diferencia de despeckle (que solo toca manchas puntuales muy fuera de rango),
-// esto empuja TODOS los píxeles hacia la mediana de su entorno 3x3, en proporción
-// a "strength". Ataca el ruido/grano fino generalizado, no solo el polvo aislado.
+// Unlike despeckle (which only touches pixels way out of range), this pulls
+// EVERY pixel toward the median of its 3x3 neighborhood, proportionally to
+// "strength". It targets fine, generalized grain/noise, not just isolated dust.
 function reduceGrain(imgData, w, h, strength){
   if(strength<=0) return imgData;
   const d = imgData.data;
@@ -799,6 +901,7 @@ function processItem(it){
   out.width=outW; out.height=outH;
   out.getContext('2d').putImageData(warped,0,0);
   it.processedCanvas = out;
+  it.thumbSrc = makeThumb(out, outW, outH); // filmstrip thumbnail now shows the edited result
 }
 
 document.getElementById('processOne').addEventListener('click', ()=>{
@@ -815,7 +918,7 @@ document.getElementById('copyToAll').addEventListener('click', ()=>{
   saveSettings();
   const s = currentItem().settings;
   items.forEach(it=> it.settings = {...s});
-  alert('Ajustes copiados a las '+items.length+' fotos.');
+  alert('Settings copied to all '+items.length+' photos.');
 });
 
 document.getElementById('processAll').addEventListener('click', ()=>{
@@ -829,7 +932,7 @@ document.getElementById('processAll').addEventListener('click', ()=>{
 document.getElementById('downloadOne').addEventListener('click', ()=>{
   const it = currentItem(); if(!it || !it.processedCanvas) return;
   const a = document.createElement('a');
-  a.download = 'restaurada_'+(it.name||'foto')+'.png';
+  a.download = 'restored_'+(it.name||'photo')+'.png';
   a.href = it.processedCanvas.toDataURL('image/png');
   a.click();
 });
@@ -838,11 +941,11 @@ document.getElementById('downloadAll').addEventListener('click', async ()=>{
   const zip = new JSZip();
   items.filter(i=>i.processedCanvas).forEach(it=>{
     const dataUrl = it.processedCanvas.toDataURL('image/png').split(',')[1];
-    zip.file('restaurada_'+(it.name||'foto')+'.png', dataUrl, {base64:true});
+    zip.file('restored_'+(it.name||'photo')+'.png', dataUrl, {base64:true});
   });
   const blob = await zip.generateAsync({type:'blob'});
   const a = document.createElement('a');
-  a.download = 'negativos_restaurados.zip';
+  a.download = 'restored_negatives.zip';
   a.href = URL.createObjectURL(blob);
   a.click();
 });

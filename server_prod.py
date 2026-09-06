@@ -24,7 +24,7 @@ import rawpy
 from PIL import Image
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-HTML_FILE = "index.html"  # landing: el link "Empezar a escanear" lleva a cuarto-oscuro.html
+HTML_FILE = "cuarto-oscuro.html"  # la herramienta es la página de inicio; no hay landing aparte
 
 app = Flask(__name__, static_folder=None)
 
