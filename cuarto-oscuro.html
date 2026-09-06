@@ -3,35 +3,43 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cuarto Oscuro Digital</title>
+<title>FFAFS — Free For All Film Scanner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=VT323&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
   :root{
-    --bg:#14120F;
-    --panel:#1D1915;
-    --panel-2:#26211B;
-    --line:#3A3128;
-    --text:#EDE6DC;
-    --text-dim:#A69A8A;
-    --safelight:#C1272D;
-    --safelight-dim:#7A1E22;
-    --amber:#D89B4A;
-    --mono:'JetBrains Mono', 'Courier New', monospace;
+    --bg:#EFEAF7;
+    --panel:#FFFDF9;
+    --panel-2:#F6F1FC;
+    --line:#C9BFE8;
+    --text:#332E4A;
+    --text-dim:#746D91;
+    --safelight:#8A7FC9;
+    --safelight-dim:#D8CFF2;
+    --amber:#E8A34D;
+    --display:'Fredoka', 'Comic Sans MS', sans-serif;
+    --mono:'VT323', 'Courier New', monospace;
   }
   *{box-sizing:border-box;}
   body{
     margin:0; background:var(--bg); color:var(--text);
-    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+    font-family:Verdana, Geneva, sans-serif;
     min-height:100vh;
   }
   header{
-    padding:22px 28px 16px; border-bottom:1px solid var(--line);
+    padding:16px 28px; border-bottom:3px solid var(--text);
+    background:linear-gradient(180deg,#FFFFFF,var(--panel));
     display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;
   }
-  header h1{
-    font-size:20px; font-weight:600; margin:0; letter-spacing:0.2px;
+  header a.back{
+    font-family:var(--mono); font-size:16px; color:var(--text-dim); text-decoration:none;
   }
-  header .sub{ color:var(--text-dim); font-size:13px; font-family:var(--mono); }
+  header a.back:hover{ color:var(--safelight); }
+  header h1{
+    font-size:22px; font-weight:600; margin:0; letter-spacing:0.3px; font-family:var(--display); color:#6A5EB0;
+  }
+  header .sub{ color:var(--text-dim); font-size:15px; font-family:var(--mono); }
   .layout{
     display:grid; grid-template-columns: 190px 1fr 300px; gap:0;
     min-height:calc(100vh - 70px);
@@ -40,22 +48,22 @@
 
   /* filmstrip */
   .filmstrip{
-    background:#0F0D0B; border-right:1px solid var(--line);
+    background:var(--panel-2); border-right:3px solid var(--text);
     padding:14px 10px; display:flex; flex-direction:column; gap:10px;
     overflow-y:auto; max-height:calc(100vh - 70px);
   }
   .drop{
-    border:1.5px dashed var(--line); border-radius:2px; padding:16px 8px;
+    border:2.5px dashed var(--line); border-radius:10px; padding:16px 8px;
     text-align:center; font-size:12px; color:var(--text-dim); cursor:pointer;
-    transition:border-color .15s;
+    transition:border-color .15s; background:var(--panel);
   }
   .drop:hover, .drop.drag{ border-color:var(--safelight); color:var(--text); }
   .frame{
-    position:relative; cursor:pointer; border-radius:2px; overflow:hidden;
-    border:1px solid var(--line); background:#000;
+    position:relative; cursor:pointer; border-radius:8px; overflow:hidden;
+    border:2px solid var(--line); background:#000;
   }
-  .frame.active{ border-color:var(--safelight); box-shadow:0 0 0 1px var(--safelight); }
-  .frame img{ display:block; width:100%; height:60px; object-fit:cover; opacity:.85; }
+  .frame.active{ border-color:var(--safelight); box-shadow:0 0 0 2px var(--safelight); }
+  .frame img{ display:block; width:100%; height:60px; object-fit:cover; opacity:.9; }
   .frame .holes{
     position:absolute; top:0; bottom:0; left:0; width:6px;
     background-image:radial-gradient(circle, #000 2px, transparent 2.2px);
@@ -64,9 +72,9 @@
   .frame .holes.r{ left:auto; right:0; }
   .frame .tag{
     position:absolute; bottom:2px; right:4px; font-family:var(--mono);
-    font-size:9px; color:var(--amber); background:rgba(0,0,0,.55); padding:1px 3px;
+    font-size:11px; color:var(--butter,#E8A34D); background:rgba(51,46,74,.7); padding:1px 4px; border-radius:3px;
   }
-  .frame .done{ position:absolute; top:2px; left:8px; font-size:10px; color:#7BC67E; }
+  .frame .done{ position:absolute; top:2px; left:8px; font-size:10px; color:#4F9B6E; }
 
   /* main canvas area */
   .stage{
@@ -75,47 +83,47 @@
   }
   .stage-empty{ margin:auto; color:var(--text-dim); font-size:14px; text-align:center; }
   .canvas-wrap{
-    position:relative; max-width:100%; background:repeating-conic-gradient(#1a1a1a 0% 25%, #111 0% 50%) 50% / 16px 16px;
-    border:1px solid var(--line);
+    position:relative; max-width:100%; background:repeating-conic-gradient(#EAE3F6 0% 25%, #F6F1FC 0% 50%) 50% / 16px 16px;
+    border:2.5px solid var(--text); border-radius:6px;
   }
   canvas{ display:block; max-width:100%; touch-action:none; }
   .view-toggle{
-    display:flex; gap:6px; background:var(--panel); padding:4px; border-radius:3px; border:1px solid var(--line);
+    display:flex; gap:6px; background:var(--panel); padding:4px; border-radius:8px; border:2px solid var(--line);
   }
   .view-toggle button{ flex:1; }
-  .stage-hint{ font-size:11.5px; color:var(--text-dim); font-family:var(--mono); text-align:center; }
+  .stage-hint{ font-size:12.5px; color:var(--text-dim); font-family:var(--mono); text-align:center; }
 
   /* controls */
   .controls{
-    background:var(--panel); border-left:1px solid var(--line);
+    background:var(--panel); border-left:3px solid var(--text);
     padding:20px; overflow-y:auto; max-height:calc(100vh - 70px);
     display:flex; flex-direction:column; gap:20px;
   }
   .stage-num{
-    font-family:var(--mono); color:var(--safelight); font-size:11px; letter-spacing:1px;
+    font-family:var(--mono); color:var(--safelight); font-size:15px; letter-spacing:0.5px;
   }
   .group{ display:flex; flex-direction:column; gap:10px; }
-  .group h3{ margin:0; font-size:13px; font-weight:600; }
+  .group h3{ margin:0; font-size:13px; font-weight:600; font-family:var(--display); }
   .row{ display:flex; flex-direction:column; gap:4px; }
-  .row label{ font-size:11.5px; color:var(--text-dim); display:flex; justify-content:space-between; }
-  .row label span.val{ font-family:var(--mono); color:var(--text); }
+  .row label{ font-size:12px; color:var(--text-dim); display:flex; justify-content:space-between; }
+  .row label span.val{ font-family:var(--mono); color:var(--text); font-size:14px; }
   input[type=range]{
-    -webkit-appearance:none; width:100%; height:3px; background:var(--line); border-radius:2px; outline:none;
+    -webkit-appearance:none; width:100%; height:5px; background:var(--line); border-radius:3px; outline:none;
   }
   input[type=range]::-webkit-slider-thumb{
-    -webkit-appearance:none; width:13px; height:13px; border-radius:50%;
-    background:var(--amber); cursor:pointer; border:2px solid #14120F;
+    -webkit-appearance:none; width:16px; height:16px; border-radius:50%;
+    background:var(--amber); cursor:pointer; border:2px solid var(--text);
   }
-  hr{ border:none; border-top:1px solid var(--line); margin:2px 0; }
+  hr{ border:none; border-top:2px dashed var(--line); margin:2px 0; }
   button{
-    font-family:inherit; font-size:12.5px; padding:9px 12px; border-radius:2px;
-    border:1px solid var(--line); background:var(--panel-2); color:var(--text);
-    cursor:pointer; transition:border-color .15s, background .15s;
+    font-family:var(--display); font-weight:500; font-size:13px; padding:9px 12px; border-radius:9px;
+    border:2px solid var(--text); background:var(--panel-2); color:var(--text);
+    cursor:pointer; transition:transform .1s; box-shadow:3px 3px 0 var(--line);
   }
-  button:hover{ border-color:var(--amber); }
-  button.primary{ background:var(--safelight); border-color:var(--safelight); color:#fff; font-weight:600; }
-  button.primary:hover{ background:#a91f24; }
-  button:disabled{ opacity:.4; cursor:not-allowed; }
+  button:hover{ transform:translate(1px,1px); box-shadow:2px 2px 0 var(--line); }
+  button.primary{ background:var(--safelight); border-color:var(--text); color:#fff; font-weight:600; box-shadow:3px 3px 0 #6A5EB0; }
+  button.primary:hover{ background:#7A6FC0; }
+  button:disabled{ opacity:.4; cursor:not-allowed; box-shadow:none; }
   .btn-row{ display:flex; flex-direction:column; gap:8px; }
   .checkbox-row{ display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text-dim); }
   input[type=file]{ display:none; }
@@ -124,8 +132,9 @@
 <body>
 
 <header>
-  <h1>Cuarto Oscuro Digital</h1>
+  <h1>✦ FFAFS ✦</h1>
   <span class="sub">recorte · revelado · balance · nitidez</span>
+  <a class="back" href="index.html">‹ volver al inicio</a>
 </header>
 
 <div class="layout">

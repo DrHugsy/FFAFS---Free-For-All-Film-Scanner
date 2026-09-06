@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FFAFS — Free For All Film Scanner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=VT323&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EFEAF7;
+    --panel:#FFFDF9;
+    --ink:#332E4A;
+    --ink-dim:#746D91;
+    --line:#C9BFE8;
+    --pink:#F7C6D9;
+    --mint:#BFEEDD;
+    --butter:#FCEAA8;
+    --sky:#BFE1F5;
+    --grape:#8A7FC9;
+    --grape-dark:#6A5EB0;
+    --display:'Fredoka', 'Comic Sans MS', sans-serif;
+    --mono:'VT323', 'Courier New', monospace;
+    --body:Verdana, Geneva, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink); font-family:var(--body);
+    line-height:1.55; font-size:15px;
+    background-image:
+      radial-gradient(circle, #DED3F5 1.5px, transparent 1.6px);
+    background-size:26px 26px;
+  }
+  .wrap{ max-width:760px; margin:0 auto; padding:0 18px; }
+
+  /* ---- barra de título, tipo ventana de sistema viejo ---- */
+  .titlebar{
+    background:linear-gradient(180deg,#FFFFFF, var(--panel));
+    border-bottom:3px solid var(--ink);
+    padding:10px 18px; display:flex; align-items:center; gap:10px;
+  }
+  .titlebar .dots{ display:flex; gap:6px; }
+  .titlebar .dot{ width:11px; height:11px; border-radius:50%; border:1.5px solid var(--ink); }
+  .titlebar .dot:nth-child(1){ background:var(--pink); }
+  .titlebar .dot:nth-child(2){ background:var(--butter); }
+  .titlebar .dot:nth-child(3){ background:var(--mint); }
+  .titlebar .name{ font-family:var(--mono); font-size:19px; color:var(--ink-dim); margin-left:4px; }
+
+  /* ---- hero ---- */
+  .hero{ text-align:center; padding:56px 18px 40px; }
+  .hero .logo{
+    font-family:var(--display); font-weight:700; font-size:56px; margin:0;
+    color:var(--grape-dark);
+    text-shadow: 2px 2px 0 var(--pink), 4px 4px 0 var(--sky);
+    letter-spacing:1px;
+  }
+  .hero .tagline{
+    font-family:var(--mono); font-size:20px; color:var(--ink-dim); margin:6px 0 22px;
+  }
+  .hero p.pitch{ max-width:480px; margin:0 auto 28px; font-size:15.5px; }
+  .sparkle{ color:var(--grape); }
+
+  .btn-big{
+    display:inline-block; font-family:var(--display); font-weight:600; font-size:19px;
+    color:var(--ink); background:var(--butter); border:3px solid var(--ink);
+    padding:14px 30px; border-radius:14px; text-decoration:none;
+    box-shadow:5px 5px 0 var(--ink);
+    transition:transform .1s, box-shadow .1s;
+  }
+  .btn-big:hover{ transform:translate(2px,2px); box-shadow:3px 3px 0 var(--ink); }
+  .btn-big:active{ transform:translate(5px,5px); box-shadow:0 0 0 var(--ink); }
+
+  /* ---- paneles con borde grueso, sin sombra difusa ---- */
+  .panel{
+    background:var(--panel); border:3px solid var(--ink); border-radius:16px;
+    padding:26px 26px; margin:0 0 34px; box-shadow:6px 6px 0 var(--line);
+  }
+  .panel h2{
+    font-family:var(--display); font-size:24px; margin:0 0 16px; color:var(--grape-dark);
+  }
+
+  /* ---- antes / después ---- */
+  .compare{ display:flex; gap:18px; align-items:center; justify-content:center; flex-wrap:wrap; }
+  .swatch{
+    width:170px; height:210px; border:3px solid var(--ink); border-radius:10px;
+    display:flex; align-items:flex-end; justify-content:center; padding:10px;
+    font-family:var(--mono); font-size:16px; text-align:center;
+  }
+  .swatch.before{
+    background:linear-gradient(160deg,#E7A66B,#C97A57 60%,#8C5A45);
+    color:#3A2415; filter:saturate(.55) brightness(.85);
+  }
+  .swatch.after{
+    background:linear-gradient(160deg,var(--sky),var(--mint) 55%,var(--pink));
+    color:var(--ink);
+  }
+  .compare .arrow{ font-family:var(--mono); font-size:34px; color:var(--grape); }
+
+  /* ---- pasos (esto sí es una secuencia real) ---- */
+  .steps{ display:flex; flex-direction:column; gap:14px; }
+  .step{ display:flex; gap:14px; align-items:flex-start; }
+  .step .num{
+    font-family:var(--display); font-weight:700; font-size:20px; color:#fff;
+    background:var(--grape); border:2.5px solid var(--ink); border-radius:50%;
+    width:34px; height:34px; flex:none; display:flex; align-items:center; justify-content:center;
+  }
+  .step p{ margin:4px 0 0; }
+  .step strong{ font-family:var(--display); }
+
+  footer{
+    text-align:center; padding:30px 18px 50px; font-family:var(--mono);
+    color:var(--ink-dim); font-size:16px;
+  }
+  footer a{ color:var(--grape-dark); }
+  footer .badges{ margin-top:10px; font-size:14px; }
+
+  @media (max-width:480px){
+    .hero .logo{ font-size:40px; }
+    .panel{ padding:20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="titlebar">
+  <div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+  <span class="name">ffafs.exe</span>
+</div>
+
+<div class="hero">
+  <p class="logo">✦ FFAFS ✦</p>
+  <p class="tagline">Free For All Film Scanner</p>
+  <p class="pitch">
+    Fotografiaste tus negativos con la cámara y te quedaron como el
+    color invertido, medio anaranjados y sin gracia. Acá los convertís
+    en fotos normales, a color, gratis y sin límite de fotos.
+  </p>
+  <a class="btn-big" href="cuarto-oscuro.html">Empezar a escanear</a>
+</div>
+
+<div class="wrap">
+
+  <div class="panel">
+    <h2>Antes / después</h2>
+    <div class="compare">
+      <div class="swatch before">negativo<br>tal cual lo<br>fotografiaste</div>
+      <span class="arrow">➜</span>
+      <div class="swatch after">recortado,<br>revelado<br>y a color</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Cómo funciona</h2>
+    <div class="steps">
+      <div class="step">
+        <span class="num">1</span>
+        <p><strong>Subís la foto del negativo</strong> — sirve JPG, PNG, o el RAW directo de la cámara (CR3, NEF, ARW, DNG y otros).</p>
+      </div>
+      <div class="step">
+        <span class="num">2</span>
+        <p><strong>Ajustás el recorte y el revelado</strong> — la app intenta recortarlo sola, y movés brillo, contraste, color y grano hasta que quede bien.</p>
+      </div>
+      <div class="step">
+        <span class="num">3</span>
+        <p><strong>Descargás el resultado</strong> — una foto normal, lista para guardar o compartir.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>¿Por qué es gratis?</h2>
+    <p>
+      La hice para escanear fotos viejas de mi familia, porque todo lo
+      que encontraba por internet para hacer esto era de pago o te
+      cortaba a los pocos usos. Una vez que la terminé, no tenía
+      sentido guardármela — así que quedó pública, sin cuenta, sin
+      límite de fotos y sin letra chica.
+    </p>
+  </div>
+
+</div>
+
+<footer>
+  tus fotos no se procesan ni se guardan en ningún lado, solo mientras las estás editando
+  <div class="badges">hecho a mano · sin registro · código abierto</div>
+</footer>
+
+</body>
+</html>
