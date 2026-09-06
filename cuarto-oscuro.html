@@ -206,7 +206,6 @@
       <div class="capbtns">
         <span id="btnMin" title="Minimize">_</span>
         <span id="btnMax" title="Fullscreen">&#9633;</span>
-        <span id="btnClose" title="Close">&#215;</span>
       </div>
     </div>
   </div>
@@ -563,14 +562,6 @@ document.getElementById('btnMax').addEventListener('click', ()=>{
   } else {
     document.exitFullscreen?.().catch(()=>{});
   }
-});
-document.getElementById('btnClose').addEventListener('click', ()=>{
-  window.close();
-  // if we're still here after a moment, the browser blocked it (it only allows
-  // closing tabs that a script itself opened) — let the person know why.
-  setTimeout(()=>{
-    alert("Your browser won't let a page close its own tab unless it was opened by a script — that's a security rule, not a bug here. You can close this tab yourself (Ctrl+W, or swipe it away on mobile).");
-  }, 300);
 });
 
 // ---------- stage: original view with draggable corners ----------
@@ -1044,18 +1035,37 @@ function unsharpMask(imgData, w, h, amount){
 // Uses UpscalerJS with a small/fast ESRGAN model, loaded lazily (only once
 // someone actually turns the toggle on) so it never costs anything for
 // people who don't use it.
+//
+// IMPORTANT: both script versions are pinned on purpose (not @latest).
+// UpscalerJS ships the core library and each model as SEPARATE npm
+// packages that don't always move in lockstep — at the time this was
+// written, @upscalerjs/esrgan-slim had graduated to a stable 1.0.0 while
+// the core "upscaler" package was still on 1.0.0-beta.19. When the model
+// UpscalerJS receives doesn't match what that particular core version
+// expects, it doesn't error — it silently swaps in its own undocumented
+// internal default model instead (confirmed in the maintainer's own
+// GitHub discussion #30), which is what caused the confusing
+// "esrgan-slim-compact" error. Pinning both to the same beta generation
+// avoids that mismatch. If you ever bump one of these, bump both together.
 let _upscaler = null;
 let _upscalerLoadPromise = null;
 function loadUpscaler(){
   if(_upscalerLoadPromise) return _upscalerLoadPromise;
   _upscalerLoadPromise = new Promise((resolve, reject)=>{
     const modelScript = document.createElement('script');
-    modelScript.src = 'https://cdn.jsdelivr.net/npm/@upscalerjs/esrgan-slim@latest/dist/umd/2x.min.js';
+    modelScript.src = 'https://cdn.jsdelivr.net/npm/@upscalerjs/esrgan-slim@1.0.0-beta.12/dist/umd/2x.min.js';
     modelScript.onload = ()=>{
       const upscalerScript = document.createElement('script');
-      upscalerScript.src = 'https://cdn.jsdelivr.net/npm/upscaler@latest/dist/browser/umd/upscaler.min.js';
+      upscalerScript.src = 'https://cdn.jsdelivr.net/npm/upscaler@1.0.0-beta.12/dist/browser/umd/upscaler.min.js';
       upscalerScript.onload = ()=>{
         try{
+          // Defensive check: if the model global didn't come through as a
+          // real model object, fail loudly here instead of letting
+          // UpscalerJS silently substitute its own (broken) internal default.
+          if(typeof ESRGANSlim2x === 'undefined' || !ESRGANSlim2x){
+            reject(new Error('The AI model script loaded, but the expected model object was missing.'));
+            return;
+          }
           _upscaler = new Upscaler({ model: ESRGANSlim2x });
           resolve(_upscaler);
         }catch(err){ reject(err); }
