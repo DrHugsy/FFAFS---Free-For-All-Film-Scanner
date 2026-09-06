@@ -1047,8 +1047,10 @@ function unsharpMask(imgData, w, h, amount){
 // ---------- AI quality enhancement (client-side, only when the toggle is on) ----------
 // Uses Transformers.js — Hugging Face's own official library, actively
 // maintained, not a small beta community package like the ones that
-// failed before — with a real trained super-resolution GAN model
-// (APISR). It's loaded as a proper ES module straight from the CDN, and
+// failed before — with Swin2SR, a real trained super-resolution model
+// specifically meant for real-world photos (not anime/illustration, which
+// is what an earlier attempt with a different model got wrong). It's
+// loaded as a proper ES module straight from the CDN, and
 // the library resolves and fetches the actual model files itself, so
 // there is no CDN file path or global variable name to guess here, which
 // is exactly the point that broke every earlier attempt.
@@ -1066,7 +1068,7 @@ async function getUpscalerPipeline(){
   if(_upscalerPipeline) return _upscalerPipeline;
   const { pipeline } = await loadTransformersJS();
   try{
-    _upscalerPipeline = await pipeline('image-to-image', 'Xenova/2x_APISR_RRDB_GAN_generator-onnx', { quantized: false });
+    _upscalerPipeline = await pipeline('image-to-image', 'Xenova/swin2SR-lightweight-x2-64', { dtype: 'fp32' });
   }catch(err){
     throw new Error('[AI model] Could not download/initialize the super-resolution model: '+err.message);
   }
