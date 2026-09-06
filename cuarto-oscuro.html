@@ -1075,7 +1075,23 @@ async function getUpscalerPipeline(){
 
 async function enhanceWithAI(it){
   const upscaler = await getUpscalerPipeline();
-  const dataUrl = it.processedCanvas.toDataURL('image/png');
+
+  // This model is trained on small image patches — feeding it a full-size
+  // photo is both very slow and can overflow its internal calculations.
+  // Shrink it down first so the AI only has to work on a small image;
+  // the model then upscales that back up 2x.
+  const maxSide = 480;
+  const srcCanvas = it.processedCanvas;
+  const scale = Math.min(1, maxSide / Math.max(srcCanvas.width, srcCanvas.height));
+  let inputCanvas = srcCanvas;
+  if(scale < 1){
+    inputCanvas = document.createElement('canvas');
+    inputCanvas.width = Math.round(srcCanvas.width*scale);
+    inputCanvas.height = Math.round(srcCanvas.height*scale);
+    inputCanvas.getContext('2d').drawImage(srcCanvas, 0, 0, inputCanvas.width, inputCanvas.height);
+  }
+  const dataUrl = inputCanvas.toDataURL('image/png');
+
   let output;
   try{
     output = await upscaler(dataUrl);
