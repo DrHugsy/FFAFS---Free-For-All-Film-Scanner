@@ -318,7 +318,7 @@
           <span class="step-num">5 — AI ENHANCE</span>
           <div class="checkbox-row">
             <input type="checkbox" id="aiEnhance">
-            <label for="aiEnhance"><strong>Improve quality with AI</strong> — slower, downloads a small model the first time</label>
+            <label for="aiEnhance"><strong>Improve quality with AI</strong> — slower, downloads a real AI model the first time (can take a bit)</label>
           </div>
         </div>
 
@@ -1045,89 +1045,57 @@ function unsharpMask(imgData, w, h, amount){
 }
 
 // ---------- AI quality enhancement (client-side, only when the toggle is on) ----------
-// Uses TensorFlow.js's own core, official APIs — no third-party pretrained
-// model package. After three failed attempts loading a beta community
-// model (@upscalerjs/esrgan-slim) whose CDN files couldn't be verified to
-// actually exist, this switches to something that only depends on
-// TensorFlow.js itself (extremely stable, single well-known script) doing
-// real GPU tensor work: it upscales the photo 2x and runs a convolution
-// (sharpening) pass on the GPU via WebGL. It is not a trained neural
-// network — there's no learned model file involved — but it is genuinely
-// TensorFlow.js doing the processing, loaded lazily and only when the
-// toggle is on, exactly like the model-based approach was meant to.
-let _tfjsLoadPromise = null;
+// Uses Transformers.js — Hugging Face's own official library, actively
+// maintained, not a small beta community package like the ones that
+// failed before — with a real trained super-resolution GAN model
+// (APISR). It's loaded as a proper ES module straight from the CDN, and
+// the library resolves and fetches the actual model files itself, so
+// there is no CDN file path or global variable name to guess here, which
+// is exactly the point that broke every earlier attempt.
+let _transformersLoadPromise = null;
+let _upscalerPipeline = null;
 
-// Loads a <script src="..."> and resolves/rejects with a stage label attached,
-// so a failure says exactly which piece didn't load.
-function loadScript(url, stageLabel){
-  return new Promise((resolve, reject)=>{
-    const s = document.createElement('script');
-    s.src = url;
-    s.onload = resolve;
-    s.onerror = ()=> reject(new Error('['+stageLabel+'] Could not load '+url));
-    document.head.appendChild(s);
-  });
+function loadTransformersJS(){
+  if(_transformersLoadPromise) return _transformersLoadPromise;
+  _transformersLoadPromise = import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.2.0')
+    .catch(err=>{ throw new Error('[Transformers.js] Could not load the library: '+err.message); });
+  return _transformersLoadPromise;
 }
 
-// Tries a list of CDN URLs in order for the same file; only moves to the
-// next one if the previous one actually failed to load.
-async function loadScriptWithFallback(urls, stageLabel){
-  let lastErr;
-  for(const url of urls){
-    try{ await loadScript(url, stageLabel); return; }
-    catch(err){ lastErr = err; }
+async function getUpscalerPipeline(){
+  if(_upscalerPipeline) return _upscalerPipeline;
+  const { pipeline } = await loadTransformersJS();
+  try{
+    _upscalerPipeline = await pipeline('image-to-image', 'Xenova/2x_APISR_RRDB_GAN_generator-onnx', { quantized: false });
+  }catch(err){
+    throw new Error('[AI model] Could not download/initialize the super-resolution model: '+err.message);
   }
-  throw lastErr;
-}
-
-function loadTFJS(){
-  if(_tfjsLoadPromise) return _tfjsLoadPromise;
-  _tfjsLoadPromise = (async ()=>{
-    if(typeof tf === 'undefined'){
-      await loadScriptWithFallback([
-        'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.11.0/dist/tf.min.js',
-        'https://unpkg.com/@tensorflow/tfjs@4.11.0/dist/tf.min.js',
-      ], 'TensorFlow.js');
-    }
-    if(typeof tf === 'undefined'){
-      throw new Error('[TensorFlow.js] Script loaded but the global "tf" object never appeared.');
-    }
-  })();
-  return _tfjsLoadPromise;
+  return _upscalerPipeline;
 }
 
 async function enhanceWithAI(it){
-  await loadTFJS();
-  const srcCanvas = it.processedCanvas;
-  const outW = srcCanvas.width*2, outH = srcCanvas.height*2;
+  const upscaler = await getUpscalerPipeline();
+  const dataUrl = it.processedCanvas.toDataURL('image/png');
+  let output;
+  try{
+    output = await upscaler(dataUrl);
+  }catch(err){
+    throw new Error('[AI inference] The model loaded, but failed while processing this photo: '+err.message);
+  }
+  const { data, width, height, channels } = output;
+  let rgba;
+  if(channels === 4){
+    rgba = new Uint8ClampedArray(data);
+  } else {
+    rgba = new Uint8ClampedArray(width*height*4);
+    for(let i=0, j=0; i<data.length; i+=channels, j+=4){
+      rgba[j]=data[i]; rgba[j+1]=data[i+1]; rgba[j+2]=data[i+2]; rgba[j+3]=255;
+    }
+  }
+  const imgData = new ImageData(rgba, width, height);
   const outCanvas = document.createElement('canvas');
-  outCanvas.width = outW; outCanvas.height = outH;
-
-  const resultTensor = tf.tidy(()=>{
-    const img = tf.browser.fromPixels(srcCanvas).toFloat();           // [h,w,3]
-    let up = tf.image.resizeBilinear(img.expandDims(0), [outH, outW], true); // [1,outH,outW,3]
-
-    // "Clarity"-style local contrast boost: blur widely to get the
-    // low-frequency version, subtract it to isolate the mid-size detail
-    // (this is what shows up on skin/skies, not just hard edges), then add
-    // that detail back in, amplified.
-    const blurred = tf.avgPool(up, [9,9], [1,1], 'same');
-    const clarityDetail = up.sub(blurred);
-    up = up.add(clarityDetail.mul(1.3));
-
-    // Fine edge sharpen on top (same kernel used elsewhere in this app),
-    // run as a GPU convolution instead of a per-pixel JS loop.
-    const kernelData = [0,-1,0, -1,5,-1, 0,-1,0];
-    const base = tf.tensor4d(kernelData, [3,3,1,1]);
-    const filter = base.tile([1,1,3,1]);                              // [3,3,3,1]
-    const sharpened = tf.depthwiseConv2d(up, filter, 1, 'same');
-    const blended = up.add(sharpened.sub(up).mul(0.6));
-
-    return blended.clipByValue(0,255).toInt().squeeze([0]);
-  });
-
-  await tf.browser.toPixels(resultTensor, outCanvas);
-  resultTensor.dispose();
+  outCanvas.width = width; outCanvas.height = height;
+  outCanvas.getContext('2d').putImageData(imgData, 0, 0);
   it.processedCanvas = outCanvas;
 }
 
