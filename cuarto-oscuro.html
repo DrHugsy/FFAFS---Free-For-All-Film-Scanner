@@ -571,15 +571,10 @@ function saveSettings(){
 
 // ---------- window control buttons (Windows XP style, actually functional) ----------
 document.getElementById('btnMin').addEventListener('click', ()=>{
-  document.querySelector('.layout').classList.toggle('win-minimized');
-  document.querySelector('.site-footer').classList.toggle('win-minimized');
+  document.exitFullscreen?.().catch(()=>{});
 });
 document.getElementById('btnMax').addEventListener('click', ()=>{
-  if(!document.fullscreenElement){
-    document.documentElement.requestFullscreen?.().catch(()=>{});
-  } else {
-    document.exitFullscreen?.().catch(()=>{});
-  }
+  document.documentElement.requestFullscreen?.().catch(()=>{});
 });
 
 // ---------- stage: original view with draggable corners ----------
@@ -1054,46 +1049,81 @@ function unsharpMask(imgData, w, h, amount){
 // someone actually turns the toggle on) so it never costs anything for
 // people who don't use it.
 //
-// IMPORTANT: versions are pinned on purpose (not @latest), and this exact
-// pairing (esrgan-slim@1.0.0-beta.12 with upscaler@1.0.0-beta.19 — NOT the
-// same version number on both) is confirmed working together in a real
-// published app's package.json, found by checking actual registry data
-// instead of guessing. Bump both together if you ever change one.
+// IMPORTANT: versions are pinned on purpose (not @latest). This exact set
+// (tfjs ~4.11.0 + esrgan-slim@1.0.0-beta.12 + upscaler@1.0.0-beta.19) is
+// confirmed working together in a real deployed app's package.json, found
+// by checking actual registry/deployment data instead of guessing.
+// Previous attempts here missed that @tensorflow/tfjs is a PEER dependency
+// of both other packages — it is never bundled inside them, so it has to
+// be loaded as its own separate script, first, before the other two.
+// Bump all three together if you ever change one.
 let _upscaler = null;
 let _upscalerLoadPromise = null;
+
+// Loads a <script src="..."> and resolves/rejects with a stage label attached,
+// so a failure says exactly which piece didn't load.
+function loadScript(url, stageLabel){
+  return new Promise((resolve, reject)=>{
+    const s = document.createElement('script');
+    s.src = url;
+    s.onload = resolve;
+    s.onerror = ()=> reject(new Error('['+stageLabel+'] Could not load '+url));
+    document.head.appendChild(s);
+  });
+}
+
+// Tries a list of CDN URLs in order for the same file; only moves to the
+// next one if the previous one actually failed to load.
+async function loadScriptWithFallback(urls, stageLabel){
+  let lastErr;
+  for(const url of urls){
+    try{ await loadScript(url, stageLabel); return; }
+    catch(err){ lastErr = err; }
+  }
+  throw lastErr;
+}
+
 function loadUpscaler(){
   if(_upscalerLoadPromise) return _upscalerLoadPromise;
-  _upscalerLoadPromise = new Promise((resolve, reject)=>{
-    const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@upscalerjs/esrgan-slim@1.0.0-beta.12/dist/umd/index.min.js';
-    const CORE_URL = 'https://cdn.jsdelivr.net/npm/upscaler@1.0.0-beta.19/dist/browser/umd/upscaler.min.js';
+  _upscalerLoadPromise = (async ()=>{
+    // 1) TensorFlow.js core — needed by both packages below, loaded first.
+    if(typeof tf === 'undefined'){
+      await loadScriptWithFallback([
+        'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.11.0/dist/tf.min.js',
+        'https://unpkg.com/@tensorflow/tfjs@4.11.0/dist/tf.min.js',
+      ], 'TensorFlow.js');
+    }
+    if(typeof tf === 'undefined'){
+      throw new Error('[TensorFlow.js] Script loaded but the global "tf" object never appeared.');
+    }
 
-    const modelScript = document.createElement('script');
-    modelScript.src = MODEL_URL;
-    modelScript.onload = ()=>{
-      const upscalerScript = document.createElement('script');
-      upscalerScript.src = CORE_URL;
-      upscalerScript.onload = ()=>{
-        try{
-          // The exact global name this beta bundle exposes isn't 100%
-          // documented, so check the plausible candidates instead of
-          // betting everything on one guessed name.
-          const candidate = (typeof ESRGANSlim2x !== 'undefined' && ESRGANSlim2x)
-            || (typeof ESRGANSlim !== 'undefined' && ESRGANSlim && (ESRGANSlim.x2 || ESRGANSlim['2x'] || ESRGANSlim))
-            || null;
-          if(!candidate){
-            reject(new Error('The AI model script loaded from '+MODEL_URL+', but no recognizable model object (ESRGANSlim2x / ESRGANSlim) was found on the page.'));
-            return;
-          }
-          _upscaler = new Upscaler({ model: candidate });
-          resolve(_upscaler);
-        }catch(err){ reject(err); }
-      };
-      upscalerScript.onerror = ()=> reject(new Error('Could not load the AI enhancement library from '+CORE_URL));
-      document.head.appendChild(upscalerScript);
-    };
-    modelScript.onerror = ()=> reject(new Error('Could not load the AI enhancement model from '+MODEL_URL));
-    document.head.appendChild(modelScript);
-  });
+    // 2) The ESRGAN model itself.
+    await loadScriptWithFallback([
+      'https://cdn.jsdelivr.net/npm/@upscalerjs/esrgan-slim@1.0.0-beta.12/dist/umd/index.min.js',
+      'https://unpkg.com/@upscalerjs/esrgan-slim@1.0.0-beta.12/dist/umd/index.min.js',
+    ], 'ESRGAN model');
+
+    // The exact global name isn't 100% documented, so check the plausible
+    // candidates instead of betting everything on one guessed name.
+    const candidate = (typeof ESRGANSlim2x !== 'undefined' && ESRGANSlim2x)
+      || (typeof ESRGANSlim !== 'undefined' && ESRGANSlim && (ESRGANSlim.x2 || ESRGANSlim['2x'] || ESRGANSlim))
+      || null;
+    if(!candidate){
+      throw new Error('[ESRGAN model] Script loaded, but no recognizable model object (ESRGANSlim2x / ESRGANSlim) was found on the page.');
+    }
+
+    // 3) UpscalerJS itself, which ties TensorFlow.js and the model together.
+    await loadScriptWithFallback([
+      'https://cdn.jsdelivr.net/npm/upscaler@1.0.0-beta.19/dist/browser/umd/upscaler.min.js',
+      'https://unpkg.com/upscaler@1.0.0-beta.19/dist/browser/umd/upscaler.min.js',
+    ], 'UpscalerJS');
+    if(typeof Upscaler === 'undefined'){
+      throw new Error('[UpscalerJS] Script loaded but the global "Upscaler" object never appeared.');
+    }
+
+    _upscaler = new Upscaler({ model: candidate });
+    return _upscaler;
+  })();
   return _upscalerLoadPromise;
 }
 
