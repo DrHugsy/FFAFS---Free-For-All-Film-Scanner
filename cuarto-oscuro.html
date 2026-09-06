@@ -48,9 +48,12 @@
   .win-title .capbtns{ display:flex; gap:3px; }
   .win-title .capbtns span{
     width:19px; height:17px; border-radius:3px; display:inline-flex; align-items:center; justify-content:center;
-    font-size:11px; font-weight:bold; color:#5A3A00; text-shadow:none;
-    background:linear-gradient(180deg,#FFDA8C,#E8A33D 55%,#C9720A); border:1px solid #7A4A05;
+    font-size:11px; font-weight:bold; color:#333333; text-shadow:none; cursor:pointer;
+    background:linear-gradient(180deg,#FFFFFF 0%,#ECECEC 45%,#D9D9D9 55%,#C4C4C4 100%); border:1px solid #7A7A7A;
   }
+  .win-title .capbtns span:hover{ background:linear-gradient(180deg,#FFFFFF 0%,#EAF2FF 45%,#D6E6FF 55%,#BFDAFF 100%); border-color:#316AC5; }
+  .win-title .capbtns span:active{ background:linear-gradient(180deg,#C4C4C4,#D9D9D9); }
+  .layout.win-minimized, .site-footer.win-minimized{ display:none; }
   .win-body{ padding:10px; }
 
   a.linklike{ color:#00298A; text-decoration:underline; cursor:pointer; }
@@ -200,7 +203,11 @@
   <div class="win top-titlebar">
     <div class="win-title">
       <span>FFAFS — Free For All Film Scanner</span>
-      <div class="capbtns"><span>_</span><span>□</span><span>×</span></div>
+      <div class="capbtns">
+        <span id="btnMin" title="Minimize">_</span>
+        <span id="btnMax" title="Fullscreen">&#9633;</span>
+        <span id="btnClose" title="Close">&#215;</span>
+      </div>
     </div>
   </div>
 
@@ -292,6 +299,10 @@
             <label>Grain reduction <span class="val" id="v-grain">25</span></label>
             <input type="range" id="grain" min="0" max="100" value="25">
           </div>
+          <div class="checkbox-row">
+            <input type="checkbox" id="aiEnhance">
+            <label for="aiEnhance">Improve quality with AI (slower — downloads a small model the first time)</label>
+          </div>
         </div>
 
         <hr>
@@ -352,11 +363,12 @@ const els = {
   sharpen: document.getElementById('sharpen'),
   despeckle: document.getElementById('despeckle'),
   grain: document.getElementById('grain'),
+  aiEnhance: document.getElementById('aiEnhance'),
   isNegative: document.getElementById('isNegative'),
 };
 
 function defaultSettings(){
-  return { brightness:0, contrast:0, saturation:0, sharpen:30, despeckle:15, grain:25, isNegative:true };
+  return { brightness:0, contrast:0, saturation:0, sharpen:30, despeckle:15, grain:25, aiEnhance:false, isNegative:true };
 }
 
 // ---------- file loading ----------
@@ -385,7 +397,7 @@ async function handleFiles(fileList){
       loadingFiles.push(file.name); renderFilmstrip();
       try{
         const {canvas,w,h} = await decodeRawFile(file);
-        addItem(file.name, canvas, w, h);
+        await addItem(file.name, canvas, w, h);
       }catch(err){
         console.error(err);
         alert(
@@ -399,13 +411,16 @@ async function handleFiles(fileList){
       loadingFiles = loadingFiles.filter(n=>n!==file.name);
       renderFilmstrip();
     } else if(file.type.startsWith('image/') || ['jpg','jpeg','png','webp'].includes(ext)){
+      loadingFiles.push(file.name); renderFilmstrip();
       await new Promise(resolve=>{
         const url = URL.createObjectURL(file);
         const img = new Image();
-        img.onload = ()=>{ addItem(file.name, img, img.naturalWidth, img.naturalHeight); resolve(); };
+        img.onload = async ()=>{ await addItem(file.name, img, img.naturalWidth, img.naturalHeight); resolve(); };
         img.onerror = ()=>{ alert('Could not open "'+file.name+'".'); resolve(); };
         img.src = url;
       });
+      loadingFiles = loadingFiles.filter(n=>n!==file.name);
+      renderFilmstrip();
     }
   }
 }
@@ -418,7 +433,7 @@ function makeThumb(source, w, h){
   return c.toDataURL('image/jpeg', 0.75);
 }
 
-function addItem(name, source, w, h){
+async function addItem(name, source, w, h){
   const id = 'f'+Math.random().toString(36).slice(2,9);
   const inset = 0.06;
   const corners = [
@@ -431,7 +446,7 @@ function addItem(name, source, w, h){
     id, name, img:source, natW:w, natH:h, corners,
     processedCanvas:null, settings:defaultSettings(), thumbSrc: makeThumb(source, w, h)
   };
-  autoDetectCrop(item); // tries to crop it automatically; keeps the default crop above if it can't
+  await autoDetectCrop(item); // tries to crop it automatically; keeps the default crop above if it can't
   items.push(item);
   renderFilmstrip();
   selectItem(id); // newly uploaded photo becomes the one you're editing
@@ -504,7 +519,8 @@ function selectItem(id){
   const it = items.find(i=>i.id===id);
   els.brightness.value=it.settings.brightness; els.contrast.value=it.settings.contrast;
   els.saturation.value=it.settings.saturation; els.sharpen.value=it.settings.sharpen;
-  els.despeckle.value=it.settings.despeckle; els.grain.value=it.settings.grain; els.isNegative.checked=it.settings.isNegative;
+  els.despeckle.value=it.settings.despeckle; els.grain.value=it.settings.grain;
+  els.aiEnhance.checked=it.settings.aiEnhance; els.isNegative.checked=it.settings.isNegative;
   updateValLabels();
   document.getElementById('downloadOne').disabled = !it.processedCanvas;
   renderFilmstrip();
@@ -525,14 +541,37 @@ function updateValLabels(){
   s.addEventListener('input', ()=>{ updateValLabels(); saveSettings(); });
 });
 els.isNegative.addEventListener('change', saveSettings);
+els.aiEnhance.addEventListener('change', saveSettings);
 function saveSettings(){
   const it = currentItem(); if(!it) return;
   it.settings = {
     brightness:+els.brightness.value, contrast:+els.contrast.value,
     saturation:+els.saturation.value, sharpen:+els.sharpen.value,
-    despeckle:+els.despeckle.value, grain:+els.grain.value, isNegative:els.isNegative.checked
+    despeckle:+els.despeckle.value, grain:+els.grain.value,
+    aiEnhance:els.aiEnhance.checked, isNegative:els.isNegative.checked
   };
 }
+
+// ---------- window control buttons (Windows XP style, actually functional) ----------
+document.getElementById('btnMin').addEventListener('click', ()=>{
+  document.querySelector('.layout').classList.toggle('win-minimized');
+  document.querySelector('.site-footer').classList.toggle('win-minimized');
+});
+document.getElementById('btnMax').addEventListener('click', ()=>{
+  if(!document.fullscreenElement){
+    document.documentElement.requestFullscreen?.().catch(()=>{});
+  } else {
+    document.exitFullscreen?.().catch(()=>{});
+  }
+});
+document.getElementById('btnClose').addEventListener('click', ()=>{
+  window.close();
+  // if we're still here after a moment, the browser blocked it (it only allows
+  // closing tabs that a script itself opened) — let the person know why.
+  setTimeout(()=>{
+    alert("Your browser won't let a page close its own tab unless it was opened by a script — that's a security rule, not a bug here. You can close this tab yourself (Ctrl+W, or swipe it away on mobile).");
+  }, 300);
+});
 
 // ---------- stage: original view with draggable corners ----------
 let stageCanvas, stageCtx;
@@ -632,12 +671,104 @@ document.getElementById('resetCorners').addEventListener('click', ()=>{
 });
 
 // ---------- auto crop ----------
+
+// ---- primary method: real edge/contour detection via OpenCV.js ----
+// Same idea used by phone "scan a document" apps: find edges, find the
+// contours they form, keep the ones that approximate a 4-sided shape, and
+// pick the largest one. Unlike the heuristic below, this can find a
+// slightly rotated negative too, not just a straight rectangle.
+let _cvReadyPromise = null;
+function loadOpenCV(){
+  if(_cvReadyPromise) return _cvReadyPromise;
+  _cvReadyPromise = new Promise((resolve, reject)=>{
+    if(window.cv && window.cv.Mat){ resolve(); return; }
+    const script = document.createElement('script');
+    script.src = 'https://docs.opencv.org/4.10.0/opencv.js';
+    script.async = true;
+    script.onload = ()=>{
+      if(window.cv && window.cv.Mat) resolve();
+      else window.cv['onRuntimeInitialized'] = resolve;
+    };
+    script.onerror = ()=> reject(new Error('Could not load the crop-detection library.'));
+    document.head.appendChild(script);
+  });
+  return _cvReadyPromise;
+}
+
+// Puts 4 arbitrary [x,y] points in [top-left, top-right, bottom-right, bottom-left] order
+function orderQuadPoints(pts){
+  const bySum = [...pts].sort((a,b)=> (a[0]+a[1]) - (b[0]+b[1]));
+  const tl = bySum[0], br = bySum[3];
+  const rest = [bySum[1], bySum[2]].sort((a,b)=> (a[0]-a[1]) - (b[0]-b[1]));
+  const bl = rest[0], tr = rest[1];
+  return [tl, tr, br, bl];
+}
+
+async function autoDetectCropCV(it){
+  await loadOpenCV();
+  const maxSide = 800;
+  const scale = Math.min(1, maxSide / Math.max(it.natW, it.natH));
+  const sw = Math.max(1, Math.round(it.natW*scale)), sh = Math.max(1, Math.round(it.natH*scale));
+
+  const tmp = document.createElement('canvas');
+  tmp.width = sw; tmp.height = sh;
+  tmp.getContext('2d').drawImage(it.img, 0, 0, sw, sh);
+
+  const src = cv.imread(tmp);
+  const gray = new cv.Mat(), blurred = new cv.Mat(), edges = new cv.Mat(), dilated = new cv.Mat();
+  const kernel = cv.Mat.ones(3, 3, cv.CV_8U);
+  const contours = new cv.MatVector();
+  const hierarchy = new cv.Mat();
+  let bestApprox = null;
+
+  try{
+    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+    cv.GaussianBlur(gray, blurred, new cv.Size(5,5), 0);
+    cv.Canny(blurred, edges, 40, 120);
+    cv.dilate(edges, dilated, kernel);
+    cv.findContours(dilated, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+
+    const imgArea = sw*sh;
+    let bestArea = 0;
+    for(let i=0; i<contours.size(); i++){
+      const cnt = contours.get(i);
+      const peri = cv.arcLength(cnt, true);
+      const approx = new cv.Mat();
+      cv.approxPolyDP(cnt, approx, 0.02*peri, true);
+      const area = Math.abs(cv.contourArea(approx));
+      if(approx.rows===4 && area > imgArea*0.15 && area > bestArea){
+        bestArea = area;
+        if(bestApprox) bestApprox.delete();
+        bestApprox = approx;
+      } else {
+        approx.delete();
+      }
+      cnt.delete();
+    }
+
+    if(!bestApprox) return null;
+
+    const pts = [];
+    for(let i=0; i<4; i++){
+      pts.push([ bestApprox.data32S[i*2] / scale, bestApprox.data32S[i*2+1] / scale ]);
+    }
+    return orderQuadPoints(pts);
+  } finally {
+    src.delete(); gray.delete(); blurred.delete(); edges.delete(); dilated.delete();
+    kernel.delete(); contours.delete(); hierarchy.delete();
+    if(bestApprox) bestApprox.delete();
+  }
+}
+
+// ---- fallback method: the original row/column "activity" heuristic ----
+// Used only if OpenCV.js fails to load (e.g. no internet to the CDN) or
+// doesn't find a clean 4-sided shape for this particular photo.
 // Idea: the background (lightbox or negative edge) tends to be fairly flat
 // (little variation between neighboring pixels), while the actual photo has
 // a lot of "activity" (edges, texture, detail). We scan row by row and
 // column by column to find where that activity starts, to locate the
 // image's real frame.
-function autoDetectCrop(it){
+function autoDetectCropHeuristic(it){
   const maxSide = 500; // analyzed at low res, plenty for this and fast
   const scale = Math.min(1, maxSide / Math.max(it.natW, it.natH));
   const sw = Math.max(1, Math.round(it.natW*scale)), sh = Math.max(1, Math.round(it.natH*scale));
@@ -713,9 +844,23 @@ function autoDetectCrop(it){
   return true;
 }
 
-document.getElementById('autoCrop').addEventListener('click', ()=>{
+// ---- wrapper: try the real detector first, fall back to the heuristic ----
+async function autoDetectCrop(it){
+  try{
+    const quad = await autoDetectCropCV(it);
+    if(quad){ it.corners = quad; return true; }
+  }catch(err){
+    console.warn('OpenCV crop detection unavailable, falling back to the heuristic:', err);
+  }
+  return autoDetectCropHeuristic(it);
+}
+
+document.getElementById('autoCrop').addEventListener('click', async ()=>{
   const it = currentItem(); if(!it) return;
-  const ok = autoDetectCrop(it);
+  const btn = document.getElementById('autoCrop');
+  btn.disabled = true; const prevText = btn.textContent; btn.textContent = 'Detecting…';
+  const ok = await autoDetectCrop(it);
+  btn.disabled = false; btn.textContent = prevText;
   drawStage();
   if(!ok){
     alert('Could not auto-detect the crop for this photo. Adjust the corners by hand instead.');
@@ -895,7 +1040,56 @@ function unsharpMask(imgData, w, h, amount){
   return imgData;
 }
 
-function processItem(it){
+// ---------- optional AI quality enhancement (client-side, only when the toggle is on) ----------
+// Uses UpscalerJS with a small/fast ESRGAN model, loaded lazily (only once
+// someone actually turns the toggle on) so it never costs anything for
+// people who don't use it.
+let _upscaler = null;
+let _upscalerLoadPromise = null;
+function loadUpscaler(){
+  if(_upscalerLoadPromise) return _upscalerLoadPromise;
+  _upscalerLoadPromise = new Promise((resolve, reject)=>{
+    const modelScript = document.createElement('script');
+    modelScript.src = 'https://cdn.jsdelivr.net/npm/@upscalerjs/esrgan-slim@latest/dist/umd/2x.min.js';
+    modelScript.onload = ()=>{
+      const upscalerScript = document.createElement('script');
+      upscalerScript.src = 'https://cdn.jsdelivr.net/npm/upscaler@latest/dist/browser/umd/upscaler.min.js';
+      upscalerScript.onload = ()=>{
+        try{
+          _upscaler = new Upscaler({ model: ESRGANSlim2x });
+          resolve(_upscaler);
+        }catch(err){ reject(err); }
+      };
+      upscalerScript.onerror = ()=> reject(new Error('Could not load the AI enhancement library.'));
+      document.head.appendChild(upscalerScript);
+    };
+    modelScript.onerror = ()=> reject(new Error('Could not load the AI enhancement model.'));
+    document.head.appendChild(modelScript);
+  });
+  return _upscalerLoadPromise;
+}
+
+function loadImage(src){
+  return new Promise((resolve, reject)=>{
+    const img = new Image();
+    img.onload = ()=>resolve(img);
+    img.onerror = ()=>reject(new Error('Could not load the image.'));
+    img.src = src;
+  });
+}
+
+async function enhanceWithAI(it){
+  const upscaler = await loadUpscaler();
+  const srcImg = await loadImage(it.processedCanvas.toDataURL('image/png'));
+  const resultDataUrl = await upscaler.upscale(srcImg);
+  const resultImg = await loadImage(resultDataUrl);
+  const c = document.createElement('canvas');
+  c.width = resultImg.naturalWidth; c.height = resultImg.naturalHeight;
+  c.getContext('2d').drawImage(resultImg, 0, 0);
+  it.processedCanvas = c;
+}
+
+async function processItem(it){
   const srcCanvas = document.createElement('canvas');
   srcCanvas.width=it.natW; srcCanvas.height=it.natH;
   const sctx = srcCanvas.getContext('2d');
@@ -922,17 +1116,34 @@ function processItem(it){
   out.width=outW; out.height=outH;
   out.getContext('2d').putImageData(warped,0,0);
   it.processedCanvas = out;
-  it.thumbSrc = makeThumb(out, outW, outH); // filmstrip thumbnail now shows the edited result
+
+  if(it.settings.aiEnhance){
+    try{
+      await enhanceWithAI(it);
+    }catch(err){
+      console.warn('AI enhancement failed, keeping the regular result:', err);
+      alert('AI quality enhancement didn\'t work this time, so this photo kept its regular result. Detail: '+(err&&err.message?err.message:err));
+    }
+  }
+
+  it.thumbSrc = makeThumb(it.processedCanvas, it.processedCanvas.width, it.processedCanvas.height); // filmstrip thumbnail now shows the edited result
 }
 
-document.getElementById('processOne').addEventListener('click', ()=>{
+document.getElementById('processOne').addEventListener('click', async ()=>{
   const it = currentItem(); if(!it) return;
   saveSettings();
-  processItem(it);
-  viewMode='processed'; drawStage();
-  document.getElementById('downloadOne').disabled=false;
-  document.getElementById('downloadAll').disabled = !items.some(i=>i.processedCanvas);
-  renderFilmstrip();
+  const btn = document.getElementById('processOne');
+  const prevText = btn.textContent;
+  btn.disabled = true; btn.textContent = it.settings.aiEnhance ? 'Enhancing…' : 'Processing…';
+  try{
+    await processItem(it);
+    viewMode='processed'; drawStage();
+    document.getElementById('downloadOne').disabled=false;
+    document.getElementById('downloadAll').disabled = !items.some(i=>i.processedCanvas);
+    renderFilmstrip();
+  } finally {
+    btn.disabled=false; btn.textContent=prevText;
+  }
 });
 
 document.getElementById('copyToAll').addEventListener('click', ()=>{
@@ -942,9 +1153,16 @@ document.getElementById('copyToAll').addEventListener('click', ()=>{
   alert('Settings copied to all '+items.length+' photos.');
 });
 
-document.getElementById('processAll').addEventListener('click', ()=>{
+document.getElementById('processAll').addEventListener('click', async ()=>{
   saveSettings();
-  items.forEach(it=> processItem(it));
+  const btn = document.getElementById('processAll');
+  const prevText = btn.textContent;
+  btn.disabled = true;
+  for(let i=0;i<items.length;i++){
+    btn.textContent = 'Processing '+(i+1)+'/'+items.length+'…';
+    await processItem(items[i]);
+  }
+  btn.textContent = prevText; btn.disabled = false;
   document.getElementById('downloadAll').disabled=false;
   document.getElementById('downloadOne').disabled=false;
   drawStage(); renderFilmstrip();
