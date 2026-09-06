@@ -172,17 +172,17 @@
 <svg class="bg-scene" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#4E86E0"/>
-      <stop offset="70%" stop-color="#9CC7F5"/>
-      <stop offset="100%" stop-color="#DCEEFB"/>
+      <stop id="sky-s1" offset="0%" stop-color="#3E76CE"/>
+      <stop id="sky-s2" offset="70%" stop-color="#8BB8E9"/>
+      <stop id="sky-s3" offset="100%" stop-color="#CCE0F0"/>
     </linearGradient>
     <linearGradient id="hillBack" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#5FAE55"/>
-      <stop offset="100%" stop-color="#3E8E3C"/>
+      <stop id="hb-s1" offset="0%" stop-color="#5FAE55"/>
+      <stop id="hb-s2" offset="100%" stop-color="#3E8E3C"/>
     </linearGradient>
     <linearGradient id="hillFront" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#7FCB68"/>
-      <stop offset="100%" stop-color="#57A63F"/>
+      <stop id="hf-s1" offset="0%" stop-color="#7FCB68"/>
+      <stop id="hf-s2" offset="100%" stop-color="#57A63F"/>
     </linearGradient>
   </defs>
   <rect x="0" y="0" width="100" height="100" fill="url(#sky)"/>
@@ -191,8 +191,8 @@
     <ellipse cx="72" cy="9" rx="7" ry="2.8"/><ellipse cx="77" cy="7.5" rx="5" ry="2.2"/><ellipse cx="67" cy="8" rx="4.5" ry="2"/>
     <ellipse cx="45" cy="20" rx="6" ry="2.4"/><ellipse cx="49" cy="18.5" rx="4.5" ry="2"/>
   </g>
-  <path d="M0,62 Q15,48 32,60 T65,58 T100,55 L100,100 L0,100 Z" fill="url(#hillBack)"/>
-  <path d="M0,78 Q20,62 40,76 T78,74 T100,70 L100,100 L0,100 Z" fill="url(#hillFront)"/>
+  <path id="hill-back" d="M0,62 Q15,48 32,60 T65,58 T100,55 L100,100 L0,100 Z" fill="url(#hillBack)"/>
+  <path id="hill-front" d="M0,78 Q20,62 40,76 T78,74 T100,70 L100,100 L0,100 Z" fill="url(#hillFront)"/>
 </svg>
 
 <div class="page">
@@ -231,7 +231,7 @@
     <div class="win">
       <div class="win-title"><span>Preview</span></div>
       <div class="stage-body" id="stage">
-        <div class="stage-empty" id="stageEmpty">Upload one or more negative photos above to get started.</div>
+        <div class="stage-empty" id="stageEmpty">Drag your first photo here, or use the box on the left, to get started.</div>
       </div>
     </div>
 
@@ -317,6 +317,20 @@
 </div>
 
 <script>
+// ---------- random background scene: different colors/sizes each visit ----------
+(function paintScene(){
+  const rand = (min,max)=> min + Math.random()*(max-min);
+
+  // colors stay fixed; only the hills' size/shape changes on each visit
+  // (sometimes small hills low on the screen, sometimes big ones covering more of it)
+  const bb=rand(50,68), ba=rand(6,20);
+  const fb=rand(70,86), fa=rand(6,20);
+  document.getElementById('hill-back').setAttribute('d',
+    `M0,${bb} Q15,${bb-ba} 32,${(bb+ba*0.6).toFixed(1)} T65,${(bb-ba*0.4).toFixed(1)} T100,${(bb-ba*0.7).toFixed(1)} L100,100 L0,100 Z`);
+  document.getElementById('hill-front').setAttribute('d',
+    `M0,${fb} Q20,${fb-fa} 40,${(fb+fa*0.5).toFixed(1)} T78,${(fb-fa*0.5).toFixed(1)} T100,${(fb-fa*0.8).toFixed(1)} L100,100 L0,100 Z`);
+})();
+
 // ---------- state ----------
 let items = [];      // {id,name,img,natW,natH,corners:[[x,y]x4],processedCanvas,settings,thumbSrc}
 let activeId = null;
@@ -354,6 +368,13 @@ els.filmstrip.addEventListener('drop', e=>{
   handleFiles(e.dataTransfer.files);
 });
 els.fileInput.addEventListener('change', e=>handleFiles(e.target.files));
+
+// Dropping directly on the preview area only works before the first photo —
+// after that, uploads go through the box on the left, as usual.
+els.stage.addEventListener('dragover', e=>{ if(items.length===0) e.preventDefault(); });
+els.stage.addEventListener('drop', e=>{
+  if(items.length===0){ e.preventDefault(); handleFiles(e.dataTransfer.files); }
+});
 
 const RAW_EXTS = ['cr3','cr2','crw','nef','arw','raf','rw2','orf','dng','pef','srw'];
 
