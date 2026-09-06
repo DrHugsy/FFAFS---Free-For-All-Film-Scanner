@@ -157,11 +157,22 @@
   }
   button:hover{ border-color:var(--accent); background:linear-gradient(180deg,#FFFFFF 0%, #EAF2FF 45%, #D6E6FF 55%, #BFDAFF 100%); }
   button:active{ background:linear-gradient(180deg,#C9C9C9,#DCDCDC); }
-  button.primary{ font-weight:bold; }
+  button.primary{
+    font-weight:bold;
+    background:linear-gradient(180deg,#EAF6FF 0%,#BFE0FA 45%,#8FC4EE 55%,#6FAEE0 100%);
+    border-color:#3E7BC4; color:#0A2A4A;
+  }
+  button.primary:hover{ background:linear-gradient(180deg,#F5FBFF 0%,#CFE9FF 45%,#A0D2FA 55%,#7FBAEE 100%); }
+  button.primary:active{ background:linear-gradient(180deg,#8FC4EE,#BFE0FA); }
   button:disabled{ opacity:.5; cursor:not-allowed; background:#DCDCDC; }
   .btn-row{ display:flex; flex-direction:column; gap:7px; }
   .checkbox-row{ display:flex; align-items:center; gap:7px; font-size:12px; color:var(--ink-dim); }
   input[type=file]{ display:none; }
+
+  .ai-step{
+    border:1px solid #7FB8EE; background:#EAF3FC; border-radius:4px; padding:8px 10px;
+  }
+  .ai-step .step-num{ color:#0F5FBF; }
 
   .site-footer{
     text-align:center; font-size:11px; color:#0F3AA8; padding:2px 0 8px;
@@ -206,6 +217,7 @@
       <div class="capbtns">
         <span id="btnMin" title="Minimize">_</span>
         <span id="btnMax" title="Fullscreen">&#9633;</span>
+        <span title="Close">&#215;</span>
       </div>
     </div>
   </div>
@@ -298,9 +310,15 @@
             <label>Grain reduction <span class="val" id="v-grain">25</span></label>
             <input type="range" id="grain" min="0" max="100" value="25">
           </div>
+        </div>
+
+        <hr>
+
+        <div class="group ai-step">
+          <span class="step-num">5 — AI ENHANCE</span>
           <div class="checkbox-row">
             <input type="checkbox" id="aiEnhance">
-            <label for="aiEnhance">Improve quality with AI (slower — downloads a small model the first time)</label>
+            <label for="aiEnhance"><strong>Improve quality with AI</strong> — slower, downloads a small model the first time</label>
           </div>
         </div>
 
@@ -1036,44 +1054,44 @@ function unsharpMask(imgData, w, h, amount){
 // someone actually turns the toggle on) so it never costs anything for
 // people who don't use it.
 //
-// IMPORTANT: both script versions are pinned on purpose (not @latest).
-// UpscalerJS ships the core library and each model as SEPARATE npm
-// packages that don't always move in lockstep — at the time this was
-// written, @upscalerjs/esrgan-slim had graduated to a stable 1.0.0 while
-// the core "upscaler" package was still on 1.0.0-beta.19. When the model
-// UpscalerJS receives doesn't match what that particular core version
-// expects, it doesn't error — it silently swaps in its own undocumented
-// internal default model instead (confirmed in the maintainer's own
-// GitHub discussion #30), which is what caused the confusing
-// "esrgan-slim-compact" error. Pinning both to the same beta generation
-// avoids that mismatch. If you ever bump one of these, bump both together.
+// IMPORTANT: versions are pinned on purpose (not @latest), and this exact
+// pairing (esrgan-slim@1.0.0-beta.12 with upscaler@1.0.0-beta.19 — NOT the
+// same version number on both) is confirmed working together in a real
+// published app's package.json, found by checking actual registry data
+// instead of guessing. Bump both together if you ever change one.
 let _upscaler = null;
 let _upscalerLoadPromise = null;
 function loadUpscaler(){
   if(_upscalerLoadPromise) return _upscalerLoadPromise;
   _upscalerLoadPromise = new Promise((resolve, reject)=>{
+    const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@upscalerjs/esrgan-slim@1.0.0-beta.12/dist/umd/index.min.js';
+    const CORE_URL = 'https://cdn.jsdelivr.net/npm/upscaler@1.0.0-beta.19/dist/browser/umd/upscaler.min.js';
+
     const modelScript = document.createElement('script');
-    modelScript.src = 'https://cdn.jsdelivr.net/npm/@upscalerjs/esrgan-slim@1.0.0-beta.12/dist/umd/2x.min.js';
+    modelScript.src = MODEL_URL;
     modelScript.onload = ()=>{
       const upscalerScript = document.createElement('script');
-      upscalerScript.src = 'https://cdn.jsdelivr.net/npm/upscaler@1.0.0-beta.12/dist/browser/umd/upscaler.min.js';
+      upscalerScript.src = CORE_URL;
       upscalerScript.onload = ()=>{
         try{
-          // Defensive check: if the model global didn't come through as a
-          // real model object, fail loudly here instead of letting
-          // UpscalerJS silently substitute its own (broken) internal default.
-          if(typeof ESRGANSlim2x === 'undefined' || !ESRGANSlim2x){
-            reject(new Error('The AI model script loaded, but the expected model object was missing.'));
+          // The exact global name this beta bundle exposes isn't 100%
+          // documented, so check the plausible candidates instead of
+          // betting everything on one guessed name.
+          const candidate = (typeof ESRGANSlim2x !== 'undefined' && ESRGANSlim2x)
+            || (typeof ESRGANSlim !== 'undefined' && ESRGANSlim && (ESRGANSlim.x2 || ESRGANSlim['2x'] || ESRGANSlim))
+            || null;
+          if(!candidate){
+            reject(new Error('The AI model script loaded from '+MODEL_URL+', but no recognizable model object (ESRGANSlim2x / ESRGANSlim) was found on the page.'));
             return;
           }
-          _upscaler = new Upscaler({ model: ESRGANSlim2x });
+          _upscaler = new Upscaler({ model: candidate });
           resolve(_upscaler);
         }catch(err){ reject(err); }
       };
-      upscalerScript.onerror = ()=> reject(new Error('Could not load the AI enhancement library.'));
+      upscalerScript.onerror = ()=> reject(new Error('Could not load the AI enhancement library from '+CORE_URL));
       document.head.appendChild(upscalerScript);
     };
-    modelScript.onerror = ()=> reject(new Error('Could not load the AI enhancement model.'));
+    modelScript.onerror = ()=> reject(new Error('Could not load the AI enhancement model from '+MODEL_URL));
     document.head.appendChild(modelScript);
   });
   return _upscalerLoadPromise;
