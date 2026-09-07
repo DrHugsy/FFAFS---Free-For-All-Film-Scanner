@@ -208,6 +208,11 @@
     z-index:1000; box-shadow:0 3px 10px rgba(0,0,0,.5); background:#000;
   }
   .loupe canvas{ display:block; image-rendering:pixelated; }
+
+  /* ---- frame navigation (prev/next) ---- */
+  .frame-nav{ display:flex; align-items:center; justify-content:center; gap:14px; font-size:11.5px; }
+  .frame-nav button{ min-width:80px; }
+  .frame-nav .frame-count{ font-weight:bold; font-variant-numeric:tabular-nums; min-width:50px; text-align:center; }
 </style>
 </head>
 <body>
@@ -261,7 +266,7 @@
 
   <div class="layout">
 
-    <div class="win">
+    <div class="win filmstrip-win">
       <div class="win-title"><span data-i18n="filmRoll">Film Roll</span></div>
       <div class="filmstrip-body" id="filmstrip">
         <div class="drop" id="drop">
@@ -283,15 +288,15 @@
       </div>
     </div>
 
-    <div class="win">
+    <div class="win stage-win">
       <div class="win-title"><span data-i18n="preview">Preview</span></div>
       <div class="stage-body" id="stage">
         <div class="stage-empty" id="stageEmpty" data-i18n="stageEmpty">Drag your first photo here, or use the box on the left, to get started.</div>
       </div>
     </div>
 
-    <div class="win">
-      <div class="win-title"><span data-i18n="controls">Controls</span></div>
+    <div class="win controls-win">
+      <div class="win-title"><span data-i18n="controls">Settings</span></div>
       <div class="controls-body" id="controls" style="display:none">
 
         <div class="group action-bar">
@@ -416,9 +421,10 @@ const I18N = {
     step4:'4 — RESTORATION', sharpen:'Sharpen', despeckle:'Remove dust / scratches', grain:'Grain reduction',
     wholeRoll:'FOR THE WHOLE ROLL', copyToAll:'Copy settings to all', processAll:'Process all',
     terms:'Terms of Service',
+    stagePrev:'‹ prev', stageNext:'next ›',
     original:'Original', result:'Result', stageHint:'Drag the 4 red dots to adjust the negative crop',
     decoding:'decoding', done:'DONE',
-    rawFailAlert:'Could not decode "{name}" (RAW).\\n\\nCheck that the server is running (its terminal window should be open, with no errors).\\n\\nIf the server is running and this keeps failing, plan B: convert it to JPG or TIFF with a free program (Canon Digital Photo Professional, RawTherapee, or darktable) and upload that instead.\\n\\nTechnical detail: {detail}',
+    rawFailAlert:'Could not decode "{name}" (RAW).\n\nCheck that the server is running (its terminal window should be open, with no errors).\n\nIf the server is running and this keeps failing, plan B: convert it to JPG or TIFF with a free program (Canon Digital Photo Professional, RawTherapee, or darktable) and upload that instead.\n\nTechnical detail: {detail}',
     openFailAlert:'Could not open "{name}".',
     autoCropFail:'Could not auto-detect the crop for this photo. Adjust the corners by hand instead.',
     processFirst:'Process this photo first.',
@@ -447,9 +453,10 @@ const I18N = {
     step4:'4 — RESTAURACIÓN', sharpen:'Nitidez', despeckle:'Quitar polvo / rayones', grain:'Reducción de grano',
     wholeRoll:'PARA TODO EL ROLLO', copyToAll:'Copiar ajustes a todas', processAll:'Procesar todas',
     terms:'Términos de servicio',
+    stagePrev:'‹ ant', stageNext:'sig ›',
     original:'Original', result:'Resultado', stageHint:'Arrastrá los 4 puntos rojos para ajustar el recorte del negativo',
     decoding:'decodificando', done:'LISTO',
-    rawFailAlert:'No pude decodificar "{name}" (RAW).\\n\\nRevisá que el servidor esté corriendo (su ventana de terminal debería estar abierta, sin errores).\\n\\nSi el servidor está corriendo y esto sigue fallando, plan B: convertila a JPG o TIFF con un programa gratis (Canon Digital Photo Professional, RawTherapee o darktable) y subí eso en su lugar.\\n\\nDetalle técnico: {detail}',
+    rawFailAlert:'No pude decodificar "{name}" (RAW).\n\nRevisá que el servidor esté corriendo (su ventana de terminal debería estar abierta, sin errores).\n\nSi el servidor está corriendo y esto sigue fallando, plan B: convertila a JPG o TIFF con un programa gratis (Canon Digital Photo Professional, RawTherapee o darktable) y subí eso en su lugar.\n\nDetalle técnico: {detail}',
     openFailAlert:'No pude abrir "{name}".',
     autoCropFail:'No pude detectar el recorte automáticamente para esta foto. Ajustá las esquinas a mano.',
     processFirst:'Procesá esta foto primero.',
@@ -699,6 +706,22 @@ document.getElementById('btnMax').addEventListener('click', ()=>{
   document.documentElement.requestFullscreen?.().catch(()=>{});
 });
 
+// A clean "‹ prev  3 / 12  next ›" row so switching frames doesn't require
+// hunting through the filmstrip thumbnails.
+function buildFrameNav(){
+  if(items.length < 2) return;
+  const idx = items.findIndex(i=>i.id===activeId);
+  const nav = document.createElement('div'); nav.className='frame-nav';
+  nav.innerHTML = `
+    <button id="framePrev" ${idx<=0?'disabled':''}>${t('stagePrev')}</button>
+    <span class="frame-count">${idx+1} / ${items.length}</span>
+    <button id="frameNext" ${idx>=items.length-1?'disabled':''}>${t('stageNext')}</button>
+  `;
+  els.stage.appendChild(nav);
+  document.getElementById('framePrev').onclick = ()=>{ if(idx>0) selectItem(items[idx-1].id); };
+  document.getElementById('frameNext').onclick = ()=>{ if(idx<items.length-1) selectItem(items[idx+1].id); };
+}
+
 // ---------- stage: original view with draggable corners ----------
 let stageCanvas, stageCtx;
 function buildStage(){
@@ -721,8 +744,8 @@ function buildStage(){
   const hint = document.createElement('div'); hint.className='stage-hint';
   hint.textContent = t('stageHint');
   els.stage.appendChild(hint);
-  els.stage.appendChild(hint);
 
+  buildFrameNav();
   drawStage();
 
   stageCanvas.addEventListener('pointerdown', onPointerDown);
