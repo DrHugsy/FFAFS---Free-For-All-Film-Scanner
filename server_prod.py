@@ -24,7 +24,7 @@ import rawpy
 from PIL import Image
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-HTML_FILE = "cuarto-oscuro.html"  # la herramienta es la página de inicio; no hay landing aparte
+HTML_FILE = "index.html"  # el hub Hugsy's es la página de inicio; FFAFS vive en cuarto-oscuro.html
 
 app = Flask(__name__, static_folder=None)
 
