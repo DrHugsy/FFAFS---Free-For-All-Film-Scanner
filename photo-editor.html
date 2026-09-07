@@ -3,22 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Terms of Service — Dr Iggy's</title>
+<title>Lite Photo Editor — Dr Iggy's</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='2' y='2' width='28' height='28' rx='4' fill='%234C2E9E'/%3E%3Ctext x='16' y='23' font-size='18' font-weight='bold' text-anchor='middle' fill='white' font-family='Tahoma,sans-serif'%3EI%3C/text%3E%3C/svg%3E">
 <style>
   :root{
+    --violet-1:#A88CF0; --violet-2:#7452D6; --violet-3:#4C2E9E;
     --titlebar-1:#3E7BEB; --titlebar-2:#1E4FC4; --titlebar-3:#0F3AA8;
     --window:#ECE9D8; --window-edge:#0A246A; --ink:#000000; --ink-dim:#4B4B4B;
-    --accent:#316AC5; --font:Tahoma, 'Segoe UI', Verdana, sans-serif;
+    --font:Tahoma, 'Segoe UI', Verdana, sans-serif;
   }
   *{ box-sizing:border-box; }
   html,body{ height:100%; background:#6E9DDD; }
   body{
-    margin:0; font-family:var(--font); font-size:13px; color:var(--ink);
-    min-height:100vh; padding:22px 14px 40px; position:relative;
+    margin:0; font-family:var(--font); font-size:12.5px; color:var(--ink);
+    min-height:100vh; padding:14px; position:relative;
   }
   .bg-scene{ position:fixed; inset:0; width:100%; height:100%; }
-  .wrap{ max-width:640px; margin:0 auto; position:relative; z-index:1; }
+
   .win{
     background:var(--window); border:2px solid var(--window-edge); border-radius:7px 7px 3px 3px;
     box-shadow:2px 3px 8px rgba(0,0,0,.4);
@@ -37,13 +38,29 @@
   }
   .win-title .capbtns span:hover{ background:linear-gradient(180deg,#FFFFFF 0%,#EAF2FF 45%,#D6E6FF 55%,#BFDAFF 100%); border-color:#316AC5; }
   .win-title .capbtns span:active{ background:linear-gradient(180deg,#C4C4C4,#D9D9D9); }
-  .win-body{ padding:20px 24px; }
-  h1{ font-size:18px; margin:0 0 4px; color:#0F3AA8; }
-  .updated{ font-size:11.5px; color:var(--ink-dim); margin:0 0 18px; }
-  h2{ font-size:13.5px; margin:18px 0 6px; }
-  p, li{ font-size:12.5px; line-height:1.55; }
-  a{ color:#0F3AA8; }
-  .back{ display:inline-block; margin-top:18px; font-size:12px; }
+
+  .dev-taskbar{
+    background:linear-gradient(180deg, var(--violet-1) 0%, var(--violet-2) 50%, var(--violet-3) 100%);
+    border:2px solid #2E1A66; border-radius:6px; padding:5px 12px;
+    display:flex; align-items:center; justify-content:space-between;
+    color:#fff; font-weight:bold; font-size:12px; text-shadow:1px 1px 1px rgba(0,0,0,.4);
+  }
+  .dev-taskbar .more-tools{
+    color:#fff; text-decoration:none; background:rgba(255,255,255,.18);
+    border:1px solid rgba(255,255,255,.5); border-radius:4px; padding:3px 10px; font-size:11.5px;
+  }
+  .dev-taskbar .more-tools:hover{ background:rgba(255,255,255,.32); }
+
+  .page{ max-width:640px; margin:0 auto; display:flex; flex-direction:column; gap:14px; position:relative; z-index:1; }
+
+  .win-body{ padding:34px 26px; text-align:center; }
+  .win-body .icon{ margin-bottom:14px; }
+  .win-body h1{ font-size:20px; margin:0 0 8px; color:#0F3AA8; }
+  .win-body p{ margin:0 0 4px; color:var(--ink-dim); font-size:12.5px; line-height:1.5; }
+  .tag{
+    display:inline-block; margin-top:14px; font-size:10px; font-weight:bold; letter-spacing:.5px;
+    color:#fff; background:#8B8B8B; border-radius:3px; padding:3px 10px;
+  }
 </style>
 </head>
 <body>
@@ -75,10 +92,16 @@
   <path d="M0,78 Q20,62 40,76 T78,74 T100,70 L100,100 L0,100 Z" fill="url(#hillFront)"/>
 </svg>
 
-<div class="wrap">
+<div class="page">
+
+  <div class="dev-taskbar">
+    <span>Dr Iggy's</span>
+    <a class="more-tools" href="index.html">&#8592; More Tools</a>
+  </div>
+
   <div class="win">
     <div class="win-title">
-      <span>Terms of Service</span>
+      <span>Lite Photo Editor</span>
       <div class="capbtns">
         <span id="btnMin" title="Minimize">_</span>
         <span id="btnMax" title="Fullscreen">&#9633;</span>
@@ -86,32 +109,23 @@
       </div>
     </div>
     <div class="win-body">
-      <h1>Terms of Service</h1>
-      <p class="updated">Last updated: 2026. This is a small personal project, written in plain language — not a document drafted or reviewed by a lawyer.</p>
-
-      <h2>What this is</h2>
-      <p>The Free Online Film Scanner (by Dr Iggy's) is a free tool that crops, color-corrects, and restores photos of film negatives. It's a personal, non-commercial project, provided as-is, with no account required.</p>
-
-      <h2>Your photos</h2>
-      <p>Photos you upload are processed to generate the result you see and download. The RAW-decoding step happens on the server only long enough to convert the file and send back an image — it is not written to disk or kept afterward. Nothing you upload is stored, sold, shared, or used for anything other than showing you the result in that same session.</p>
-
-      <h2>No warranty</h2>
-      <p>This tool is provided "as is," with no guarantee that it will always be available, error-free, or produce a perfect result for every photo. Always keep your own backup of the original negatives or scans — don't rely on this site as your only copy of anything.</p>
-
-      <h2>Acceptable use</h2>
-      <p>Don't upload content you don't have the right to process, or use the service in a way that disrupts it for other people (for example, automated bulk abuse). Reasonable personal use is exactly what this was built for.</p>
-
-      <h2>Changes</h2>
-      <p>This is a hobby project and may change, move, or occasionally go down. If anything meaningful changes about how it handles your data, this page will be updated.</p>
-
-      <h2>Contact</h2>
-      <p>This project is open source. Questions or issues can be raised through its GitHub repository.</p>
-
-      <a class="back" href="cuarto-oscuro.html">‹ back to the Film Scanner</a>
-      &nbsp;·&nbsp;
-      <a class="back" href="index.html">Dr Iggy's home ›</a>
+      <svg class="icon" width="72" height="72" viewBox="0 0 56 56">
+        <rect x="5" y="7" width="46" height="34" rx="3" fill="#fff" stroke="#0A246A" stroke-width="2"/>
+        <path d="M9 35 L20 22 L27 30 L36 18 L47 35 Z" fill="#7FCB68"/>
+        <circle cx="17" cy="16" r="3.5" fill="#FCEAA8"/>
+        <g stroke="#0F3AA8" stroke-width="2" stroke-linecap="round">
+          <line x1="8" y1="47" x2="20" y2="47"/><circle cx="16" cy="47" r="2.6" fill="#fff"/>
+          <line x1="24" y1="47" x2="36" y2="47"/><circle cx="30" cy="47" r="2.6" fill="#fff"/>
+          <line x1="40" y1="47" x2="50" y2="47"/><circle cx="44" cy="47" r="2.6" fill="#fff"/>
+        </g>
+      </svg>
+      <h1>Lite Photo Editor</h1>
+      <p>A free, lightweight photo editor for quick crops, color adjustments and touch-ups —</p>
+      <p>right in your browser, no signup.</p>
+      <span class="tag">Coming soon — in development</span>
     </div>
   </div>
+
 </div>
 
 <script>

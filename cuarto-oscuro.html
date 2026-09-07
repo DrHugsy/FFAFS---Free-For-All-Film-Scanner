@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FFAFS — Free For All Film Scanner</title>
+<title>Free Online Film Scanner — Dr Iggy's</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='1' y='4' width='30' height='24' rx='2' fill='%23231F20'/%3E%3Cg fill='%23F2E9D8'%3E%3Ccircle cx='5' cy='9' r='1.6'/%3E%3Ccircle cx='5' cy='16' r='1.6'/%3E%3Ccircle cx='5' cy='23' r='1.6'/%3E%3Ccircle cx='27' cy='9' r='1.6'/%3E%3Ccircle cx='27' cy='16' r='1.6'/%3E%3Ccircle cx='27' cy='23' r='1.6'/%3E%3C/g%3E%3Crect x='9' y='7' width='14' height='18' rx='1' fill='%234A5FB8'/%3E%3C/svg%3E">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
@@ -54,7 +54,11 @@
   }
   .win-title .capbtns span:hover{ background:linear-gradient(180deg,#FFFFFF 0%,#EAF2FF 45%,#D6E6FF 55%,#BFDAFF 100%); border-color:#316AC5; }
   .win-title .capbtns span:active{ background:linear-gradient(180deg,#C4C4C4,#D9D9D9); }
-  #btnLang{ width:28px !important; }
+  #btnLangEn, #btnLangEs{ width:22px !important; font-size:10px !important; }
+  .lang-btn.active{
+    background:linear-gradient(180deg,#FFDA8C,#E8A33D 55%,#C9720A) !important;
+    border-color:#7A4A05 !important; color:#3A2400 !important;
+  }
   .layout.win-minimized, .site-footer.win-minimized{ display:none; }
   .win-body{ padding:10px; }
 
@@ -238,15 +242,16 @@
 <div class="page">
 
   <div class="dev-taskbar">
-    <span class="dev-name">Hugsy's</span>
+    <span class="dev-name">Dr Iggy's</span>
     <a class="more-tools" href="index.html">&#8592; More Tools</a>
   </div>
 
   <div class="win top-titlebar">
     <div class="win-title">
-      <span>FFAFS — Free For All Film Scanner</span>
+      <span>Free Online Film Scanner</span>
       <div class="capbtns">
-        <span id="btnLang" title="Language / Idioma">EN</span>
+        <span id="btnLangEn" class="lang-btn" title="English">EN</span>
+        <span id="btnLangEs" class="lang-btn" title="Español">ES</span>
         <span id="btnMin" title="Minimize">_</span>
         <span id="btnMax" title="Fullscreen">&#9633;</span>
         <span title="Close">&#215;</span>
@@ -378,7 +383,7 @@
   </div>
 
   <div class="site-footer">
-    © 2026 FFAFS — Free For All Film Scanner. <a class="linklike" href="terms.html" data-i18n="terms">Terms of Service</a>.
+    © 2026 Free Online Film Scanner — Dr Iggy's. <a class="linklike" href="terms.html" data-i18n="terms">Terms of Service</a>.
   </div>
 
 </div>
@@ -391,7 +396,7 @@
 // ---------- language (English default, Spanish switch) ----------
 const I18N = {
   en: {
-    filmRoll:'Film Roll', preview:'Preview', controls:'Controls',
+    filmRoll:'Film Roll', preview:'Preview', controls:'Settings',
     dropLine1:'Drag your photos here', dropLine2:'or click to choose', dropLine3:'(JPG, PNG or RAW: CR3/CR2/NEF/ARW/DNG…)',
     tipsTitle:'How to photograph a negative',
     tip1:'Backlight it evenly — a lightbox, a tablet showing a plain white screen, or a bright overcast window all work.',
@@ -422,7 +427,7 @@ const I18N = {
     processingN:'Processing {i}/{n}…',
   },
   es: {
-    filmRoll:'Rollo de película', preview:'Vista previa', controls:'Controles',
+    filmRoll:'Rollo de película', preview:'Vista previa', controls:'Ajustes',
     dropLine1:'Arrastrá tus fotos acá', dropLine2:'o hacé clic para elegir', dropLine3:'(JPG, PNG o RAW: CR3/CR2/NEF/ARW/DNG…)',
     tipsTitle:'Cómo fotografiar un negativo',
     tip1:'Iluminalo parejo desde atrás — una mesa de luz, una tablet mostrando una pantalla blanca, o una ventana con luz difusa funcionan bien.',
@@ -453,27 +458,34 @@ const I18N = {
     processingN:'Procesando {i}/{n}…',
   }
 };
-let LANG = 'en';
+const LANG_KEY = 'drIggyLang'; // shared across the hub and every tool, via localStorage
+let LANG = (function(){
+  try{ return localStorage.getItem(LANG_KEY) || 'en'; }catch(e){ return 'en'; }
+})();
 function t(key, vars){
   let s = (I18N[LANG] && I18N[LANG][key]) || key;
   if(vars) for(const k in vars) s = s.split('{'+k+'}').join(vars[k]);
   return s;
+}
+function setLanguage(lang){
+  LANG = lang;
+  try{ localStorage.setItem(LANG_KEY, LANG); }catch(e){}
+  applyLanguage();
 }
 function applyLanguage(){
   document.querySelectorAll('[data-i18n]').forEach(el=>{
     const key = el.getAttribute('data-i18n');
     if(I18N[LANG][key] !== undefined) el.textContent = I18N[LANG][key];
   });
-  document.getElementById('btnLang').textContent = LANG.toUpperCase();
+  document.getElementById('btnLangEn').classList.toggle('active', LANG==='en');
+  document.getElementById('btnLangEs').classList.toggle('active', LANG==='es');
   document.documentElement.lang = LANG;
   // refresh anything currently built dynamically in JS
   renderFilmstrip();
   if(activeId) buildStage();
 }
-document.getElementById('btnLang').addEventListener('click', ()=>{
-  LANG = (LANG==='en') ? 'es' : 'en';
-  applyLanguage();
-});
+document.getElementById('btnLangEn').addEventListener('click', ()=> setLanguage('en'));
+document.getElementById('btnLangEs').addEventListener('click', ()=> setLanguage('es'));
 
 // ---------- state ----------
 let items = [];      // {id,name,img,natW,natH,corners:[[x,y]x4],processedCanvas,settings,thumbSrc}
