@@ -4,11 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FFAFS — Free For All Film Scanner</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='1' y='4' width='30' height='24' rx='2' fill='%23231F20'/%3E%3Cg fill='%23F2E9D8'%3E%3Ccircle cx='5' cy='9' r='1.6'/%3E%3Ccircle cx='5' cy='16' r='1.6'/%3E%3Ccircle cx='5' cy='23' r='1.6'/%3E%3Ccircle cx='27' cy='9' r='1.6'/%3E%3Ccircle cx='27' cy='16' r='1.6'/%3E%3Ccircle cx='27' cy='23' r='1.6'/%3E%3C/g%3E%3Crect x='9' y='7' width='14' height='18' rx='1' fill='%234A5FB8'/%3E%3C/svg%3E">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
   :root{
-    --desktop-a:#8FB4F5;
-    --desktop-b:#3E6FD9;
     --titlebar-1:#3E7BEB;
     --titlebar-2:#1E4FC4;
     --titlebar-3:#0F3AA8;
@@ -26,11 +25,10 @@
     --font:Tahoma, 'Segoe UI', Verdana, sans-serif;
   }
   *{ box-sizing:border-box; }
-  html,body{ height:100%; }
+  html,body{ height:100%; background:#6E9DDD; }
   body{
     margin:0; font-family:var(--font); font-size:12.5px; color:var(--ink);
     min-height:100vh; padding:14px; position:relative;
-    cursor:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><path d="M3 2 L3 26 L10 20 L14 29 L18 27 L14 18 L23 18 Z" fill="white" stroke="black" stroke-width="1.6" stroke-linejoin="round"/></svg>') 3 2, default;
   }
   .bg-scene{ position:fixed; inset:0; width:100%; height:100%; z-index:-1; }
 
@@ -53,6 +51,7 @@
   }
   .win-title .capbtns span:hover{ background:linear-gradient(180deg,#FFFFFF 0%,#EAF2FF 45%,#D6E6FF 55%,#BFDAFF 100%); border-color:#316AC5; }
   .win-title .capbtns span:active{ background:linear-gradient(180deg,#C4C4C4,#D9D9D9); }
+  #btnLang{ width:28px !important; }
   .layout.win-minimized, .site-footer.win-minimized{ display:none; }
   .win-body{ padding:10px; }
 
@@ -169,16 +168,27 @@
   .checkbox-row{ display:flex; align-items:center; gap:7px; font-size:12px; color:var(--ink-dim); }
   input[type=file]{ display:none; }
 
-  .ai-step{
+  .extra-step{
     border:1px solid #7FB8EE; background:#EAF3FC; border-radius:4px; padding:8px 10px;
   }
-  .ai-step .step-num{ color:#0F5FBF; }
+  .extra-step .step-num{ color:#0F5FBF; }
+  .action-bar{ display:flex; flex-direction:column; gap:7px; }
+  .action-bar .primary{ font-size:13.5px; padding:9px 12px; }
+  .action-bar-row{ display:flex; flex-direction:row; gap:7px; }
+  .action-bar-row button{ flex:1; }
 
   .site-footer{
     text-align:center; font-size:11px; color:#0F3AA8; padding:2px 0 8px;
     text-shadow:1px 1px 1px rgba(255,255,255,.5);
   }
   .site-footer a{ color:#0F3AA8; }
+
+  .loupe{
+    position:fixed; width:150px; height:150px; border-radius:8px;
+    border:3px solid var(--window-edge); overflow:hidden; pointer-events:none;
+    z-index:1000; box-shadow:0 3px 10px rgba(0,0,0,.5); background:#000;
+  }
+  .loupe canvas{ display:block; image-rendering:pixelated; }
 </style>
 </head>
 <body>
@@ -186,27 +196,28 @@
 <svg class="bg-scene" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-      <stop id="sky-s1" offset="0%" stop-color="#3E76CE"/>
-      <stop id="sky-s2" offset="70%" stop-color="#8BB8E9"/>
-      <stop id="sky-s3" offset="100%" stop-color="#CCE0F0"/>
+      <stop offset="0%" stop-color="#2E5FC2"/>
+      <stop offset="45%" stop-color="#5C93DE"/>
+      <stop offset="100%" stop-color="#D9EAF6"/>
     </linearGradient>
     <linearGradient id="hillBack" x1="0" y1="0" x2="0" y2="1">
-      <stop id="hb-s1" offset="0%" stop-color="#5FAE55"/>
-      <stop id="hb-s2" offset="100%" stop-color="#3E8E3C"/>
+      <stop offset="0%" stop-color="#8FD37A"/>
+      <stop offset="55%" stop-color="#4F9E48"/>
+      <stop offset="100%" stop-color="#286B2C"/>
     </linearGradient>
     <linearGradient id="hillFront" x1="0" y1="0" x2="0" y2="1">
-      <stop id="hf-s1" offset="0%" stop-color="#7FCB68"/>
-      <stop id="hf-s2" offset="100%" stop-color="#57A63F"/>
+      <stop offset="0%" stop-color="#A9E793"/>
+      <stop offset="55%" stop-color="#69B856"/>
+      <stop offset="100%" stop-color="#3D8B3F"/>
     </linearGradient>
   </defs>
   <rect x="0" y="0" width="100" height="100" fill="url(#sky)"/>
-  <g fill="#FFFFFF" opacity="0.85">
+  <g fill="#FFFFFF" opacity="0.8">
     <ellipse cx="16" cy="16" rx="8" ry="3.2"/><ellipse cx="21" cy="14" rx="6" ry="2.6"/><ellipse cx="11" cy="14.5" rx="5" ry="2.3"/>
     <ellipse cx="72" cy="9" rx="7" ry="2.8"/><ellipse cx="77" cy="7.5" rx="5" ry="2.2"/><ellipse cx="67" cy="8" rx="4.5" ry="2"/>
-    <ellipse cx="45" cy="20" rx="6" ry="2.4"/><ellipse cx="49" cy="18.5" rx="4.5" ry="2"/>
   </g>
-  <path id="hill-back" d="M0,62 Q15,48 32,60 T65,58 T100,55 L100,100 L0,100 Z" fill="url(#hillBack)"/>
-  <path id="hill-front" d="M0,78 Q20,62 40,76 T78,74 T100,70 L100,100 L0,100 Z" fill="url(#hillFront)"/>
+  <path d="M0,62 Q15,48 32,60 T65,58 T100,55 L100,100 L0,100 Z" fill="url(#hillBack)"/>
+  <path d="M0,78 Q20,62 40,76 T78,74 T100,70 L100,100 L0,100 Z" fill="url(#hillFront)"/>
 </svg>
 
 <div class="page">
@@ -215,6 +226,7 @@
     <div class="win-title">
       <span>FFAFS — Free For All Film Scanner</span>
       <div class="capbtns">
+        <span id="btnLang" title="Language / Idioma">EN</span>
         <span id="btnMin" title="Minimize">_</span>
         <span id="btnMax" title="Fullscreen">&#9633;</span>
         <span title="Close">&#215;</span>
@@ -225,71 +237,91 @@
   <div class="layout">
 
     <div class="win">
-      <div class="win-title"><span>Film Roll</span></div>
+      <div class="win-title"><span data-i18n="filmRoll">Film Roll</span></div>
       <div class="filmstrip-body" id="filmstrip">
         <div class="drop" id="drop">
-          Drag your photos here<br>or click to choose<br>
-          <span style="opacity:.7">(JPG, PNG or RAW: CR3/CR2/NEF/ARW/DNG…)</span>
+          <span data-i18n="dropLine1">Drag your photos here</span><br><span data-i18n="dropLine2">or click to choose</span><br>
+          <span style="opacity:.7" data-i18n="dropLine3">(JPG, PNG or RAW: CR3/CR2/NEF/ARW/DNG…)</span>
         </div>
         <input type="file" id="fileInput" accept=".jpg,.jpeg,.png,.webp,.cr3,.cr2,.crw,.nef,.arw,.raf,.rw2,.orf,.dng,.pef,.srw" multiple>
       </div>
       <div class="tips" id="tips">
-        <h4>How to photograph a negative</h4>
+        <h4 data-i18n="tipsTitle">How to photograph a negative</h4>
         <ul>
-          <li><svg class="tip-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" fill="#FFE27A" stroke="#000" stroke-width="1.3"/><g stroke="#000" stroke-width="1.3"><line x1="12" y1="1" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="23"/><line x1="1" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="23" y2="12"/><line x1="4" y1="4" x2="6" y2="6"/><line x1="18" y1="18" x2="20" y2="20"/><line x1="20" y1="4" x2="18" y2="6"/><line x1="6" y1="18" x2="4" y2="20"/></g></svg> Backlight it evenly — a lightbox, a tablet showing a plain white screen, or a bright overcast window all work.</li>
-          <li><svg class="tip-icon" viewBox="0 0 24 24"><circle cx="10" cy="10" r="7" fill="#DCEEFB" stroke="#000" stroke-width="1.3"/><line x1="15" y1="15" x2="22" y2="22" stroke="#000" stroke-width="2"/></svg> Get close (macro or close-focus mode) so the negative fills as much of the frame as possible.</li>
-          <li><svg class="tip-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#000" stroke-width="1.3"/><circle cx="12" cy="12" r="5" fill="none" stroke="#000" stroke-width="1.3"/><circle cx="12" cy="12" r="1.5" fill="#C1272D"/></svg> Focus manually on the film grain itself, not on the light behind it.</li>
-          <li><svg class="tip-icon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="1.5" fill="#fff" stroke="#000" stroke-width="1.3"/><text x="12" y="15" font-size="7" font-weight="bold" text-anchor="middle" fill="#316AC5">RAW</text></svg> Shoot RAW if your camera can — it decodes better here than a JPG copy.</li>
-          <li><svg class="tip-icon" viewBox="0 0 24 24"><path d="M13 2 L5 14 h5 l-2 8 9-13h-5z" fill="#FCEAA8" stroke="#000" stroke-width="1.2"/><line x1="2" y1="22" x2="22" y2="2" stroke="#C1272D" stroke-width="2"/></svg> Turn off flash and any "scene" color correction — a plain, flat capture works best.</li>
-          <li><svg class="tip-icon" viewBox="0 0 24 24"><rect x="3" y="14" width="18" height="4" rx="1" fill="#8394B8" stroke="#000" stroke-width="1"/><path d="M4 14 L9 3 L11 3 L8 14 Z" fill="#DCEEFB" stroke="#000" stroke-width="1"/></svg> Keep the negative flat (glass or a film holder) and wipe dust off it and the lens first.</li>
+          <li><svg class="tip-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" fill="#FFE27A" stroke="#000" stroke-width="1.3"/><g stroke="#000" stroke-width="1.3"><line x1="12" y1="1" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="23"/><line x1="1" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="23" y2="12"/><line x1="4" y1="4" x2="6" y2="6"/><line x1="18" y1="18" x2="20" y2="20"/><line x1="20" y1="4" x2="18" y2="6"/><line x1="6" y1="18" x2="4" y2="20"/></g></svg><span data-i18n="tip1">Backlight it evenly — a lightbox, a tablet showing a plain white screen, or a bright overcast window all work.</span></li>
+          <li><svg class="tip-icon" viewBox="0 0 24 24"><circle cx="10" cy="10" r="7" fill="#DCEEFB" stroke="#000" stroke-width="1.3"/><line x1="15" y1="15" x2="22" y2="22" stroke="#000" stroke-width="2"/></svg><span data-i18n="tip2">Get close (macro or close-focus mode) so the negative fills as much of the frame as possible.</span></li>
+          <li><svg class="tip-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#000" stroke-width="1.3"/><circle cx="12" cy="12" r="5" fill="none" stroke="#000" stroke-width="1.3"/><circle cx="12" cy="12" r="1.5" fill="#C1272D"/></svg><span data-i18n="tip3">Focus manually on the film grain itself, not on the light behind it.</span></li>
+          <li><svg class="tip-icon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="1.5" fill="#fff" stroke="#000" stroke-width="1.3"/><text x="12" y="15" font-size="7" font-weight="bold" text-anchor="middle" fill="#316AC5">RAW</text></svg><span data-i18n="tip4">Shoot RAW if your camera can — it decodes better here than a JPG copy.</span></li>
+          <li><svg class="tip-icon" viewBox="0 0 24 24"><path d="M13 2 L5 14 h5 l-2 8 9-13h-5z" fill="#FCEAA8" stroke="#000" stroke-width="1.2"/><line x1="2" y1="22" x2="22" y2="2" stroke="#C1272D" stroke-width="2"/></svg><span data-i18n="tip5">Turn off flash and any "scene" color correction — a plain, flat capture works best.</span></li>
+          <li><svg class="tip-icon" viewBox="0 0 24 24"><rect x="3" y="14" width="18" height="4" rx="1" fill="#8394B8" stroke="#000" stroke-width="1"/><path d="M4 14 L9 3 L11 3 L8 14 Z" fill="#DCEEFB" stroke="#000" stroke-width="1"/></svg><span data-i18n="tip6">Keep the negative flat (glass or a film holder) and wipe dust off it and the lens first.</span></li>
         </ul>
       </div>
     </div>
 
     <div class="win">
-      <div class="win-title"><span>Preview</span></div>
+      <div class="win-title"><span data-i18n="preview">Preview</span></div>
       <div class="stage-body" id="stage">
-        <div class="stage-empty" id="stageEmpty">Drag your first photo here, or use the box on the left, to get started.</div>
+        <div class="stage-empty" id="stageEmpty" data-i18n="stageEmpty">Drag your first photo here, or use the box on the left, to get started.</div>
       </div>
     </div>
 
     <div class="win">
-      <div class="win-title"><span>Controls</span></div>
+      <div class="win-title"><span data-i18n="controls">Controls</span></div>
       <div class="controls-body" id="controls" style="display:none">
 
-        <div class="group">
-          <span class="step-num">1 — CROP</span>
-          <p style="font-size:11.5px;color:var(--ink-dim);margin:0">
-            Each photo is cropped automatically on upload. If it's off, drag the 4 corners by hand or try auto-detect again.
-          </p>
-          <button id="resetCorners">Reset corners</button>
-          <button id="autoCrop">Auto-detect crop</button>
+        <div class="group action-bar">
+          <button class="primary" id="processOne" data-i18n="processOne">Process this photo</button>
+          <div class="action-bar-row">
+            <button id="downloadOne" disabled data-i18n="downloadOne">Download this one</button>
+            <button id="downloadAll" disabled data-i18n="downloadAll">Download all (.zip)</button>
+          </div>
         </div>
 
         <hr>
 
-        <div class="group">
-          <span class="step-num">2 — DEVELOP</span>
+        <div class="group extra-step">
+          <span class="step-num" data-i18n="stepExtra">EXTRA — ENHANCE QUALITY</span>
           <div class="checkbox-row">
-            <input type="checkbox" id="isNegative" checked>
-            <label for="isNegative">This is a color negative (invert + remove orange mask)</label>
+            <input type="checkbox" id="qualityBoost">
+            <label for="qualityBoost"><strong data-i18n="qualityBoostLabel">Extra quality enhancement</strong><span data-i18n="qualityBoostDesc"> — boosts fine local contrast and detail, on top of the sliders below</span></label>
           </div>
         </div>
 
         <hr>
 
         <div class="group">
-          <span class="step-num">3 — BALANCE</span>
+          <span class="step-num" data-i18n="step1">1 — CROP</span>
+          <p style="font-size:11.5px;color:var(--ink-dim);margin:0" data-i18n="step1desc">
+            Each photo is cropped automatically on upload. If it's off, drag the 4 corners by hand or try auto-detect again.
+          </p>
+          <button id="resetCorners" data-i18n="resetCorners">Reset corners</button>
+          <button id="autoCrop" data-i18n="autoCrop">Auto-detect crop</button>
+        </div>
+
+        <hr>
+
+        <div class="group">
+          <span class="step-num" data-i18n="step2">2 — DEVELOP</span>
+          <div class="checkbox-row">
+            <input type="checkbox" id="isNegative" checked>
+            <label for="isNegative" data-i18n="isNegative">This is a color negative (invert + remove orange mask)</label>
+          </div>
+        </div>
+
+        <hr>
+
+        <div class="group">
+          <span class="step-num" data-i18n="step3">3 — BALANCE</span>
           <div class="row">
-            <label>Brightness <span class="val" id="v-brightness">0</span></label>
+            <label><span data-i18n="brightness">Brightness</span> <span class="val" id="v-brightness">0</span></label>
             <input type="range" id="brightness" min="-60" max="60" value="0">
           </div>
           <div class="row">
-            <label>Contrast <span class="val" id="v-contrast">0</span></label>
+            <label><span data-i18n="contrast">Contrast</span> <span class="val" id="v-contrast">0</span></label>
             <input type="range" id="contrast" min="-60" max="60" value="0">
           </div>
           <div class="row">
-            <label>Saturation <span class="val" id="v-saturation">0</span></label>
+            <label><span data-i18n="saturation">Saturation</span> <span class="val" id="v-saturation">0</span></label>
             <input type="range" id="saturation" min="-60" max="60" value="0">
           </div>
         </div>
@@ -297,40 +329,27 @@
         <hr>
 
         <div class="group">
-          <span class="step-num">4 — RESTORATION</span>
+          <span class="step-num" data-i18n="step4">4 — RESTORATION</span>
           <div class="row">
-            <label>Sharpen <span class="val" id="v-sharpen">30</span></label>
+            <label><span data-i18n="sharpen">Sharpen</span> <span class="val" id="v-sharpen">30</span></label>
             <input type="range" id="sharpen" min="0" max="100" value="30">
           </div>
           <div class="row">
-            <label>Remove dust / scratches <span class="val" id="v-despeckle">15</span></label>
+            <label><span data-i18n="despeckle">Remove dust / scratches</span> <span class="val" id="v-despeckle">15</span></label>
             <input type="range" id="despeckle" min="0" max="100" value="15">
           </div>
           <div class="row">
-            <label>Grain reduction <span class="val" id="v-grain">25</span></label>
+            <label><span data-i18n="grain">Grain reduction</span> <span class="val" id="v-grain">25</span></label>
             <input type="range" id="grain" min="0" max="100" value="25">
           </div>
         </div>
 
         <hr>
 
-        <div class="group ai-step">
-          <span class="step-num">5 — AI ENHANCE</span>
-          <div class="checkbox-row">
-            <input type="checkbox" id="aiEnhance">
-            <label for="aiEnhance"><strong>Improve quality with AI</strong> — slower (can take a minute or more per photo), downloads a real AI model the first time</label>
-          </div>
-        </div>
-
-        <hr>
-
         <div class="group btn-row">
-          <button class="primary" id="processOne">Process this photo</button>
-          <button id="copyToAll">Copy settings to all</button>
-          <button id="processAll">Process all</button>
-          <hr>
-          <button id="downloadOne" disabled>Download this one</button>
-          <button id="downloadAll" disabled>Download all (.zip)</button>
+          <span class="step-num" style="color:var(--ink-dim)" data-i18n="wholeRoll">FOR THE WHOLE ROLL</span>
+          <button id="copyToAll" data-i18n="copyToAll">Copy settings to all</button>
+          <button id="processAll" data-i18n="processAll">Process all</button>
         </div>
 
       </div>
@@ -339,25 +358,102 @@
   </div>
 
   <div class="site-footer">
-    © 2026 FFAFS — Free For All Film Scanner. <a class="linklike" href="terms.html">Terms of Service</a>.
+    © 2026 FFAFS — Free For All Film Scanner. <a class="linklike" href="terms.html" data-i18n="terms">Terms of Service</a>.
   </div>
 
 </div>
 
-<script>
-// ---------- random background scene: different colors/sizes each visit ----------
-(function paintScene(){
-  const rand = (min,max)=> min + Math.random()*(max-min);
+<div class="loupe" id="loupe" style="display:none">
+  <canvas id="loupeCanvas" width="150" height="150"></canvas>
+</div>
 
-  // colors stay fixed; only the hills' size/shape changes on each visit
-  // (sometimes small hills low on the screen, sometimes big ones covering more of it)
-  const bb=rand(50,68), ba=rand(6,20);
-  const fb=rand(70,86), fa=rand(6,20);
-  document.getElementById('hill-back').setAttribute('d',
-    `M0,${bb} Q15,${bb-ba} 32,${(bb+ba*0.6).toFixed(1)} T65,${(bb-ba*0.4).toFixed(1)} T100,${(bb-ba*0.7).toFixed(1)} L100,100 L0,100 Z`);
-  document.getElementById('hill-front').setAttribute('d',
-    `M0,${fb} Q20,${fb-fa} 40,${(fb+fa*0.5).toFixed(1)} T78,${(fb-fa*0.5).toFixed(1)} T100,${(fb-fa*0.8).toFixed(1)} L100,100 L0,100 Z`);
-})();
+<script>
+// ---------- language (English default, Spanish switch) ----------
+const I18N = {
+  en: {
+    filmRoll:'Film Roll', preview:'Preview', controls:'Controls',
+    dropLine1:'Drag your photos here', dropLine2:'or click to choose', dropLine3:'(JPG, PNG or RAW: CR3/CR2/NEF/ARW/DNG…)',
+    tipsTitle:'How to photograph a negative',
+    tip1:'Backlight it evenly — a lightbox, a tablet showing a plain white screen, or a bright overcast window all work.',
+    tip2:'Get close (macro or close-focus mode) so the negative fills as much of the frame as possible.',
+    tip3:'Focus manually on the film grain itself, not on the light behind it.',
+    tip4:'Shoot RAW if your camera can — it decodes better here than a JPG copy.',
+    tip5:'Turn off flash and any "scene" color correction — a plain, flat capture works best.',
+    tip6:'Keep the negative flat (glass or a film holder) and wipe dust off it and the lens first.',
+    stageEmpty:'Drag your first photo here, or use the box on the left, to get started.',
+    processOne:'Process this photo', downloadOne:'Download this one', downloadAll:'Download all (.zip)',
+    stepExtra:'EXTRA — ENHANCE QUALITY', qualityBoostLabel:'Extra quality enhancement',
+    qualityBoostDesc:' — boosts fine local contrast and detail, on top of the sliders below',
+    step1:'1 — CROP', step1desc:"Each photo is cropped automatically on upload. If it's off, drag the 4 corners by hand or try auto-detect again.",
+    resetCorners:'Reset corners', autoCrop:'Auto-detect crop',
+    step2:'2 — DEVELOP', isNegative:'This is a color negative (invert + remove orange mask)',
+    step3:'3 — BALANCE', brightness:'Brightness', contrast:'Contrast', saturation:'Saturation',
+    step4:'4 — RESTORATION', sharpen:'Sharpen', despeckle:'Remove dust / scratches', grain:'Grain reduction',
+    wholeRoll:'FOR THE WHOLE ROLL', copyToAll:'Copy settings to all', processAll:'Process all',
+    terms:'Terms of Service',
+    original:'Original', result:'Result', stageHint:'Drag the 4 red dots to adjust the negative crop',
+    decoding:'decoding', done:'DONE',
+    rawFailAlert:'Could not decode "{name}" (RAW).\\n\\nCheck that the server is running (its terminal window should be open, with no errors).\\n\\nIf the server is running and this keeps failing, plan B: convert it to JPG or TIFF with a free program (Canon Digital Photo Professional, RawTherapee, or darktable) and upload that instead.\\n\\nTechnical detail: {detail}',
+    openFailAlert:'Could not open "{name}".',
+    autoCropFail:'Could not auto-detect the crop for this photo. Adjust the corners by hand instead.',
+    processFirst:'Process this photo first.',
+    settingsCopied:'Settings copied to all {n} photos.',
+    processing:'Processing…', detecting:'Detecting…',
+    processingN:'Processing {i}/{n}…',
+  },
+  es: {
+    filmRoll:'Rollo de película', preview:'Vista previa', controls:'Controles',
+    dropLine1:'Arrastrá tus fotos acá', dropLine2:'o hacé clic para elegir', dropLine3:'(JPG, PNG o RAW: CR3/CR2/NEF/ARW/DNG…)',
+    tipsTitle:'Cómo fotografiar un negativo',
+    tip1:'Iluminalo parejo desde atrás — una mesa de luz, una tablet mostrando una pantalla blanca, o una ventana con luz difusa funcionan bien.',
+    tip2:'Acercate (modo macro o enfoque cercano) para que el negativo ocupe la mayor parte del cuadro posible.',
+    tip3:'Enfocá manualmente sobre el grano de la película, no sobre la luz de atrás.',
+    tip4:'Sacá en RAW si tu cámara puede — acá se decodifica mejor que una copia JPG.',
+    tip5:'Apagá el flash y cualquier corrección de color de "escena" — una captura plana funciona mejor.',
+    tip6:'Mantené el negativo plano (vidrio o un portanegativos) y limpiá el polvo de él y del lente antes.',
+    stageEmpty:'Arrastrá tu primera foto acá, o usá la caja de la izquierda, para empezar.',
+    processOne:'Procesar esta foto', downloadOne:'Descargar esta', downloadAll:'Descargar todas (.zip)',
+    stepExtra:'EXTRA — MEJORAR CALIDAD', qualityBoostLabel:'Mejora extra de calidad',
+    qualityBoostDesc:' — realza el contraste local fino y el detalle, además de los controles de abajo',
+    step1:'1 — RECORTE', step1desc:'Cada foto se recorta sola al subirla. Si queda mal, arrastrá los 4 puntos a mano o probá la detección automática de nuevo.',
+    resetCorners:'Reiniciar esquinas', autoCrop:'Detectar recorte automático',
+    step2:'2 — REVELADO', isNegative:'Es un negativo a color (invierte + quita la máscara naranja)',
+    step3:'3 — BALANCE', brightness:'Brillo', contrast:'Contraste', saturation:'Saturación',
+    step4:'4 — RESTAURACIÓN', sharpen:'Nitidez', despeckle:'Quitar polvo / rayones', grain:'Reducción de grano',
+    wholeRoll:'PARA TODO EL ROLLO', copyToAll:'Copiar ajustes a todas', processAll:'Procesar todas',
+    terms:'Términos de servicio',
+    original:'Original', result:'Resultado', stageHint:'Arrastrá los 4 puntos rojos para ajustar el recorte del negativo',
+    decoding:'decodificando', done:'LISTO',
+    rawFailAlert:'No pude decodificar "{name}" (RAW).\\n\\nRevisá que el servidor esté corriendo (su ventana de terminal debería estar abierta, sin errores).\\n\\nSi el servidor está corriendo y esto sigue fallando, plan B: convertila a JPG o TIFF con un programa gratis (Canon Digital Photo Professional, RawTherapee o darktable) y subí eso en su lugar.\\n\\nDetalle técnico: {detail}',
+    openFailAlert:'No pude abrir "{name}".',
+    autoCropFail:'No pude detectar el recorte automáticamente para esta foto. Ajustá las esquinas a mano.',
+    processFirst:'Procesá esta foto primero.',
+    settingsCopied:'Ajustes copiados a las {n} fotos.',
+    processing:'Procesando…', detecting:'Detectando…',
+    processingN:'Procesando {i}/{n}…',
+  }
+};
+let LANG = 'en';
+function t(key, vars){
+  let s = (I18N[LANG] && I18N[LANG][key]) || key;
+  if(vars) for(const k in vars) s = s.split('{'+k+'}').join(vars[k]);
+  return s;
+}
+function applyLanguage(){
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const key = el.getAttribute('data-i18n');
+    if(I18N[LANG][key] !== undefined) el.textContent = I18N[LANG][key];
+  });
+  document.getElementById('btnLang').textContent = LANG.toUpperCase();
+  document.documentElement.lang = LANG;
+  // refresh anything currently built dynamically in JS
+  renderFilmstrip();
+  if(activeId) buildStage();
+}
+document.getElementById('btnLang').addEventListener('click', ()=>{
+  LANG = (LANG==='en') ? 'es' : 'en';
+  applyLanguage();
+});
 
 // ---------- state ----------
 let items = [];      // {id,name,img,natW,natH,corners:[[x,y]x4],processedCanvas,settings,thumbSrc}
@@ -380,12 +476,12 @@ const els = {
   sharpen: document.getElementById('sharpen'),
   despeckle: document.getElementById('despeckle'),
   grain: document.getElementById('grain'),
-  aiEnhance: document.getElementById('aiEnhance'),
+  qualityBoost: document.getElementById('qualityBoost'),
   isNegative: document.getElementById('isNegative'),
 };
 
 function defaultSettings(){
-  return { brightness:0, contrast:0, saturation:0, sharpen:30, despeckle:15, grain:25, aiEnhance:false, isNegative:true };
+  return { brightness:0, contrast:0, saturation:0, sharpen:30, despeckle:15, grain:25, qualityBoost:false, isNegative:true };
 }
 
 // ---------- file loading ----------
@@ -417,13 +513,7 @@ async function handleFiles(fileList){
         await addItem(file.name, canvas, w, h);
       }catch(err){
         console.error(err);
-        alert(
-          'Could not decode "'+file.name+'" (RAW).\n\n'+
-          'Check that the server is running (its terminal window should be open, with no errors).\n\n'+
-          'If the server is running and this keeps failing, plan B: convert it to JPG or TIFF with a '+
-          'free program (Canon Digital Photo Professional, RawTherapee, or darktable) and upload that instead.\n\n'+
-          'Technical detail: '+(err&&err.message?err.message:err)
-        );
+        alert(t('rawFailAlert', {name:file.name, detail:(err&&err.message?err.message:err)}));
       }
       loadingFiles = loadingFiles.filter(n=>n!==file.name);
       renderFilmstrip();
@@ -433,7 +523,7 @@ async function handleFiles(fileList){
         const url = URL.createObjectURL(file);
         const img = new Image();
         img.onload = async ()=>{ await addItem(file.name, img, img.naturalWidth, img.naturalHeight); resolve(); };
-        img.onerror = ()=>{ alert('Could not open "'+file.name+'".'); resolve(); };
+        img.onerror = ()=>{ alert(t('openFailAlert', {name:file.name})); resolve(); };
         img.src = url;
       });
       loadingFiles = loadingFiles.filter(n=>n!==file.name);
@@ -511,7 +601,7 @@ function renderFilmstrip(){
   loadingFiles.forEach(name=>{
     const div = document.createElement('div');
     div.className = 'frame';
-    div.innerHTML = `<div class="loading-label">&#9203; decoding<br>${name.slice(0,16)}</div>`;
+    div.innerHTML = `<div class="loading-label">&#9203; ${t('decoding')}<br>${name.slice(0,16)}</div>`;
     els.filmstrip.appendChild(div);
   });
   items.forEach(it=>{
@@ -521,7 +611,7 @@ function renderFilmstrip(){
       <div class="holes"></div>
       <img src="${it.thumbSrc}">
       <div class="holes r"></div>
-      ${it.processedCanvas? '<div class="done">DONE</div>':''}
+      ${it.processedCanvas? '<div class="done">'+t('done')+'</div>':''}
       <div class="tag">${(it.name||'').slice(0,10)}</div>
     `;
     div.addEventListener('click', ()=>selectItem(it.id));
@@ -537,7 +627,7 @@ function selectItem(id){
   els.brightness.value=it.settings.brightness; els.contrast.value=it.settings.contrast;
   els.saturation.value=it.settings.saturation; els.sharpen.value=it.settings.sharpen;
   els.despeckle.value=it.settings.despeckle; els.grain.value=it.settings.grain;
-  els.aiEnhance.checked=it.settings.aiEnhance; els.isNegative.checked=it.settings.isNegative;
+  els.qualityBoost.checked=it.settings.qualityBoost; els.isNegative.checked=it.settings.isNegative;
   updateValLabels();
   document.getElementById('downloadOne').disabled = !it.processedCanvas;
   renderFilmstrip();
@@ -558,14 +648,14 @@ function updateValLabels(){
   s.addEventListener('input', ()=>{ updateValLabels(); saveSettings(); });
 });
 els.isNegative.addEventListener('change', saveSettings);
-els.aiEnhance.addEventListener('change', saveSettings);
+els.qualityBoost.addEventListener('change', saveSettings);
 function saveSettings(){
   const it = currentItem(); if(!it) return;
   it.settings = {
     brightness:+els.brightness.value, contrast:+els.contrast.value,
     saturation:+els.saturation.value, sharpen:+els.sharpen.value,
     despeckle:+els.despeckle.value, grain:+els.grain.value,
-    aiEnhance:els.aiEnhance.checked, isNegative:els.isNegative.checked
+    qualityBoost:els.qualityBoost.checked, isNegative:els.isNegative.checked
   };
 }
 
@@ -587,24 +677,25 @@ function buildStage(){
   els.stage.appendChild(wrap);
 
   const toggle = document.createElement('div'); toggle.className='view-toggle';
-  toggle.innerHTML = `<button id="tOrig">Original</button><button id="tProc">Result</button>`;
+  toggle.innerHTML = `<button id="tOrig">${t('original')}</button><button id="tProc">${t('result')}</button>`;
   els.stage.appendChild(toggle);
   document.getElementById('tOrig').onclick=()=>{ viewMode='original'; drawStage(); };
   document.getElementById('tProc').onclick=()=>{
     const it=currentItem();
-    if(!it.processedCanvas){ alert('Process this photo first.'); return; }
+    if(!it.processedCanvas){ alert(t('processFirst')); return; }
     viewMode='processed'; drawStage();
   };
 
   const hint = document.createElement('div'); hint.className='stage-hint';
-  hint.textContent = 'Drag the 4 red dots to adjust the negative crop';
+  hint.textContent = t('stageHint');
+  els.stage.appendChild(hint);
   els.stage.appendChild(hint);
 
   drawStage();
 
   stageCanvas.addEventListener('pointerdown', onPointerDown);
   stageCanvas.addEventListener('pointermove', onPointerMove);
-  window.addEventListener('pointerup', ()=>{ dragCorner=-1; });
+  window.addEventListener('pointerup', ()=>{ dragCorner=-1; hideLoupe(); });
 }
 
 function drawStage(){
@@ -654,17 +745,73 @@ function onPointerDown(e){
     if(d<bestD){ bestD=d; best=i; }
   });
   dragCorner = best;
+  if(dragCorner>=0){
+    updateLoupe(e.clientX, e.clientY, it.corners[dragCorner][0], it.corners[dragCorner][1]);
+  }
 }
 function onPointerMove(e){
   if(dragCorner<0 || viewMode!=='original') return;
   const it = currentItem(); if(!it) return;
   const rect = stageCanvas.getBoundingClientRect();
   const mx = e.clientX-rect.left, my = e.clientY-rect.top;
-  it.corners[dragCorner] = [
-    Math.max(0,Math.min(it.natW, mx/scaleFactor)),
-    Math.max(0,Math.min(it.natH, my/scaleFactor))
-  ];
+  const natX = Math.max(0,Math.min(it.natW, mx/scaleFactor));
+  const natY = Math.max(0,Math.min(it.natH, my/scaleFactor));
+  it.corners[dragCorner] = [natX, natY];
   drawStage();
+  updateLoupe(e.clientX, e.clientY, natX, natY);
+}
+
+// Floating magnifier loupe shown while dragging a crop corner, so you can
+// line it up precisely with the actual edge of the negative instead of
+// guessing at the small on-screen scale.
+function updateLoupe(clientX, clientY, natX, natY){
+  const it = currentItem(); if(!it) return;
+  const loupe = document.getElementById('loupe');
+  const canvas = document.getElementById('loupeCanvas');
+  const lctx = canvas.getContext('2d');
+  const size = 150, zoom = 3;
+  const srcSize = size/zoom;
+
+  lctx.imageSmoothingEnabled = false; // crisp pixels help judge the exact edge
+  lctx.fillStyle = '#000';
+  lctx.fillRect(0,0,size,size);
+  lctx.drawImage(
+    it.img,
+    natX-srcSize/2, natY-srcSize/2, srcSize, srcSize,
+    0, 0, size, size
+  );
+
+  // Draw the actual crop boundary lines running through this corner (like
+  // Adobe Scan's magnifier does), not a generic crosshair — this shows
+  // exactly where the edge will cut relative to the real negative border.
+  if(dragCorner>=0){
+    const prev = it.corners[(dragCorner+3)%4];
+    const next = it.corners[(dragCorner+1)%4];
+    const toLoupe = (p)=> [ size/2 + (p[0]-natX)*zoom, size/2 + (p[1]-natY)*zoom ];
+    const [px,py] = toLoupe(prev);
+    const [nx,ny] = toLoupe(next);
+    lctx.strokeStyle = '#C1272D'; lctx.lineWidth = 1.5;
+    lctx.beginPath();
+    lctx.moveTo(px,py); lctx.lineTo(size/2,size/2); lctx.lineTo(nx,ny);
+    lctx.stroke();
+  }
+  // exact point marker, right where the corner will land
+  lctx.fillStyle = '#fff';
+  lctx.beginPath(); lctx.arc(size/2,size/2,4,0,Math.PI*2); lctx.fill();
+  lctx.strokeStyle = '#C1272D'; lctx.lineWidth = 1.5;
+  lctx.beginPath(); lctx.arc(size/2,size/2,4,0,Math.PI*2); lctx.stroke();
+
+  // Sits up and to the right of the finger/cursor so it isn't covered by it;
+  // flips below if there isn't room above, and stays inside the viewport.
+  let left = clientX + 20, top = clientY - size - 20;
+  if(top < 4) top = clientY + 20;
+  left = Math.max(4, Math.min(window.innerWidth - size - 4, left));
+  loupe.style.left = left+'px';
+  loupe.style.top = top+'px';
+  loupe.style.display = 'block';
+}
+function hideLoupe(){
+  document.getElementById('loupe').style.display = 'none';
 }
 
 document.getElementById('resetCorners').addEventListener('click', ()=>{
@@ -862,12 +1009,12 @@ async function autoDetectCrop(it){
 document.getElementById('autoCrop').addEventListener('click', async ()=>{
   const it = currentItem(); if(!it) return;
   const btn = document.getElementById('autoCrop');
-  btn.disabled = true; const prevText = btn.textContent; btn.textContent = 'Detecting…';
+  btn.disabled = true; const prevText = btn.textContent; btn.textContent = t('detecting');
   const ok = await autoDetectCrop(it);
   btn.disabled = false; btn.textContent = prevText;
   drawStage();
   if(!ok){
-    alert('Could not auto-detect the crop for this photo. Adjust the corners by hand instead.');
+    alert(t('autoCropFail'));
   }
 });
 
@@ -1044,108 +1191,64 @@ function unsharpMask(imgData, w, h, amount){
   return imgData;
 }
 
-// ---------- AI quality enhancement (client-side, only when the toggle is on) ----------
-// Uses Transformers.js — Hugging Face's own official library, actively
-// maintained, not a small beta community package like the ones that
-// failed before — with Swin2SR, a real trained super-resolution model
-// specifically meant for real-world photos (not anime/illustration, which
-// is what an earlier attempt with a different model got wrong). It's
-// loaded as a proper ES module straight from the CDN, and
-// the library resolves and fetches the actual model files itself, so
-// there is no CDN file path or global variable name to guess here, which
-// is exactly the point that broke every earlier attempt.
-let _transformersLoadPromise = null;
-let _upscalerPipeline = null;
+// ---------- extra quality enhancement (classical, no external model) ----------
+// After several attempts at wiring up a real neural network reliably in a
+// single-file, CDN-only, no-build setup, this does the same job with plain
+// canvas pixel math instead — same idea as a photo editor's "Clarity"
+// slider: blur widely to find the low-frequency version of the image,
+// subtract it to isolate the mid-size detail (skin texture, hair, fabric —
+// not just hard edges), and add that detail back in, amplified. No
+// download, no external library, no chance of a broken CDN path.
+function boxBlur(imgData, w, h, radius){
+  // separable box blur: one horizontal pass, one vertical pass — much
+  // faster than a full 2D blur kernel for the radius we need here.
+  const src = imgData.data;
+  const tmp = new Float32Array(src.length);
+  const out = new Float32Array(src.length);
+  const size = radius*2+1;
 
-function loadTransformersJS(){
-  if(_transformersLoadPromise) return _transformersLoadPromise;
-  _transformersLoadPromise = import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.2.0')
-    .catch(err=>{ throw new Error('[Transformers.js] Could not load the library: '+err.message); });
-  return _transformersLoadPromise;
-}
-
-async function getUpscalerPipeline(){
-  if(_upscalerPipeline) return _upscalerPipeline;
-  const { pipeline } = await loadTransformersJS();
-  // Real-world x4 variant (not "lightweight"): heavier, but trained
-  // specifically on camera-style degradation (noise, compression) instead
-  // of clean academic benchmark images — a better match for phone/camera
-  // photos of negatives.
-  const MODEL_ID = 'Xenova/swin2SR-realworld-sr-x4-64-bsrgan-psnr';
-  const hasWebGPU = typeof navigator !== 'undefined' && !!navigator.gpu;
-  try{
-    _upscalerPipeline = hasWebGPU
-      ? await pipeline('image-to-image', MODEL_ID, { dtype: 'fp32', device: 'webgpu' })
-      : await pipeline('image-to-image', MODEL_ID, { dtype: 'fp32' });
-  }catch(err){
-    if(hasWebGPU){
-      // WebGPU claimed to be available but failed to actually initialize for
-      // this model/browser — fall back to the normal (slower) CPU path
-      // instead of failing outright.
-      try{
-        _upscalerPipeline = await pipeline('image-to-image', MODEL_ID, { dtype: 'fp32' });
-      }catch(err2){
-        throw new Error('[AI model] Could not download/initialize the super-resolution model: '+err2.message);
+  for(let y=0; y<h; y++){
+    for(let c=0; c<3; c++){
+      let sum=0;
+      for(let x=-radius; x<=radius; x++){
+        const xx = Math.min(w-1, Math.max(0, x));
+        sum += src[(y*w+xx)*4+c];
       }
-    } else {
-      throw new Error('[AI model] Could not download/initialize the super-resolution model: '+err.message);
+      for(let x=0; x<w; x++){
+        tmp[(y*w+x)*4+c] = sum/size;
+        const addX = Math.min(w-1, x+radius+1), remX = Math.max(0, x-radius);
+        sum += src[(y*w+addX)*4+c] - src[(y*w+remX)*4+c];
+      }
     }
   }
-  return _upscalerPipeline;
+  for(let x=0; x<w; x++){
+    for(let c=0; c<3; c++){
+      let sum=0;
+      for(let y=-radius; y<=radius; y++){
+        const yy = Math.min(h-1, Math.max(0, y));
+        sum += tmp[(yy*w+x)*4+c];
+      }
+      for(let y=0; y<h; y++){
+        out[(y*w+x)*4+c] = sum/size;
+        const addY = Math.min(h-1, y+radius+1), remY = Math.max(0, y-radius);
+        sum += tmp[(addY*w+x)*4+c] - tmp[(remY*w+x)*4+c];
+      }
+    }
+  }
+  return out;
 }
 
-async function enhanceWithAI(it){
-  const upscaler = await getUpscalerPipeline();
-
-  // This model is trained on small image patches — feeding it a full-size
-  // photo is both very slow and can overflow its internal calculations.
-  // Shrink it down first so the AI only has to work on a manageable image;
-  // the model then upscales that 4x.
-  const maxSide = 720;
-  const srcCanvas = it.processedCanvas;
-  const scale = Math.min(1, maxSide / Math.max(srcCanvas.width, srcCanvas.height));
-  let inputCanvas = srcCanvas;
-  if(scale < 1){
-    inputCanvas = document.createElement('canvas');
-    inputCanvas.width = Math.round(srcCanvas.width*scale);
-    inputCanvas.height = Math.round(srcCanvas.height*scale);
-    inputCanvas.getContext('2d').drawImage(srcCanvas, 0, 0, inputCanvas.width, inputCanvas.height);
-  }
-  const dataUrl = inputCanvas.toDataURL('image/png');
-
-  let output;
-  try{
-    output = await upscaler(dataUrl);
-  }catch(err){
-    throw new Error('[AI inference] The model loaded, but failed while processing this photo: '+err.message);
-  }
-  const { data, width, height, channels } = output;
-  let rgba;
-  if(channels === 4){
-    rgba = new Uint8ClampedArray(data);
-  } else {
-    rgba = new Uint8ClampedArray(width*height*4);
-    for(let i=0, j=0; i<data.length; i+=channels, j+=4){
-      rgba[j]=data[i]; rgba[j+1]=data[i+1]; rgba[j+2]=data[i+2]; rgba[j+3]=255;
+function qualityBoostFilter(imgData, w, h){
+  const d = imgData.data;
+  const blurred = boxBlur(imgData, w, h, 5);
+  const amt = 0.9;
+  for(let i=0; i<d.length; i+=4){
+    for(let c=0; c<3; c++){
+      const detail = d[i+c] - blurred[i+c];
+      d[i+c] = clamp255(d[i+c] + detail*amt);
     }
   }
-  const imgData = new ImageData(rgba, width, height);
-  const rawCanvas = document.createElement('canvas');
-  rawCanvas.width = width; rawCanvas.height = height;
-  rawCanvas.getContext('2d').putImageData(imgData, 0, 0);
-
-  // Cap the final size so a 4x jump doesn't produce an unreasonably huge
-  // download — this still keeps far more detail than the non-AI pipeline.
-  const finalCap = 2000;
-  if(Math.max(width, height) > finalCap){
-    const s = finalCap / Math.max(width, height);
-    const finalCanvas = document.createElement('canvas');
-    finalCanvas.width = Math.round(width*s); finalCanvas.height = Math.round(height*s);
-    finalCanvas.getContext('2d').drawImage(rawCanvas, 0, 0, finalCanvas.width, finalCanvas.height);
-    it.processedCanvas = finalCanvas;
-  } else {
-    it.processedCanvas = rawCanvas;
-  }
+  return imgData;
 }
 
 async function processItem(it){
@@ -1170,20 +1273,12 @@ async function processItem(it){
   warped = despeckle(warped, outW, outH, it.settings.despeckle);
   warped = reduceGrain(warped, outW, outH, it.settings.grain);
   warped = unsharpMask(warped, outW, outH, it.settings.sharpen);
+  if(it.settings.qualityBoost) warped = qualityBoostFilter(warped, outW, outH);
 
   const out = document.createElement('canvas');
   out.width=outW; out.height=outH;
   out.getContext('2d').putImageData(warped,0,0);
   it.processedCanvas = out;
-
-  if(it.settings.aiEnhance){
-    try{
-      await enhanceWithAI(it);
-    }catch(err){
-      console.warn('AI enhancement failed, keeping the regular result:', err);
-      alert('AI quality enhancement didn\'t work this time, so this photo kept its regular result. Detail: '+(err&&err.message?err.message:err));
-    }
-  }
 
   it.thumbSrc = makeThumb(it.processedCanvas, it.processedCanvas.width, it.processedCanvas.height); // filmstrip thumbnail now shows the edited result
 }
@@ -1193,7 +1288,7 @@ document.getElementById('processOne').addEventListener('click', async ()=>{
   saveSettings();
   const btn = document.getElementById('processOne');
   const prevText = btn.textContent;
-  btn.disabled = true; btn.textContent = it.settings.aiEnhance ? 'Enhancing…' : 'Processing…';
+  btn.disabled = true; btn.textContent = t('processing');
   try{
     await processItem(it);
     viewMode='processed'; drawStage();
@@ -1209,7 +1304,7 @@ document.getElementById('copyToAll').addEventListener('click', ()=>{
   saveSettings();
   const s = currentItem().settings;
   items.forEach(it=> it.settings = {...s});
-  alert('Settings copied to all '+items.length+' photos.');
+  alert(t('settingsCopied', {n:items.length}));
 });
 
 document.getElementById('processAll').addEventListener('click', async ()=>{
@@ -1218,7 +1313,7 @@ document.getElementById('processAll').addEventListener('click', async ()=>{
   const prevText = btn.textContent;
   btn.disabled = true;
   for(let i=0;i<items.length;i++){
-    btn.textContent = 'Processing '+(i+1)+'/'+items.length+'…';
+    btn.textContent = t('processingN', {i:i+1, n:items.length});
     await processItem(items[i]);
   }
   btn.textContent = prevText; btn.disabled = false;
@@ -1249,6 +1344,7 @@ document.getElementById('downloadAll').addEventListener('click', async ()=>{
 });
 
 window.addEventListener('resize', ()=>{ if(activeId) drawStage(); });
+applyLanguage();
 </script>
 </body>
 </html>
