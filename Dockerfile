@@ -10,7 +10,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY server_prod.py .
-COPY cuarto-oscuro.html .
+COPY *.html .
 
 EXPOSE 8000
 
