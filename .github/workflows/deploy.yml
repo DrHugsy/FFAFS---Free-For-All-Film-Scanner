@@ -17,7 +17,7 @@ jobs:
           script: |
             cd ~/app
             git pull
-            sudo docker stop driggys || true
-            sudo docker rm driggys || true
+            docker stop driggys || true
+            docker rm driggys || true
             docker build -t driggys .
-            sudo docker run -d --restart unless-stopped -p 80:8000 --name driggys driggys
+            docker run -d --restart unless-stopped -p 80:8000 --name driggys driggys
