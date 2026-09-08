@@ -142,6 +142,12 @@
     background:var(--done); border-radius:2px; padding:0 3px;
   }
   .frame .loading-label{ padding:20px 4px; text-align:center; font-size:10px; color:var(--warn); }
+  .frame-remove{
+    position:absolute; top:2px; right:2px; width:16px; height:16px; min-height:auto; padding:0;
+    font-size:9px; line-height:1; background:rgba(0,0,0,.6); color:#fff; border:1px solid #000;
+    display:none; align-items:center; justify-content:center; z-index:2;
+  }
+  .frame:hover .frame-remove{ display:flex; }
 
   /* ---- how to photograph negatives (shown when nothing uploaded yet) ---- */
   .tips{
@@ -241,19 +247,19 @@
 <svg class="bg-scene" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#2E5FC2"/>
-      <stop offset="45%" stop-color="#5C93DE"/>
+      <stop offset="0%" stop-color="#1B4FC0"/>
+      <stop offset="45%" stop-color="#4C86D6"/>
       <stop offset="100%" stop-color="#D9EAF6"/>
     </linearGradient>
     <linearGradient id="hillBack" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#8FD37A"/>
-      <stop offset="55%" stop-color="#4F9E48"/>
-      <stop offset="100%" stop-color="#286B2C"/>
+      <stop offset="0%" stop-color="#9EDB88"/>
+      <stop offset="55%" stop-color="#3F8F39"/>
+      <stop offset="100%" stop-color="#1C5420"/>
     </linearGradient>
     <linearGradient id="hillFront" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#A9E793"/>
-      <stop offset="55%" stop-color="#69B856"/>
-      <stop offset="100%" stop-color="#3D8B3F"/>
+      <stop offset="0%" stop-color="#B8F0A0"/>
+      <stop offset="55%" stop-color="#5AAB45"/>
+      <stop offset="100%" stop-color="#2C7A2E"/>
     </linearGradient>
   </defs>
   <rect x="0" y="0" width="100" height="100" fill="url(#sky)"/>
@@ -454,6 +460,7 @@ const I18N = {
     settingsCopied:'Settings copied to all {n} photos.',
     processing:'Processing…', detecting:'Detecting…',
     processingN:'Processing {i}/{n}…',
+    removePhoto:'Remove', confirmRemovePhoto:'Remove "{name}" from the roll? This can\'t be undone.',
   },
   es: {
     filmRoll:'Rollo de película', preview:'Vista previa', controls:'Ajustes',
@@ -487,6 +494,7 @@ const I18N = {
     settingsCopied:'Ajustes copiados a las {n} fotos.',
     processing:'Procesando…', detecting:'Detectando…',
     processingN:'Procesando {i}/{n}…',
+    removePhoto:'Quitar', confirmRemovePhoto:'¿Quitar "{name}" del rollo? No se puede deshacer.',
   }
 };
 const LANG_KEY = 'drIggyLang'; // shared across the hub and every tool, via localStorage
@@ -676,10 +684,33 @@ function renderFilmstrip(){
       <div class="holes r"></div>
       ${it.processedCanvas? '<div class="done">'+t('done')+'</div>':''}
       <div class="tag">${(it.name||'').slice(0,10)}</div>
+      <button class="frame-remove" title="${t('removePhoto')}">&#10005;</button>
     `;
     div.addEventListener('click', ()=>selectItem(it.id));
+    div.querySelector('.frame-remove').addEventListener('click', (e)=>{
+      e.stopPropagation();
+      if(confirm(t('confirmRemovePhoto', {name: it.name||''}))) removeItem(it.id);
+    });
     els.filmstrip.appendChild(div);
   });
+}
+
+function removeItem(id){
+  const idx = items.findIndex(i=>i.id===id);
+  if(idx<0) return;
+  items.splice(idx,1);
+  if(activeId===id){
+    if(items.length){
+      selectItem(items[Math.min(idx, items.length-1)].id);
+    } else {
+      activeId = null;
+      els.controls.style.display='none';
+      els.stage.innerHTML = '<div class="stage-empty" data-i18n="stageEmpty">'+t('stageEmpty')+'</div>';
+      document.getElementById('downloadOne').disabled = true;
+      document.getElementById('editInPhotoEditor').disabled = true;
+    }
+  }
+  renderFilmstrip();
 }
 
 function selectItem(id){

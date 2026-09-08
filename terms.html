@@ -45,7 +45,13 @@
   h2{ font-size:13.5px; margin:18px 0 6px; }
   p, li{ font-size:12.5px; line-height:1.55; }
   a{ color:#0F3AA8; }
-  .back{ display:inline-block; margin-top:18px; font-size:12px; }
+  .back-btn{
+    display:inline-block; margin-top:20px; text-decoration:none; font-family:var(--font);
+    font-size:12px; padding:7px 16px; border:1px solid #556; border-radius:3px; color:var(--ink);
+    background:linear-gradient(180deg,#FDFDFD 0%, #ECECEC 45%, #DCDCDC 55%, #C9C9C9 100%);
+  }
+  .back-btn:hover{ border-color:var(--accent); background:linear-gradient(180deg,#FFFFFF 0%, #EAF2FF 45%, #D6E6FF 55%, #BFDAFF 100%); }
+  .back-btn:active{ background:linear-gradient(180deg,#C9C9C9,#DCDCDC); }
 </style>
 </head>
 <body>
@@ -53,19 +59,19 @@
 <svg class="bg-scene" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#2E5FC2"/>
-      <stop offset="45%" stop-color="#5C93DE"/>
+      <stop offset="0%" stop-color="#1B4FC0"/>
+      <stop offset="45%" stop-color="#4C86D6"/>
       <stop offset="100%" stop-color="#D9EAF6"/>
     </linearGradient>
     <linearGradient id="hillBack" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#8FD37A"/>
-      <stop offset="55%" stop-color="#4F9E48"/>
-      <stop offset="100%" stop-color="#286B2C"/>
+      <stop offset="0%" stop-color="#9EDB88"/>
+      <stop offset="55%" stop-color="#3F8F39"/>
+      <stop offset="100%" stop-color="#1C5420"/>
     </linearGradient>
     <linearGradient id="hillFront" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#A9E793"/>
-      <stop offset="55%" stop-color="#69B856"/>
-      <stop offset="100%" stop-color="#3D8B3F"/>
+      <stop offset="0%" stop-color="#B8F0A0"/>
+      <stop offset="55%" stop-color="#5AAB45"/>
+      <stop offset="100%" stop-color="#2C7A2E"/>
     </linearGradient>
   </defs>
   <rect x="0" y="0" width="100" height="100" fill="url(#sky)"/>
@@ -84,7 +90,7 @@
       <div class="capbtns">
         <span id="btnMin" title="Minimize">_</span>
         <span id="btnMax" title="Fullscreen">&#9633;</span>
-        <span title="Close">&#215;</span>
+        <span id="btnClose" title="Back to Home">&#215;</span>
       </div>
     </div>
     <div class="win-body">
@@ -109,9 +115,7 @@
       <h2>Contact</h2>
       <p>This project is open source. Questions or issues can be raised through its GitHub repository.</p>
 
-      <a class="back" href="cuarto-oscuro.html">‹ back to the Film Scanner</a>
-      &nbsp;·&nbsp;
-      <a class="back" href="index.html">Dr Iggy's home ›</a>
+      <a class="back-btn" href="index.html">Back to Home</a>
     </div>
   </div>
 </div>
@@ -122,6 +126,9 @@ document.getElementById('btnMin').addEventListener('click', ()=>{
 });
 document.getElementById('btnMax').addEventListener('click', ()=>{
   document.documentElement.requestFullscreen?.().catch(()=>{});
+});
+document.getElementById('btnClose').addEventListener('click', ()=>{
+  window.location.href = 'index.html';
 });
 </script>
 

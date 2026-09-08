@@ -154,6 +154,10 @@
   .lr-section-body{ padding:10px 12px 12px; display:flex; flex-direction:column; gap:9px; }
   .lr-section.collapsed .lr-section-body{ display:none; }
 
+  .basic-tools-row{ display:flex; gap:6px; margin-bottom:2px; }
+  .basic-tools-row button{ flex:1; font-size:10.5px; padding:5px 6px; display:flex; align-items:center; justify-content:center; gap:4px; }
+  .basic-tools-row button.active{ background:var(--lr-accent); color:#12283B; border-color:#1E5A96; font-weight:bold; }
+  #docCanvas.wb-picking{ cursor:crosshair; }
   .lr-slider{ display:flex; flex-direction:column; gap:2px; }
   .lr-slider-head{ display:flex; justify-content:space-between; font-size:11px; }
   .lr-slider-head .lbl{ color:#C8C8C8; }
@@ -233,13 +237,13 @@
 <svg class="bg-scene" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#2E5FC2"/><stop offset="45%" stop-color="#5C93DE"/><stop offset="100%" stop-color="#D9EAF6"/>
+      <stop offset="0%" stop-color="#1B4FC0"/><stop offset="45%" stop-color="#4C86D6"/><stop offset="100%" stop-color="#D9EAF6"/>
     </linearGradient>
     <linearGradient id="hillBack" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#8FD37A"/><stop offset="55%" stop-color="#4F9E48"/><stop offset="100%" stop-color="#286B2C"/>
+      <stop offset="0%" stop-color="#9EDB88"/><stop offset="55%" stop-color="#3F8F39"/><stop offset="100%" stop-color="#1C5420"/>
     </linearGradient>
     <linearGradient id="hillFront" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#A9E793"/><stop offset="55%" stop-color="#69B856"/><stop offset="100%" stop-color="#3D8B3F"/>
+      <stop offset="0%" stop-color="#B8F0A0"/><stop offset="55%" stop-color="#5AAB45"/><stop offset="100%" stop-color="#2C7A2E"/>
     </linearGradient>
   </defs>
   <rect x="0" y="0" width="100" height="100" fill="url(#sky)"/>
@@ -279,6 +283,8 @@
       <input type="file" id="fileInput" multiple accept=".jpg,.jpeg,.png,.webp,.cr3,.cr2,.crw,.nef,.arw,.raf,.rw2,.orf,.dng,.pef,.srw">
       <button id="btnCrop" disabled data-i18n="crop">Crop &amp; Straighten</button>
       <button id="btnCompare" disabled data-i18n="compare">Before / After</button>
+      <button id="btnCopySettings" disabled data-i18n="copySettings">Copy Settings</button>
+      <button id="btnPasteAll" disabled data-i18n="pasteAll">Paste to All</button>
       <div class="spacer"></div>
       <button id="btnUndo" disabled title="Ctrl+Z">&#8630; <span data-i18n="undo">Undo</span></button>
       <button id="btnRedo" disabled title="Ctrl+Y">&#8631; <span data-i18n="redo">Redo</span></button>
@@ -332,6 +338,10 @@
         <div class="lr-section" data-section="basic">
           <div class="lr-section-head"><span data-i18n="basic">Basic</span><span class="tri">&#9660;</span></div>
           <div class="lr-section-body">
+            <div class="basic-tools-row">
+              <button id="btnAutoTone" data-i18n="autoTone">Auto</button>
+              <button id="btnWbPicker" title="White Balance Picker"><svg viewBox="0 0 24 24" width="13" height="13"><path d="M18 3 L21 6 L8 19 L4 20 L5 16 Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg> <span data-i18n="wbPicker">White Balance</span></button>
+            </div>
             <div class="lr-slider"><div class="lr-slider-head"><span class="lbl" data-i18n="temperature">Temperature</span><span class="val" id="v-temperature">0</span></div><input type="range" id="temperature" min="-100" max="100" value="0"></div>
             <div class="lr-slider"><div class="lr-slider-head"><span class="lbl" data-i18n="tint">Tint</span><span class="val" id="v-tint">0</span></div><input type="range" id="tint" min="-100" max="100" value="0"></div>
             <div class="lr-slider"><div class="lr-slider-head"><span class="lbl" data-i18n="exposure">Exposure</span><span class="val" id="v-exposure">0</span></div><input type="range" id="exposure" min="-100" max="100" value="0"></div>
@@ -372,10 +382,24 @@
           </div>
         </div>
 
+        <div class="lr-section collapsed" data-section="split">
+          <div class="lr-section-head"><span data-i18n="splitToning">Split Toning</span><span class="tri">&#9660;</span></div>
+          <div class="lr-section-body">
+            <p class="lr-hint" data-i18n="splitHiLabel">Highlights</p>
+            <div class="lr-slider"><div class="lr-slider-head"><span class="lbl" data-i18n="hue">Hue</span><span class="val" id="v-splitHiHue">0</span></div><input type="range" id="splitHiHue" min="0" max="360" value="0"></div>
+            <div class="lr-slider"><div class="lr-slider-head"><span class="lbl" data-i18n="satHsl">Saturation</span><span class="val" id="v-splitHiSat">0</span></div><input type="range" id="splitHiSat" min="0" max="100" value="0"></div>
+            <p class="lr-hint" data-i18n="splitShLabel">Shadows</p>
+            <div class="lr-slider"><div class="lr-slider-head"><span class="lbl" data-i18n="hue">Hue</span><span class="val" id="v-splitShHue">0</span></div><input type="range" id="splitShHue" min="0" max="360" value="0"></div>
+            <div class="lr-slider"><div class="lr-slider-head"><span class="lbl" data-i18n="satHsl">Saturation</span><span class="val" id="v-splitShSat">0</span></div><input type="range" id="splitShSat" min="0" max="100" value="0"></div>
+            <div class="lr-slider"><div class="lr-slider-head"><span class="lbl" data-i18n="balance">Balance</span><span class="val" id="v-splitBalance">0</span></div><input type="range" id="splitBalance" min="-100" max="100" value="0"></div>
+          </div>
+        </div>
+
         <div class="lr-section collapsed" data-section="detail">
           <div class="lr-section-head"><span data-i18n="detail">Detail</span><span class="tri">&#9660;</span></div>
           <div class="lr-section-body">
             <div class="lr-slider"><div class="lr-slider-head"><span class="lbl" data-i18n="sharpening">Sharpening</span><span class="val" id="v-sharpen">0</span></div><input type="range" id="sharpen" min="0" max="100" value="0"></div>
+            <div class="lr-slider"><div class="lr-slider-head"><span class="lbl" data-i18n="noiseReduction">Noise Reduction</span><span class="val" id="v-noiseReduction">0</span></div><input type="range" id="noiseReduction" min="0" max="100" value="0"></div>
           </div>
         </div>
 
@@ -383,6 +407,7 @@
           <div class="lr-section-head"><span data-i18n="effects">Effects</span><span class="tri">&#9660;</span></div>
           <div class="lr-section-body">
             <div class="lr-slider"><div class="lr-slider-head"><span class="lbl" data-i18n="vignette">Vignette</span><span class="val" id="v-vignette">0</span></div><input type="range" id="vignette" min="-100" max="100" value="0"></div>
+            <div class="lr-slider"><div class="lr-slider-head"><span class="lbl" data-i18n="grain">Grain</span><span class="val" id="v-grain">0</span></div><input type="range" id="grain" min="0" max="100" value="0"></div>
           </div>
         </div>
       </div>
@@ -433,12 +458,19 @@ const I18N = {
     hslHint:'Pick a color band, then adjust.', hue:'Hue', satHsl:'Saturation', lightness:'Luminance',
     aspect:'Aspect', aspectFree:'Free', straighten:'Straighten',
     resetCrop:'Reset', cancelCrop:'Cancel', applyCrop:'Apply',
+    autoTone:'Auto', wbPicker:'White Balance', wbPickHint:'Click a neutral gray or white area in the photo.',
+    splitToning:'Split Toning', splitHiLabel:'Highlights', splitShLabel:'Shadows', balance:'Balance',
+    noiseReduction:'Noise Reduction', grain:'Grain',
+    copySettings:'Copy Settings', pasteAll:'Paste to All',
+    copiedAlert:'Settings copied.', noCopiedAlert:'Copy settings from a photo first.',
+    pastedAllAlert:'Settings pasted to {n} other photo(s).',
     terms:'Terms of Service',
     openFailAlert:'Could not open "{name}".',
     rawFailAlert:'Could not decode "{name}" (RAW). Check that the server is running.\n\nTechnical detail: {detail}',
     removingBg:'Removing background…', bgFail:'Background removal failed. Detail: {detail}',
     noImageAlert:'Open a photo first.',
     photoSingular:'photo', photoPlural:'photos', remove:'Remove', pick:'Pick', reject:'Reject',
+    confirmRemovePhoto:'Remove "{name}" from the library? This can\'t be undone.',
     filterLabel:'Filter', filterAll:'All', filterPicks:'Picks', filterRejects:'Rejects', filterUnflagged:'Unflagged',
     sortLabel:'Sort', sortAdded:'Order Added', sortName:'Name', sortFlag:'Flag',
   },
@@ -454,12 +486,19 @@ const I18N = {
     hslHint:'Elegí una banda de color y ajustá.', hue:'Matiz', satHsl:'Saturación', lightness:'Luminancia',
     aspect:'Proporción', aspectFree:'Libre', straighten:'Enderezar',
     resetCrop:'Reiniciar', cancelCrop:'Cancelar', applyCrop:'Aplicar',
+    autoTone:'Auto', wbPicker:'Balance de Blancos', wbPickHint:'Hacé clic en una zona gris o blanca neutra de la foto.',
+    splitToning:'Tonificación Dividida', splitHiLabel:'Luces', splitShLabel:'Sombras', balance:'Balance',
+    noiseReduction:'Reducción de Ruido', grain:'Grano',
+    copySettings:'Copiar Ajustes', pasteAll:'Pegar a Todas',
+    copiedAlert:'Ajustes copiados.', noCopiedAlert:'Primero copiá los ajustes de una foto.',
+    pastedAllAlert:'Ajustes pegados a {n} otra(s) foto(s).',
     terms:'Términos de servicio',
     openFailAlert:'No pude abrir "{name}".',
     rawFailAlert:'No pude decodificar "{name}" (RAW). Revisá que el servidor esté corriendo.\n\nDetalle técnico: {detail}',
     removingBg:'Quitando fondo…', bgFail:'Falló quitar el fondo. Detalle: {detail}',
     noImageAlert:'Primero abrí una foto.',
     photoSingular:'foto', photoPlural:'fotos', remove:'Quitar', pick:'Selección', reject:'Descarte',
+    confirmRemovePhoto:'¿Quitar "{name}" de la biblioteca? No se puede deshacer.',
     filterLabel:'Filtro', filterAll:'Todas', filterPicks:'Seleccionadas', filterRejects:'Descartadas', filterUnflagged:'Sin marcar',
     sortLabel:'Orden', sortAdded:'Orden de carga', sortName:'Nombre', sortFlag:'Marca',
   }
@@ -506,6 +545,8 @@ function defaultAdj(){
     temperature:0, tint:0, exposure:0, contrast:0,
     highlights:0, shadows:0, whites:0, blacks:0,
     clarity:0, vibrance:0, saturation:0, sharpen:0, vignette:0,
+    splitHiHue:0, splitHiSat:0, splitShHue:0, splitShSat:0, splitBalance:0,
+    noiseReduction:0, grain:0,
     curve:null, // array of [x,y] 0-255 control points (excluding fixed endpoints), or null = identity
     hsl
   };
@@ -572,9 +613,17 @@ function processImageData(srcData, adj, srcCanvas){
 
   const needClarity = adj.clarity !== 0;
   const needSharpen = adj.sharpen !== 0;
+  const needNR = adj.noiseReduction > 0;
   const blurClarity = needClarity ? blurredImageData(srcCanvas, Math.max(3, Math.round(Math.min(w,h)/40))) : null;
   const blurSharpen = needSharpen ? blurredImageData(srcCanvas, 1.4) : null;
+  const blurNR = needNR ? blurredImageData(srcCanvas, 2.2) : null;
 
+  const needSplit = adj.splitHiSat>0 || adj.splitShSat>0;
+  const splitBal = (adj.splitBalance||0)/100*0.25;
+  const hiToneRGB = (adj.splitHiSat>0) ? hslToRgb(adj.splitHiHue,1,0.5) : null;
+  const shToneRGB = (adj.splitShSat>0) ? hslToRgb(adj.splitShHue,1,0.5) : null;
+
+  const needGrain = adj.grain > 0;
   const needVignette = adj.vignette !== 0;
   const cx = w/2, cy = h/2, maxDist = Math.sqrt(cx*cx+cy*cy);
 
@@ -611,6 +660,13 @@ function processImageData(srcData, adj, srcCanvas){
     // tone curve
     if(lut){ r=lut[r|0]; g=lut[g|0]; b=lut[b|0]; }
 
+    // noise reduction (blend toward a blurred version of the source)
+    if(needNR){
+      const br=blurNR.data[i], bg=blurNR.data[i+1], bb=blurNR.data[i+2];
+      const amt = adj.noiseReduction/100*0.85;
+      r = r*(1-amt)+br*amt; g = g*(1-amt)+bg*amt; b = b*(1-amt)+bb*amt;
+    }
+
     // vibrance + saturation
     if(hasVibSat){
       const gray = 0.299*r+0.587*g+0.114*b;
@@ -639,6 +695,25 @@ function processImageData(srcData, adj, srcCanvas){
       [r,g,b] = hslToRgb(hh,ss,ll);
     }
 
+    // split toning (tint highlights/shadows separately)
+    if(needSplit){
+      const lum = (0.299*r+0.587*g+0.114*b)/255;
+      if(hiToneRGB){
+        const hiWeight = smoothstep(0.5-splitBal, 1.0, lum);
+        if(hiWeight>0){
+          const amt = hiWeight*(adj.splitHiSat/100)*0.5;
+          r = r*(1-amt)+hiToneRGB[0]*amt; g = g*(1-amt)+hiToneRGB[1]*amt; b = b*(1-amt)+hiToneRGB[2]*amt;
+        }
+      }
+      if(shToneRGB){
+        const shWeight = 1-smoothstep(0.0, 0.5-splitBal, lum);
+        if(shWeight>0){
+          const amt = shWeight*(adj.splitShSat/100)*0.5;
+          r = r*(1-amt)+shToneRGB[0]*amt; g = g*(1-amt)+shToneRGB[1]*amt; b = b*(1-amt)+shToneRGB[2]*amt;
+        }
+      }
+    }
+
     // clarity (local contrast)
     if(needClarity){
       const br=blurClarity.data[i], bg=blurClarity.data[i+1], bb=blurClarity.data[i+2];
@@ -660,6 +735,11 @@ function processImageData(srcData, adj, srcCanvas){
       const fall = smoothstep(0.35,1.05,dist);
       const vf = 1 - (adj.vignette/100)*fall*0.85;
       r=clamp255(r*vf); g=clamp255(g*vf); b=clamp255(b*vf);
+    }
+    // grain
+    if(needGrain){
+      const n = (Math.random()-0.5)*adj.grain*0.9;
+      r=clamp255(r+n); g=clamp255(g+n); b=clamp255(b+n);
     }
 
     d[i]=r; d[i+1]=g; d[i+2]=b;
@@ -686,10 +766,11 @@ function rotatedRectMaxInscribed(w,h,angleRad){
   }
   return [Math.max(1,Math.round(wr)), Math.max(1,Math.round(hr))];
 }
-function computeGeometryCanvas(){
-  if(!original.img) return null;
-  const {img,w,h} = original;
-  const angleDeg = state.angle||0;
+function computeGeometryCanvas(orig, angleDeg){
+  orig = orig || original;
+  if(!orig.img) return null;
+  const {img,w,h} = orig;
+  angleDeg = angleDeg===undefined ? (state.angle||0) : (angleDeg||0);
   if(!angleDeg){
     const c = document.createElement('canvas'); c.width=w; c.height=h;
     c.getContext('2d').drawImage(img,0,0,w,h);
@@ -706,11 +787,12 @@ function computeGeometryCanvas(){
   c.getContext('2d').drawImage(rc, (rw-iw)/2, (rh-ih)/2, iw, ih, 0,0, iw, ih);
   return c;
 }
-function getWorkingCanvas(){
-  const geo = computeGeometryCanvas();
+function getWorkingCanvas(orig, st){
+  orig = orig || original; st = st || state;
+  const geo = computeGeometryCanvas(orig, st.angle||0);
   if(!geo) return null;
-  if(!state.crop) return geo;
-  const {x,y,w,h} = state.crop;
+  if(!st.crop) return geo;
+  const {x,y,w,h} = st.crop;
   const cw = Math.max(1,Math.round(w)), ch = Math.max(1,Math.round(h));
   const c = document.createElement('canvas'); c.width=cw; c.height=ch;
   c.getContext('2d').drawImage(geo, x, y, w, h, 0, 0, cw, ch);
@@ -815,7 +897,7 @@ function updateHistogram(imgData){
 // open image / set original
 // ============================================================
 function enableControls(on){
-  ['btnCrop','btnCompare','btnResetAll','btnRemoveBg','btnExport'].forEach(id=>{
+  ['btnCrop','btnCompare','btnResetAll','btnRemoveBg','btnExport','btnCopySettings','btnPasteAll','btnAutoTone','btnWbPicker'].forEach(id=>{
     document.getElementById(id).disabled = !on;
   });
   document.body.classList.toggle('has-image', on);
@@ -840,6 +922,21 @@ function updateActiveThumb(){
   const tc = document.createElement('canvas'); tc.width=tw; tc.height=th;
   tc.getContext('2d').drawImage(srcCanvas,0,0,tw,th);
   p.thumb = tc.toDataURL('image/jpeg', 0.72);
+}
+// Recomputes a thumbnail for an arbitrary (possibly non-active) library photo from scratch —
+// used after batch operations like "Paste to All", where the photo isn't the one on screen.
+function computeThumbForPhoto(photo){
+  const working = getWorkingCanvas(photo.original, photo.state);
+  if(!working) return;
+  const tw = 88, th = Math.max(1, Math.round(tw * working.height/working.width));
+  const pc = document.createElement('canvas'); pc.width=tw; pc.height=th;
+  const pctx = pc.getContext('2d', {willReadFrequently:true});
+  pctx.drawImage(working, 0,0,tw,th);
+  const data = pctx.getImageData(0,0,tw,th);
+  const out = processImageData(data, photo.state.adj, pc);
+  const oc = document.createElement('canvas'); oc.width=tw; oc.height=th;
+  oc.getContext('2d').putImageData(out,0,0);
+  photo.thumb = oc.toDataURL('image/jpeg', 0.72);
 }
 
 function addPhotoToLibrary(img, w, h, name){
@@ -928,7 +1025,10 @@ function renderFilmstrip(){
         '<button class="flag-btn flag-reject'+(p.flag==='reject'?' active':'')+'" title="'+t('reject')+' (X)">&#10005;</button>' +
       '</div>';
     cell.querySelector('.film-thumb').addEventListener('click', ()=> selectPhoto(p.id));
-    cell.querySelector('.film-remove').addEventListener('click', (e)=>{ e.stopPropagation(); removePhoto(p.id); });
+    cell.querySelector('.film-remove').addEventListener('click', (e)=>{
+      e.stopPropagation();
+      if(confirm(t('confirmRemovePhoto', {name: p.name||''}))) removePhoto(p.id);
+    });
     cell.querySelector('.flag-pick').addEventListener('click', (e)=>{ e.stopPropagation(); setFlag(p.id,'pick'); });
     cell.querySelector('.flag-reject').addEventListener('click', (e)=>{ e.stopPropagation(); setFlag(p.id,'reject'); });
     strip.appendChild(cell);
@@ -1011,13 +1111,92 @@ document.getElementById('btnCompare').addEventListener('click', (e)=>{
 });
 
 // ============================================================
+// copy / paste settings across the library
+// ============================================================
+let clipboardAdj = null;
+document.getElementById('btnCopySettings').addEventListener('click', ()=>{
+  if(!original.img) return;
+  clipboardAdj = { adj: JSON.parse(JSON.stringify(state.adj)), crop: state.crop?{...state.crop}:null, angle: state.angle };
+  alert(t('copiedAlert'));
+});
+document.getElementById('btnPasteAll').addEventListener('click', ()=>{
+  if(!clipboardAdj){ alert(t('noCopiedAlert')); return; }
+  let count = 0;
+  library.forEach(p=>{
+    if(p.id===activeId) return;
+    p.state.adj = JSON.parse(JSON.stringify(clipboardAdj.adj));
+    p.state.crop = clipboardAdj.crop ? {...clipboardAdj.crop} : null;
+    p.state.angle = clipboardAdj.angle;
+    p.history = [{ img:p.original.img, w:p.original.w, h:p.original.h,
+      crop: p.state.crop, angle: p.state.angle, adj: JSON.parse(JSON.stringify(p.state.adj)) }];
+    p.historyIndex = 0;
+    computeThumbForPhoto(p);
+    count++;
+  });
+  renderFilmstrip();
+  alert(t('pastedAllAlert', {n: count}));
+});
+
+// ============================================================
+// auto tone (one-click exposure/contrast stretch)
+// ============================================================
+document.getElementById('btnAutoTone').addEventListener('click', ()=>{
+  if(!original.img || !previewBaseData) return;
+  const d = previewBaseData.data;
+  let sum=0, count=0, lo=255, hi=0;
+  const step = 16;
+  for(let i=0;i<d.length;i+=step){
+    const lum = 0.299*d[i]+0.587*d[i+1]+0.114*d[i+2];
+    sum+=lum; count++;
+    if(lum<lo) lo=lum; if(lum>hi) hi=lum;
+  }
+  const avg = count ? sum/count : 128;
+  const range = Math.max(1, hi-lo);
+  state.adj.contrast = clampN(Math.round((255/range - 1) * 55), -20, 60);
+  state.adj.exposure = clampN(Math.round((128-avg)/128*40), -40, 40);
+  syncSlidersFromState();
+  render();
+  pushHistory();
+});
+
+// ============================================================
+// white balance eyedropper
+// ============================================================
+let wbPicking = false;
+document.getElementById('btnWbPicker').addEventListener('click', (e)=>{
+  if(!original.img) return;
+  wbPicking = !wbPicking;
+  e.currentTarget.classList.toggle('active', wbPicking);
+  els.docCanvas.classList.toggle('wb-picking', wbPicking);
+  if(wbPicking) alert(t('wbPickHint'));
+});
+els.docCanvas.addEventListener('click', (e)=>{
+  if(!wbPicking || !previewBaseData) return;
+  const rect = els.docCanvas.getBoundingClientRect();
+  const px = Math.round((e.clientX-rect.left) * (previewBaseData.width/rect.width));
+  const py = Math.round((e.clientY-rect.top) * (previewBaseData.height/rect.height));
+  const cx = clampN(px,0,previewBaseData.width-1), cy = clampN(py,0,previewBaseData.height-1);
+  const idx = (cy*previewBaseData.width+cx)*4;
+  const r = previewBaseData.data[idx], g = previewBaseData.data[idx+1], b = previewBaseData.data[idx+2];
+  state.adj.temperature = clampN(Math.round((b-r)*1.4), -100, 100);
+  state.adj.tint = clampN(Math.round(-(g-(r+b)/2)*1.4), -100, 100);
+  syncSlidersFromState();
+  render();
+  pushHistory();
+  wbPicking = false;
+  document.getElementById('btnWbPicker').classList.remove('active');
+  els.docCanvas.classList.remove('wb-picking');
+});
+
+// ============================================================
 // slider wiring
 // ============================================================
 const BASIC_KEYS = ['temperature','tint','exposure','contrast','highlights','shadows','whites','blacks'];
 const PRESENCE_KEYS = ['clarity','vibrance','saturation'];
-const DETAIL_KEYS = ['sharpen'];
-const EFFECT_KEYS = ['vignette'];
-const ALL_ADJ_KEYS = BASIC_KEYS.concat(PRESENCE_KEYS, DETAIL_KEYS, EFFECT_KEYS);
+const SPLIT_KEYS = ['splitHiHue','splitHiSat','splitShHue','splitShSat','splitBalance'];
+const DETAIL_KEYS = ['sharpen','noiseReduction'];
+const EFFECT_KEYS = ['vignette','grain'];
+const ALL_ADJ_KEYS = BASIC_KEYS.concat(PRESENCE_KEYS, SPLIT_KEYS, DETAIL_KEYS, EFFECT_KEYS);
 
 ALL_ADJ_KEYS.forEach(key=>{
   const input = document.getElementById(key);
