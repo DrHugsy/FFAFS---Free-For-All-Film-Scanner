@@ -6,131 +6,91 @@
 <title>Terms of Service — Dr Iggy's</title>
 <meta name="description" content="Terms of Service for the Free Online Film Scanner and Dr Iggy's free tools.">
 <link rel="canonical" href="https://www.driggys.com/terms.html">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='2' y='2' width='28' height='28' rx='4' fill='%234C2E9E'/%3E%3Ctext x='16' y='23' font-size='18' font-weight='bold' text-anchor='middle' fill='white' font-family='Tahoma,sans-serif'%3EI%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%236E42D6'/%3E%3Cpath d='M9 8 L11.5 3.5 L14 8Z' fill='%23FFB74D'/%3E%3Ccircle cx='13' cy='15' r='9' fill='%238B5CF6'/%3E%3Ccircle cx='11.5' cy='13' r='3' fill='%232B1750'/%3E%3Ccircle cx='12.5' cy='12' r='1' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --titlebar-1:#3E7BEB; --titlebar-2:#1E4FC4; --titlebar-3:#0F3AA8;
-    --window:#ECE9D8; --window-edge:#0A246A; --ink:#000000; --ink-dim:#4B4B4B;
-    --accent:#316AC5; --font:Tahoma, 'Segoe UI', Verdana, sans-serif;
+    --font-display:'Space Grotesk','Segoe UI',sans-serif;
+    --font-body:'Inter','Segoe UI',sans-serif;
+    --bg:#0E0B16; --surface:#1B1626; --border:rgba(255,255,255,.09);
+    --text:#F3F1FA; --text-dim:#A79FC0; --text-faint:#726A8A;
+    --violet-2:#8B5CF6; --violet-3:#6E42D6;
+    --radius-lg:22px; --radius-sm:10px;
   }
   *{ box-sizing:border-box; }
-  html,body{ height:100%; background:#6E9DDD; }
+  html,body{ height:100%; }
   body{
-    margin:0; font-family:var(--font); font-size:13px; color:var(--ink);
-    min-height:100vh; padding:22px 14px 40px; position:relative;
+    margin:0; background:var(--bg); color:var(--text); font-family:var(--font-body);
+    font-size:15px; line-height:1.6; min-height:100vh; position:relative; overflow-x:hidden;
   }
-  .bg-scene{ position:fixed; inset:0; width:100%; height:100%; }
-  .wrap{ max-width:640px; margin:0 auto; position:relative; z-index:1; }
-  .win{
-    background:var(--window); border:2px solid var(--window-edge); border-radius:7px 7px 3px 3px;
-    box-shadow:2px 3px 8px rgba(0,0,0,.4);
-  }
-  .win-title{
-    background:linear-gradient(180deg, var(--titlebar-1) 0%, var(--titlebar-2) 45%, var(--titlebar-2) 60%, var(--titlebar-3) 100%);
-    color:#fff; font-weight:bold; font-size:13px; padding:4px 6px 4px 10px; border-radius:5px 5px 0 0;
-    display:flex; align-items:center; justify-content:space-between; gap:8px;
-    text-shadow:1px 1px 1px rgba(0,0,0,.45);
-  }
-  .win-title .capbtns{ display:flex; gap:3px; }
-  .win-title .capbtns span{
-    width:19px; height:17px; border-radius:3px; display:inline-flex; align-items:center; justify-content:center;
-    font-size:11px; font-weight:bold; color:#333333; text-shadow:none; cursor:pointer;
-    background:linear-gradient(180deg,#FFFFFF 0%,#ECECEC 45%,#D9D9D9 55%,#C4C4C4 100%); border:1px solid #7A7A7A;
-  }
-  .win-title .capbtns span:hover{ background:linear-gradient(180deg,#FFFFFF 0%,#EAF2FF 45%,#D6E6FF 55%,#BFDAFF 100%); border-color:#316AC5; }
-  .win-title .capbtns span:active{ background:linear-gradient(180deg,#C4C4C4,#D9D9D9); }
-  .win-body{ padding:20px 24px; }
-  h1{ font-size:18px; margin:0 0 4px; color:#0F3AA8; }
-  .updated{ font-size:11.5px; color:var(--ink-dim); margin:0 0 18px; }
-  h2{ font-size:13.5px; margin:18px 0 6px; }
-  p, li{ font-size:12.5px; line-height:1.55; }
-  a{ color:#0F3AA8; }
+  .bg-glow{ position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none; }
+  .bg-glow i{ position:absolute; border-radius:50%; filter:blur(90px); display:block; }
+  .bg-glow .b1{ width:520px; height:520px; background:var(--violet-3); opacity:.32; top:-220px; left:-180px; }
+  .bg-glow .b2{ width:420px; height:420px; background:#FF8FA3; opacity:.12; bottom:-200px; right:-140px; }
+
+  .wrap{ max-width:680px; margin:0 auto; position:relative; z-index:1; padding:24px 20px 60px; }
+  .nav{ display:flex; align-items:center; gap:10px; text-decoration:none; margin-bottom:28px; }
+  .nav svg{ width:28px; height:28px; }
+  .nav span{ font-family:var(--font-display); font-weight:600; font-size:16px; color:var(--text); }
+
+  .card{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:30px 32px; }
+  h1{ font-family:var(--font-display); font-size:24px; margin:0 0 6px; }
+  .updated{ font-size:12.5px; color:var(--text-faint); margin:0 0 22px; }
+  h2{ font-family:var(--font-display); font-size:15px; margin:22px 0 7px; color:var(--violet-2); }
+  h2:first-of-type{ margin-top:0; }
+  p, li{ font-size:13.5px; line-height:1.65; color:var(--text-dim); }
+  a{ color:var(--violet-2); }
   .back-btn{
-    display:inline-block; margin-top:20px; text-decoration:none; font-family:var(--font);
-    font-size:12px; padding:7px 16px; border:1px solid #556; border-radius:3px; color:var(--ink);
-    background:linear-gradient(180deg,#FDFDFD 0%, #ECECEC 45%, #DCDCDC 55%, #C9C9C9 100%);
+    display:inline-block; margin-top:26px; text-decoration:none; font-family:var(--font-body); font-weight:600;
+    font-size:13px; padding:10px 20px; border-radius:var(--radius-sm); color:#fff;
+    background:linear-gradient(135deg, var(--violet-2), var(--violet-3));
   }
-  .back-btn:hover{ border-color:var(--accent); background:linear-gradient(180deg,#FFFFFF 0%, #EAF2FF 45%, #D6E6FF 55%, #BFDAFF 100%); }
-  .back-btn:active{ background:linear-gradient(180deg,#C9C9C9,#DCDCDC); }
+  .back-btn:hover{ filter:brightness(1.1); }
 </style>
 </head>
 <body>
 
-<svg class="bg-scene" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#1B4FC0"/>
-      <stop offset="45%" stop-color="#4C86D6"/>
-      <stop offset="100%" stop-color="#D9EAF6"/>
-    </linearGradient>
-    <linearGradient id="hillBack" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#9EDB88"/>
-      <stop offset="55%" stop-color="#3F8F39"/>
-      <stop offset="100%" stop-color="#1C5420"/>
-    </linearGradient>
-    <linearGradient id="hillFront" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#B8F0A0"/>
-      <stop offset="55%" stop-color="#5AAB45"/>
-      <stop offset="100%" stop-color="#2C7A2E"/>
-    </linearGradient>
-  </defs>
-  <rect x="0" y="0" width="100" height="100" fill="url(#sky)"/>
-  <g fill="#FFFFFF" opacity="0.8">
-    <ellipse cx="16" cy="16" rx="8" ry="3.2"/><ellipse cx="21" cy="14" rx="6" ry="2.6"/><ellipse cx="11" cy="14.5" rx="5" ry="2.3"/>
-    <ellipse cx="72" cy="9" rx="7" ry="2.8"/><ellipse cx="77" cy="7.5" rx="5" ry="2.2"/><ellipse cx="67" cy="8" rx="4.5" ry="2"/>
-  </g>
-  <path d="M0,62 Q15,48 32,60 T65,58 T100,55 L100,100 L0,100 Z" fill="url(#hillBack)"/>
-  <path d="M0,78 Q20,62 40,76 T78,74 T100,70 L100,100 L0,100 Z" fill="url(#hillFront)"/>
-</svg>
+<div class="bg-glow"><i class="b1"></i><i class="b2"></i></div>
 
 <div class="wrap">
-  <div class="win">
-    <div class="win-title">
-      <span>Terms of Service</span>
-      <div class="capbtns">
-        <span id="btnMin" title="Minimize">_</span>
-        <span id="btnMax" title="Fullscreen">&#9633;</span>
-        <span id="btnClose" title="Back to Home">&#215;</span>
-      </div>
-    </div>
-    <div class="win-body">
-      <h1>Terms of Service</h1>
-      <p class="updated">Last updated: 2026. This is a small personal project, written in plain language — not a document drafted or reviewed by a lawyer.</p>
+  <a class="nav" href="index.html">
+    <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+      <rect width="32" height="32" rx="9" fill="#6E42D6"/>
+      <path d="M9 8 L11.5 3.5 L14 8Z" fill="#FFB74D"/>
+      <circle cx="13" cy="15" r="9" fill="#8B5CF6"/>
+      <circle cx="11.5" cy="13" r="3" fill="#2B1750"/>
+      <circle cx="12.5" cy="12" r="1" fill="#fff"/>
+    </svg>
+    <span>Dr Iggy's</span>
+  </a>
 
-      <h2>What this is</h2>
-      <p>The Free Online Film Scanner (by Dr Iggy's) is a free tool that crops, color-corrects, and restores photos of film negatives. It's a personal, non-commercial project, provided as-is, with no account required.</p>
+  <div class="card">
+    <h1>Terms of Service</h1>
+    <p class="updated">Last updated: 2026. This is a small personal project, written in plain language — not a document drafted or reviewed by a lawyer.</p>
 
-      <h2>Your photos</h2>
-      <p>Photos you upload are processed to generate the result you see and download. The RAW-decoding step happens on the server only long enough to convert the file and send back an image — it is not written to disk or kept afterward. Nothing you upload is stored, sold, shared, or used for anything other than showing you the result in that same session.</p>
+    <h2>What this is</h2>
+    <p>Dr Iggy's is a small set of free tools (a film negative scanner, a photo editor, a LUT lab) for photography and design. It's a personal, non-commercial project, provided as-is, with no account required.</p>
 
-      <h2>No warranty</h2>
-      <p>This tool is provided "as is," with no guarantee that it will always be available, error-free, or produce a perfect result for every photo. Always keep your own backup of the original negatives or scans — don't rely on this site as your only copy of anything.</p>
+    <h2>Your photos</h2>
+    <p>Photos you upload are processed to generate the result you see and download. The RAW-decoding step happens on the server only long enough to convert the file and send back an image — it is not written to disk or kept afterward. Nothing you upload is stored, sold, shared, or used for anything other than showing you the result in that same session.</p>
 
-      <h2>Acceptable use</h2>
-      <p>Don't upload content you don't have the right to process, or use the service in a way that disrupts it for other people (for example, automated bulk abuse). Reasonable personal use is exactly what this was built for.</p>
+    <h2>No warranty</h2>
+    <p>These tools are provided "as is," with no guarantee that they will always be available, error-free, or produce a perfect result for every photo. Always keep your own backup of the original negatives or scans — don't rely on this site as your only copy of anything.</p>
 
-      <h2>Changes</h2>
-      <p>This is a hobby project and may change, move, or occasionally go down. If anything meaningful changes about how it handles your data, this page will be updated.</p>
+    <h2>Acceptable use</h2>
+    <p>Don't upload content you don't have the right to process, or use the service in a way that disrupts it for other people (for example, automated bulk abuse). Reasonable personal use is exactly what this was built for.</p>
 
-      <h2>Contact</h2>
-      <p>This project is open source. Questions or issues can be raised through its GitHub repository.</p>
+    <h2>Changes</h2>
+    <p>This is a hobby project and may change, move, or occasionally go down. If anything meaningful changes about how it handles your data, this page will be updated.</p>
 
-      <a class="back-btn" href="index.html">Back to Home</a>
-    </div>
+    <h2>Contact</h2>
+    <p>This project is open source. Questions or issues can be raised through its GitHub repository.</p>
+
+    <a class="back-btn" href="index.html">Back to Home</a>
   </div>
 </div>
-
-<script>
-document.getElementById('btnMin').addEventListener('click', ()=>{
-  document.exitFullscreen?.().catch(()=>{});
-});
-document.getElementById('btnMax').addEventListener('click', ()=>{
-  document.documentElement.requestFullscreen?.().catch(()=>{});
-});
-document.getElementById('btnClose').addEventListener('click', ()=>{
-  window.location.href = 'index.html';
-});
-</script>
 
 </body>
 </html>
