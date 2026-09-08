@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LUT Lab — Dr Iggy's</title>
+<meta name="description" content="A free LUT selector and creator: apply color-grading LUTs to your photos, upload your own .cube files, or build and export your own — right in your browser, no signup.">
+<link rel="canonical" href="https://www.driggys.com/lut-lab.html">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 56 56'%3E%3Ccircle cx='28' cy='28' r='22' fill='white' stroke='%230A246A' stroke-width='2'/%3E%3Ccircle cx='20' cy='20' r='5' fill='%23E04040'/%3E%3Ccircle cx='36' cy='18' r='5' fill='%2340A0E0'/%3E%3Ccircle cx='40' cy='34' r='5' fill='%23E0C040'/%3E%3Ccircle cx='22' cy='36' r='5' fill='%2340C060'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --violet-1:#A88CF0; --violet-2:#7452D6; --violet-3:#4C2E9E;
+    --titlebar-1:#3E7BEB; --titlebar-2:#1E4FC4; --titlebar-3:#0F3AA8;
+    --window:#ECE9D8; --window-edge:#0A246A; --ink:#000000; --ink-dim:#4B4B4B;
+    --btnface:#ECE9D8; --btn-hi:#FFFFFF; --btn-lo:#ACA899; --field:#FFFFFF;
+    --accent:#316AC5; --font:Tahoma, 'Segoe UI', Verdana, sans-serif;
+    --lr-bg:#3C3C3C; --lr-panel:#383838; --lr-panel-2:#2F2F2F;
+    --lr-canvas:#232323; --lr-border:#222222; --lr-text:#D8D8D8; --lr-text-dim:#9B9B9B;
+    --lr-accent:#4FA3E8;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; background:#6E9DDD; }
+  body{
+    margin:0; font-family:var(--font); font-size:12px; color:var(--ink);
+    min-height:100vh; padding:10px; position:relative;
+  }
+  .bg-scene{ position:fixed; inset:0; width:100%; height:100%; }
+
+  .win{
+    background:var(--window); border:2px solid var(--window-edge); border-radius:7px 7px 3px 3px;
+    box-shadow:2px 3px 8px rgba(0,0,0,.4);
+  }
+  .win-title{
+    background:linear-gradient(180deg, var(--titlebar-1) 0%, var(--titlebar-2) 45%, var(--titlebar-2) 60%, var(--titlebar-3) 100%);
+    color:#fff; font-weight:bold; font-size:13px; padding:4px 6px 4px 10px; border-radius:5px 5px 0 0;
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    text-shadow:1px 1px 1px rgba(0,0,0,.45);
+  }
+  .win-title .capbtns{ display:flex; gap:3px; }
+  .win-title .capbtns span{
+    width:19px; height:17px; border-radius:3px; display:inline-flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:bold; color:#333333; text-shadow:none; cursor:pointer;
+    background:linear-gradient(180deg,#FFFFFF 0%,#ECECEC 45%,#D9D9D9 55%,#C4C4C4 100%); border:1px solid #7A7A7A;
+  }
+  .win-title .capbtns span:hover{ background:linear-gradient(180deg,#FFFFFF 0%,#EAF2FF 45%,#D6E6FF 55%,#BFDAFF 100%); border-color:#316AC5; }
+  .win-title .capbtns span:active{ background:linear-gradient(180deg,#C4C4C4,#D9D9D9); }
+  #btnLangEn, #btnLangEs{ width:22px !important; font-size:10px !important; }
+  .lang-btn.active{
+    background:linear-gradient(180deg,#FFDA8C,#E8A33D 55%,#C9720A) !important;
+    border-color:#7A4A05 !important; color:#3A2400 !important;
+  }
+
+  .dev-taskbar{
+    background:linear-gradient(180deg, var(--violet-1) 0%, var(--violet-2) 50%, var(--violet-3) 100%);
+    border:2px solid #2E1A66; border-radius:6px; padding:5px 12px;
+    display:flex; align-items:center; justify-content:space-between;
+    color:#fff; font-weight:bold; font-size:12px; text-shadow:1px 1px 1px rgba(0,0,0,.4);
+    margin-bottom:10px;
+  }
+  .dev-taskbar .more-tools{
+    color:#fff; text-decoration:none; background:rgba(255,255,255,.18);
+    border:1px solid rgba(255,255,255,.5); border-radius:4px; padding:3px 10px; font-size:11.5px;
+  }
+  .dev-taskbar .more-tools:hover{ background:rgba(255,255,255,.32); }
+
+  .page{ max-width:1500px; margin:0 auto; position:relative; z-index:1; display:flex; flex-direction:column; gap:10px; }
+
+  .lr-toolbar{
+    background:linear-gradient(180deg,#4A4A4A,#3A3A3A); border-bottom:1px solid var(--lr-border);
+    display:flex; align-items:center; gap:6px; padding:7px 8px; flex-wrap:wrap;
+  }
+  .lr-toolbar .spacer{ flex:1; }
+  .lr-toolbar button{
+    background:#565656; color:var(--lr-text); border:1px solid #222; font-size:11px; padding:6px 10px;
+  }
+  .lr-toolbar button:hover{ background:#666; border-color:#111; }
+  .lr-toolbar button:active{ background:#4a4a4a; }
+  .lr-toolbar button.primary{ background:linear-gradient(180deg,#5FAEEF,#3E85C9); border-color:#1E5A96; color:#fff; font-weight:bold; }
+  .lr-toolbar button.primary:hover{ background:linear-gradient(180deg,#6FBCFC,#4B93D8); }
+  .lr-toolbar button.toggled{ background:var(--lr-accent); border-color:#1E5A96; color:#12283B; font-weight:bold; }
+  .lr-toolbar button:disabled{ opacity:.4; cursor:not-allowed; }
+
+  .editor-body{ display:grid; grid-template-columns:210px 1fr 300px; gap:0; height:68vh; min-height:460px; }
+
+  /* ---- LUT gallery (left) ---- */
+  .gallery-panel{ background:var(--lr-panel); border-right:1px solid var(--lr-border); display:flex; flex-direction:column; overflow:hidden; }
+  .gallery-head{ padding:8px 10px 4px; font-size:10.5px; color:var(--lr-text-dim); text-transform:uppercase; letter-spacing:.05em; }
+  .lut-gallery{ flex:1; display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:6px 10px 10px; overflow-y:auto; align-content:start; }
+  .lut-item{ cursor:pointer; border:2px solid transparent; border-radius:3px; background:#1c1c1c; padding:0; }
+  .lut-item.active{ border-color:var(--lr-accent); }
+  .lut-thumb{ width:100%; height:60px; object-fit:cover; display:block; background:#111; border-radius:1px 1px 0 0; }
+  .lut-name{ font-size:9.5px; color:var(--lr-text); padding:3px 4px; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .lut-item.builtin .lut-name{ color:#cfe0f5; }
+  .lut-item.custom .lut-name{ color:#d8f0d8; }
+
+  .canvas-area{
+    background:var(--lr-canvas); position:relative; overflow:auto; display:flex; align-items:center; justify-content:center;
+  }
+  .canvas-checker{
+    background-image:
+      linear-gradient(45deg,#5a5a5a 25%,transparent 25%),linear-gradient(-45deg,#5a5a5a 25%,transparent 25%),
+      linear-gradient(45deg,transparent 75%,#5a5a5a 75%),linear-gradient(-45deg,transparent 75%,#5a5a5a 75%);
+    background-size:16px 16px; background-position:0 0,0 8px,8px -8px,-8px 0px; background-color:#787878;
+    box-shadow:0 2px 14px rgba(0,0,0,.6); position:relative;
+  }
+  #docCanvas{ display:block; }
+  .canvas-bar{
+    position:absolute; bottom:8px; left:50%; transform:translateX(-50%);
+    background:rgba(30,30,30,.92); border:1px solid #111; border-radius:5px; padding:6px 10px;
+    display:flex; align-items:center; gap:10px; color:var(--lr-text); font-size:11px;
+  }
+  .canvas-bar .strength-wrap{ display:flex; align-items:center; gap:6px; }
+  .canvas-bar .strength-wrap input[type=range]{ width:120px; }
+
+  .right-panel{ background:var(--lr-panel); border-left:1px solid var(--lr-border); display:flex; flex-direction:column; overflow-y:auto; color:var(--lr-text); }
+  .creator-hint{ padding:8px 12px; font-size:10.5px; color:var(--lr-text-dim); border-bottom:1px solid var(--lr-border); background:var(--lr-panel-2); line-height:1.4; }
+
+  .lr-section{ border-bottom:1px solid var(--lr-border); }
+  .lr-section-head{
+    padding:8px 12px; font-size:11px; font-weight:bold; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--lr-text); cursor:pointer; display:flex; align-items:center; justify-content:space-between;
+    background:var(--lr-panel-2); user-select:none;
+  }
+  .lr-section-head:hover{ background:#343434; }
+  .lr-section-head .tri{ display:inline-block; transition:transform .12s; font-size:9px; color:var(--lr-text-dim); }
+  .lr-section.collapsed .tri{ transform:rotate(-90deg); }
+  .lr-section-body{ padding:10px 12px 12px; display:flex; flex-direction:column; gap:9px; }
+  .lr-section.collapsed .lr-section-body{ display:none; }
+
+  .lr-slider{ display:flex; flex-direction:column; gap:2px; }
+  .lr-slider-head{ display:flex; justify-content:space-between; font-size:11px; }
+  .lr-slider-head .lbl{ color:#C8C8C8; }
+  .lr-slider-head .val{ color:#fff; font-variant-numeric:tabular-nums; min-width:2.2em; text-align:right; }
+  input[type=range]{
+    -webkit-appearance:none; appearance:none; width:100%; height:4px; border-radius:2px; outline:none;
+    background:#1c1c1c; border:1px solid #111;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:12px; height:14px; border-radius:2px;
+    background:linear-gradient(180deg,#fff,#cfcfcf 55%,#a8a8a8); cursor:pointer; border:1px solid #333; margin-top:-1px;
+  }
+  input[type=range]::-moz-range-thumb{
+    width:12px; height:14px; border-radius:2px; border:1px solid #333;
+    background:linear-gradient(180deg,#fff,#cfcfcf 55%,#a8a8a8); cursor:pointer;
+  }
+  .right-panel button{ font-family:var(--font); }
+  .hsl-band-btns{ display:flex; flex-wrap:wrap; gap:4px; }
+  .hsl-band-btn{ width:26px; height:20px; border:1px solid #111; border-radius:2px; cursor:pointer; padding:0; }
+  .hsl-band-btn.active{ outline:2px solid #fff; outline-offset:1px; }
+  .lr-hint{ font-size:10px; color:var(--lr-text-dim); margin:0; }
+  .save-row{ display:flex; gap:6px; padding:10px 12px; border-top:1px solid var(--lr-border); }
+  .save-row button{ flex:1; }
+
+  button{
+    font-family:var(--font); font-size:11.5px; padding:6px 10px; min-height:24px;
+    border:1px solid #556; border-radius:3px; color:var(--ink); cursor:pointer;
+    background:linear-gradient(180deg,#FDFDFD 0%, #ECECEC 45%, #DCDCDC 55%, #C9C9C9 100%);
+  }
+  button:hover{ border-color:var(--accent); background:linear-gradient(180deg,#FFFFFF 0%, #EAF2FF 45%, #D6E6FF 55%, #BFDAFF 100%); }
+  button:active{ background:linear-gradient(180deg,#C9C9C9,#DCDCDC); }
+  button:disabled{ opacity:.5; cursor:not-allowed; }
+  input[type=file]{ display:none; }
+
+  .site-footer{ text-align:center; font-size:11px; color:#0F3AA8; padding:2px 0 8px; text-shadow:1px 1px 1px rgba(255,255,255,.5); }
+  .site-footer a{ color:#0F3AA8; }
+
+  @media (max-width:980px){
+    .editor-body{ grid-template-columns:1fr; grid-template-rows:180px 1fr auto; height:auto; }
+    .gallery-panel{ border-right:none; border-bottom:1px solid var(--lr-border); }
+    .right-panel{ border-left:none; border-top:1px solid var(--lr-border); max-height:360px; }
+    .canvas-area{ min-height:320px; }
+  }
+</style>
+</head>
+<body>
+
+<svg class="bg-scene" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1B4FC0"/><stop offset="45%" stop-color="#4C86D6"/><stop offset="100%" stop-color="#D9EAF6"/>
+    </linearGradient>
+    <linearGradient id="hillBack" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#9EDB88"/><stop offset="55%" stop-color="#3F8F39"/><stop offset="100%" stop-color="#1C5420"/>
+    </linearGradient>
+    <linearGradient id="hillFront" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#B8F0A0"/><stop offset="55%" stop-color="#5AAB45"/><stop offset="100%" stop-color="#2C7A2E"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="100" height="100" fill="url(#sky)"/>
+  <g fill="#FFFFFF" opacity="0.8">
+    <ellipse cx="16" cy="16" rx="8" ry="3.2"/><ellipse cx="21" cy="14" rx="6" ry="2.6"/><ellipse cx="11" cy="14.5" rx="5" ry="2.3"/>
+    <ellipse cx="72" cy="9" rx="7" ry="2.8"/><ellipse cx="77" cy="7.5" rx="5" ry="2.2"/><ellipse cx="67" cy="8" rx="4.5" ry="2"/>
+  </g>
+  <path d="M0,62 Q15,48 32,60 T65,58 T100,55 L100,100 L0,100 Z" fill="url(#hillBack)"/>
+  <path d="M0,78 Q20,62 40,76 T78,74 T100,70 L100,100 L0,100 Z" fill="url(#hillFront)"/>
+</svg>
+
+<div class="page">
+
+  <div class="dev-taskbar">
+    <span>Dr Iggy's</span>
+    <a class="more-tools" href="index.html">&#8592; More Tools</a>
+  </div>
+
+  <div class="win top-titlebar">
+    <div class="win-title">
+      <span>LUT Lab</span>
+      <div class="capbtns">
+        <span id="btnLangEn" class="lang-btn" title="English">EN</span>
+        <span id="btnLangEs" class="lang-btn" title="Español">ES</span>
+        <span id="btnMin" title="Minimize">_</span>
+        <span id="btnMax" title="Fullscreen">&#9633;</span>
+        <span title="Close">&#215;</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="win">
+    <div class="win-title"><span data-i18n="winTitle">LUT Lab</span></div>
+
+    <div class="lr-toolbar">
+      <button class="primary" id="btnOpenPhoto" data-i18n="openPhoto">Open Photo</button>
+      <input type="file" id="photoInput" accept=".jpg,.jpeg,.png,.webp">
+      <button id="btnUploadLut" data-i18n="uploadLut">Upload LUT (.cube)</button>
+      <input type="file" id="lutInput" accept=".cube">
+      <div class="spacer"></div>
+      <button id="btnSendEditor" disabled data-i18n="sendEditor">Send to Photo Editor</button>
+      <button class="primary" id="btnExportPng" disabled data-i18n="exportPng">Download PNG</button>
+    </div>
+
+    <div class="editor-body">
+      <div class="gallery-panel">
+        <div class="gallery-head" data-i18n="builtinLuts">Starter LUTs</div>
+        <div class="lut-gallery" id="lutGalleryBuiltin"></div>
+        <div class="gallery-head" data-i18n="myLuts">My LUTs</div>
+        <div class="lut-gallery" id="lutGalleryCustom"></div>
+      </div>
+
+      <div class="canvas-area" id="canvasArea">
+        <div class="canvas-checker" id="canvasWrap" style="position:relative;">
+          <canvas id="docCanvas"></canvas>
+        </div>
+        <div class="canvas-bar">
+          <button id="btnCompare" data-i18n="compare">Before / After</button>
+          <div class="strength-wrap">
+            <span data-i18n="strength">Strength</span>
+            <input type="range" id="strengthSlider" min="0" max="100" value="100">
+            <span id="v-strength">100%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="right-panel" id="rightPanel">
+        <div class="creator-hint" data-i18n="creatorHint">Move any slider below to start building your own LUT. Texture effects (clarity, vignette, grain) live in the Photo Editor — LUTs only carry color and tone.</div>
+
+        <div class="lr-section" data-section="basic">
+          <div class="lr-section-head"><span data-i18n="basic">Basic</span><span class="tri">&#9660;</span></div>
+          <div class="lr-section-body">
+            <div class="lr-slider"><div class="lr-slider-head"><span class="lbl" data-i18n="temperature">Temperature</span><span class="val" id="v-temperature">0</span></div><input type="range" id="temperature" min="-100" max="100" value="0"></div>
+            <div class="lr-slider"><div class="lr-slider-head"><span class="lbl" data-i18n="tint">Tint</span><span class="val" id="v-tint">0</span></div><input type="range" id="tint" min="-100" max="100" value="0"></div>
+            <div class="lr-slider"><div class="lr-slider-head"><span class="lbl" data-i18n="exposure">Exposure</span><span class="val" id="v-exposure">0</span></div><input type="range" id="exposure" min="-100" max="100" value="0"></div>
+            <div class="lr-slider"><div class="lr-slider-head"><span class="lbl" data-i18n="contrast">Contrast</span><span class="val" id="v-contrast">0</span></div><input type="range" id="contrast" min="-100" max="100" value="0"></div>
+            <div class="lr-slider"><div class="lr-slider-head"><span class="lbl" data-i18n="highlights">Highlights</span><span class="val" id="v-highlights">0</span></div><input type="range" id="highlights" min="-100" max="100" value="0"></div>
+            <div class="lr-slider"><div class="lr-slider-head"><span class="lbl" data-i18n="shadows">Shadows</span><span class="val" id="v-shadows">0</span></div><input type="range" id="shadows" min="-100" max="100" value="0"></div>
+            <div class="lr-slider"><div class="lr-slider-head"><span class="lbl" data-i18n="whites">Whites</span><span class="val" id="v-whites">0</span></div><input type="range" id="whites" min="-100" max="100" value="0"></div>
+            <div class="lr-slider"><div class="lr-slider-head"><span class="lbl" data-i18n="blacks">Blacks</span><span class="val" id="v-blacks">0</span></div><input type="range" id="blacks" min="-100" max="100" value="0"></div>
+          </div>
+        </div>
+
+        <div class="lr-section" data-section="presence">
+          <div class="lr-section-head"><span data-i18n="presence">Presence</span><span class="tri">&#9660;</span></div>
+          <div class="lr-section-body">
+            <div class="lr-slider"><div class="lr-slider-head"><span class="lbl" data-i18n="vibrance">Vibrance</span><span class="val" id="v-vibrance">0</span></div><input type="range" id="vibrance" min="-100" max="100" value="0"></div>
+            <div class="lr-slider"><div class="lr-slider-head"><span class="lbl" data-i18n="saturation">Saturation</span><span class="val" id="v-saturation">0</span></div><input type="range" id="saturation" min="-100" max="100" value="0"></div>
+          </div>
+        </div>
+
+        <div class="lr-section collapsed" data-section="mixer">
+          <div class="lr-section-head"><span data-i18n="colorMixer">Color Mixer</span><span class="tri">&#9660;</span></div>
+          <div class="lr-section-body">
+            <p class="lr-hint" data-i18n="hslHint">Pick a color band, then adjust.</p>
+            <div class="hsl-band-btns" id="hslBands"></div>
+            <div class="lr-slider"><div class="lr-slider-head"><span class="lbl" data-i18n="hue">Hue</span><span class="val" id="v-hslH">0</span></div><input type="range" id="hslH" min="-60" max="60" value="0"></div>
+            <div class="lr-slider"><div class="lr-slider-head"><span class="lbl" data-i18n="satHsl">Saturation</span><span class="val" id="v-hslS">0</span></div><input type="range" id="hslS" min="-100" max="100" value="0"></div>
+            <div class="lr-slider"><div class="lr-slider-head"><span class="lbl" data-i18n="lightness">Luminance</span><span class="val" id="v-hslL">0</span></div><input type="range" id="hslL" min="-100" max="100" value="0"></div>
+          </div>
+        </div>
+
+        <div class="lr-section collapsed" data-section="split">
+          <div class="lr-section-head"><span data-i18n="splitToning">Split Toning</span><span class="tri">&#9660;</span></div>
+          <div class="lr-section-body">
+            <p class="lr-hint" data-i18n="splitHiLabel">Highlights</p>
+            <div class="lr-slider"><div class="lr-slider-head"><span class="lbl" data-i18n="hue">Hue</span><span class="val" id="v-splitHiHue">0</span></div><input type="range" id="splitHiHue" min="0" max="360" value="0"></div>
+            <div class="lr-slider"><div class="lr-slider-head"><span class="lbl" data-i18n="satHsl">Saturation</span><span class="val" id="v-splitHiSat">0</span></div><input type="range" id="splitHiSat" min="0" max="100" value="0"></div>
+            <p class="lr-hint" data-i18n="splitShLabel">Shadows</p>
+            <div class="lr-slider"><div class="lr-slider-head"><span class="lbl" data-i18n="hue">Hue</span><span class="val" id="v-splitShHue">0</span></div><input type="range" id="splitShHue" min="0" max="360" value="0"></div>
+            <div class="lr-slider"><div class="lr-slider-head"><span class="lbl" data-i18n="satHsl">Saturation</span><span class="val" id="v-splitShSat">0</span></div><input type="range" id="splitShSat" min="0" max="100" value="0"></div>
+            <div class="lr-slider"><div class="lr-slider-head"><span class="lbl" data-i18n="balance">Balance</span><span class="val" id="v-splitBalance">0</span></div><input type="range" id="splitBalance" min="-100" max="100" value="0"></div>
+          </div>
+        </div>
+
+        <div class="save-row">
+          <button id="btnResetCreator" data-i18n="resetCreator">Reset</button>
+          <button id="btnSaveLut" data-i18n="saveLut">Save as My LUT</button>
+          <button class="primary" id="btnExportCube" data-i18n="exportCube">Export .cube</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="site-footer">
+    © 2026 LUT Lab — Dr Iggy's. <a href="terms.html" data-i18n="terms">Terms of Service</a>.
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+// i18n
+// ============================================================
+const I18N = {
+  en: {
+    winTitle:'LUT Lab', openPhoto:'Open Photo', uploadLut:'Upload LUT (.cube)',
+    sendEditor:'Send to Photo Editor', exportPng:'Download PNG',
+    builtinLuts:'Starter LUTs', myLuts:'My LUTs',
+    compare:'Before / After', strength:'Strength',
+    creatorHint:'Move any slider below to start building your own LUT. Texture effects (clarity, vignette, grain) live in the Photo Editor — LUTs only carry color and tone.',
+    basic:'Basic', presence:'Presence', colorMixer:'Color Mixer', splitToning:'Split Toning',
+    temperature:'Temperature', tint:'Tint', exposure:'Exposure', contrast:'Contrast',
+    highlights:'Highlights', shadows:'Shadows', whites:'Whites', blacks:'Blacks',
+    vibrance:'Vibrance', saturation:'Saturation',
+    hslHint:'Pick a color band, then adjust.', hue:'Hue', satHsl:'Saturation', lightness:'Luminance',
+    splitHiLabel:'Highlights', splitShLabel:'Shadows', balance:'Balance',
+    resetCreator:'Reset', saveLut:'Save as My LUT', exportCube:'Export .cube',
+    terms:'Terms of Service',
+    openFailAlert:'Could not open "{name}".',
+    lutParseFail:'Could not read "{name}" as a .cube LUT.\n\nDetail: {detail}',
+    lutUploaded:'LUT "{name}" added to My LUTs.',
+    saveLutPrompt:'Name this LUT:', saveLutDefault:'My LUT',
+    lutSaved:'Saved "{name}" to My LUTs, and exported a .cube file for you too.',
+    noPhotoAlert:'Open a photo first.',
+    confirmDeleteLut:'Remove "{name}" from My LUTs? This can\'t be undone.',
+    removeLut:'Remove',
+  },
+  es: {
+    winTitle:'LUT Lab', openPhoto:'Abrir Foto', uploadLut:'Subir LUT (.cube)',
+    sendEditor:'Enviar al Photo Editor', exportPng:'Descargar PNG',
+    builtinLuts:'LUTs Iniciales', myLuts:'Mis LUTs',
+    compare:'Antes / Después', strength:'Intensidad',
+    creatorHint:'Movė cualquier control para armar tu propio LUT. Los efectos de textura (claridad, viñeta, grano) viven en el Photo Editor — los LUTs solo llevan color y tono.',
+    basic:'Básico', presence:'Presencia', colorMixer:'Mezclador de Color', splitToning:'Tonificación Dividida',
+    temperature:'Temperatura', tint:'Tinte', exposure:'Exposición', contrast:'Contraste',
+    highlights:'Luces', shadows:'Sombras', whites:'Blancos', blacks:'Negros',
+    vibrance:'Vitalidad', saturation:'Saturación',
+    hslHint:'Elegí una banda de color y ajustá.', hue:'Matiz', satHsl:'Saturación', lightness:'Luminancia',
+    splitHiLabel:'Luces', splitShLabel:'Sombras', balance:'Balance',
+    resetCreator:'Reiniciar', saveLut:'Guardar como Mi LUT', exportCube:'Exportar .cube',
+    terms:'Términos de servicio',
+    openFailAlert:'No pude abrir "{name}".',
+    lutParseFail:'No pude leer "{name}" como un LUT .cube.\n\nDetalle: {detail}',
+    lutUploaded:'LUT "{name}" agregado a Mis LUTs.',
+    saveLutPrompt:'Nombre para este LUT:', saveLutDefault:'Mi LUT',
+    lutSaved:'Se guardó "{name}" en Mis LUTs, y también se exportó un archivo .cube.',
+    noPhotoAlert:'Primero abrí una foto.',
+    confirmDeleteLut:'¿Quitar "{name}" de Mis LUTs? No se puede deshacer.',
+    removeLut:'Quitar',
+  }
+};
+const LANG_KEY = 'drIggyLang';
+let LANG = (function(){ try{ return localStorage.getItem(LANG_KEY) || 'en'; }catch(e){ return 'en'; } })();
+function t(key, vars){
+  let s = (I18N[LANG] && I18N[LANG][key]) || key;
+  if(vars) for(const k in vars) s = s.split('{'+k+'}').join(vars[k]);
+  return s;
+}
+function setLanguage(lang){ LANG = lang; try{ localStorage.setItem(LANG_KEY, LANG); }catch(e){} applyLanguage(); }
+function applyLanguage(){
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const key = el.getAttribute('data-i18n');
+    if(I18N[LANG][key] !== undefined) el.textContent = I18N[LANG][key];
+  });
+  document.getElementById('btnLangEn').classList.toggle('active', LANG==='en');
+  document.getElementById('btnLangEs').classList.toggle('active', LANG==='es');
+  document.documentElement.lang = LANG;
+  renderGalleries();
+}
+document.getElementById('btnLangEn').addEventListener('click', ()=> setLanguage('en'));
+document.getElementById('btnLangEs').addEventListener('click', ()=> setLanguage('es'));
+document.getElementById('btnMin').addEventListener('click', ()=>{ document.exitFullscreen?.().catch(()=>{}); });
+document.getElementById('btnMax').addEventListener('click', ()=>{ document.documentElement.requestFullscreen?.().catch(()=>{}); });
+
+// ============================================================
+// helpers
+// ============================================================
+function clamp255(v){ return v<0?0:v>255?255:v; }
+function clamp01(v){ return v<0?0:v>1?1:v; }
+function clampN(v,a,b){ return v<a?a:v>b?b:v; }
+function smoothstep(e0,e1,x){ const tt = clampN((x-e0)/(e1-e0),0,1); return tt*tt*(3-2*tt); }
+function uid(){ return 'u'+Math.random().toString(36).slice(2,9); }
+function rgbToHsl(r,g,b){
+  r/=255; g/=255; b/=255;
+  const max=Math.max(r,g,b), min=Math.min(r,g,b);
+  let h=0,s=0,l=(max+min)/2;
+  const d=max-min;
+  if(d!==0){
+    s = l>0.5 ? d/(2-max-min) : d/(max+min);
+    if(max===r) h=((g-b)/d + (g<b?6:0));
+    else if(max===g) h=(b-r)/d+2;
+    else h=(r-g)/d+4;
+    h*=60;
+  }
+  return [h,s,l];
+}
+function hslToRgb(h,s,l){
+  h=((h%360)+360)%360; s=clamp01(s); l=clamp01(l);
+  const c=(1-Math.abs(2*l-1))*s, x=c*(1-Math.abs((h/60)%2-1)), m=l-c/2;
+  let r,g,b;
+  if(h<60){r=c;g=x;b=0;} else if(h<120){r=x;g=c;b=0;} else if(h<180){r=0;g=c;b=x;}
+  else if(h<240){r=0;g=x;b=c;} else if(h<300){r=x;g=0;b=c;} else {r=c;g=0;b=x;}
+  return [clamp255((r+m)*255), clamp255((g+m)*255), clamp255((b+m)*255)];
+}
+
+// ============================================================
+// adjustments (point-only — color/tone, no spatial texture effects)
+// ============================================================
+const HSL_BANDS = { red:0, orange:45, yellow:90, green:135, aqua:180, blue:225, purple:270, magenta:315 };
+function defaultAdj(){
+  const hsl = {};
+  Object.keys(HSL_BANDS).forEach(k=> hsl[k] = {h:0,s:0,l:0});
+  return {
+    temperature:0, tint:0, exposure:0, contrast:0,
+    highlights:0, shadows:0, whites:0, blacks:0,
+    vibrance:0, saturation:0,
+    splitHiHue:0, splitHiSat:0, splitShHue:0, splitShSat:0, splitBalance:0,
+    hsl
+  };
+}
+function applyPointAdjustments(r,g,b,adj){
+  const expF = Math.pow(2, adj.exposure/100*2);
+  const conF = (259*(adj.contrast*2.55+255))/(255*(259-adj.contrast*2.55));
+  const tempR = adj.temperature>0 ? adj.temperature*0.7 : 0;
+  const tempB = adj.temperature<0 ? -adj.temperature*0.7 : 0;
+  const tintG = adj.tint>0 ? adj.tint*0.6 : 0;
+  const tintRB = adj.tint<0 ? -adj.tint*0.35 : 0;
+
+  r += tempR+tintRB; b += tempB+tintRB; g += tintG;
+  r*=expF; g*=expF; b*=expF;
+  r=clamp255(r); g=clamp255(g); b=clamp255(b);
+  r = conF*(r-128)+128; g = conF*(g-128)+128; b = conF*(b-128)+128;
+  r=clamp255(r); g=clamp255(g); b=clamp255(b);
+
+  if(adj.highlights||adj.shadows||adj.whites||adj.blacks){
+    const chans=[r,g,b];
+    for(let c=0;c<3;c++){
+      let x = chans[c]/255;
+      const hiW = smoothstep(0.45,1.0,x);
+      const shW = 1-smoothstep(0.0,0.55,x);
+      const whW = smoothstep(0.75,1.0,x);
+      const blW = 1-smoothstep(0.0,0.25,x);
+      x += (adj.highlights/100)*0.35*hiW;
+      x += (adj.shadows/100)*0.35*shW;
+      x += (adj.whites/100)*0.3*whW;
+      x += (adj.blacks/100)*0.3*blW;
+      chans[c] = clamp01(x)*255;
+    }
+    r=chans[0]; g=chans[1]; b=chans[2];
+  }
+
+  if(adj.vibrance!==0 || adj.saturation!==0){
+    const gray = 0.299*r+0.587*g+0.114*b;
+    let f = 1+adj.saturation/100;
+    if(adj.vibrance!==0){
+      const [,s] = rgbToHsl(r,g,b);
+      f *= 1 + (adj.vibrance/100)*(1-s)*1.6;
+    }
+    r = clamp255(gray+(r-gray)*f); g = clamp255(gray+(g-gray)*f); b = clamp255(gray+(b-gray)*f);
+  }
+
+  const hasHsl = Object.values(adj.hsl).some(bnd=>bnd.h||bnd.s||bnd.l);
+  if(hasHsl){
+    let [hh,ss,ll] = rgbToHsl(r,g,b);
+    let dh=0, ds=0, dl=0;
+    for(const band in HSL_BANDS){
+      const center = HSL_BANDS[band];
+      let diff = Math.abs(hh-center); if(diff>180) diff=360-diff;
+      const weight = Math.max(0, 1 - diff/45);
+      if(weight>0){
+        const bAdj = adj.hsl[band];
+        dh += bAdj.h*weight; ds += (bAdj.s/100)*weight; dl += (bAdj.l/100)*weight;
+      }
+    }
+    hh += dh; ss = clamp01(ss+ds); ll = clamp01(ll+dl);
+    [r,g,b] = hslToRgb(hh,ss,ll);
+  }
+
+  if(adj.splitHiSat>0 || adj.splitShSat>0){
+    const lum = (0.299*r+0.587*g+0.114*b)/255;
+    const bal = (adj.splitBalance||0)/100*0.25;
+    if(adj.splitHiSat>0){
+      const hiWeight = smoothstep(0.5-bal, 1.0, lum);
+      if(hiWeight>0){
+        const [tr,tg,tb] = hslToRgb(adj.splitHiHue,1,0.5);
+        const amt = hiWeight*(adj.splitHiSat/100)*0.5;
+        r = r*(1-amt)+tr*amt; g = g*(1-amt)+tg*amt; b = b*(1-amt)+tb*amt;
+      }
+    }
+    if(adj.splitShSat>0){
+      const shWeight = 1-smoothstep(0.0, 0.5-bal, lum);
+      if(shWeight>0){
+        const [tr,tg,tb] = hslToRgb(adj.splitShHue,1,0.5);
+        const amt = shWeight*(adj.splitShSat/100)*0.5;
+        r = r*(1-amt)+tr*amt; g = g*(1-amt)+tg*amt; b = b*(1-amt)+tb*amt;
+      }
+    }
+  }
+
+  return [clamp255(r), clamp255(g), clamp255(b)];
+}
+
+// ============================================================
+// .cube parsing / writing / sampling
+// ============================================================
+function parseCube(text){
+  const lines = text.split(/\r?\n/);
+  let size=null, is3D=true, title=null;
+  const data=[];
+  for(const raw of lines){
+    const line = raw.trim();
+    if(!line || line.startsWith('#')) continue;
+    const upper = line.toUpperCase();
+    if(upper.startsWith('TITLE')){ const m=line.match(/"([^"]*)"/); title=m?m[1]:null; continue; }
+    if(upper.startsWith('LUT_3D_SIZE')){ size=parseInt(line.split(/\s+/)[1],10); is3D=true; continue; }
+    if(upper.startsWith('LUT_1D_SIZE')){ size=parseInt(line.split(/\s+/)[1],10); is3D=false; continue; }
+    if(upper.startsWith('DOMAIN_') || upper.startsWith('LUT_')) continue;
+    const parts = line.split(/\s+/).map(Number);
+    if(parts.length>=3 && parts.every(n=>Number.isFinite(n))) data.push(parts[0],parts[1],parts[2]);
+  }
+  if(!size || !Number.isFinite(size) || size<2) throw new Error('No LUT_3D_SIZE / LUT_1D_SIZE found.');
+  const expectedPoints = is3D ? size*size*size : size;
+  if(data.length < expectedPoints*3) throw new Error('LUT data has fewer points than its declared size ('+expectedPoints+' expected, got '+(data.length/3)+').');
+  return { size, is3D, data:new Float32Array(data.slice(0, expectedPoints*3)), title };
+}
+function writeCube(lut, name){
+  const N = lut.size;
+  let out = 'TITLE "'+(name||'Custom LUT').replace(/"/g,'')+'"\nLUT_3D_SIZE '+N+'\nDOMAIN_MIN 0.0 0.0 0.0\nDOMAIN_MAX 1.0 1.0 1.0\n';
+  const rows = [];
+  for(let bi=0; bi<N; bi++) for(let gi=0; gi<N; gi++) for(let ri=0; ri<N; ri++){
+    const idx=(ri+gi*N+bi*N*N)*3;
+    rows.push(lut.data[idx].toFixed(6)+' '+lut.data[idx+1].toFixed(6)+' '+lut.data[idx+2].toFixed(6));
+  }
+  return out + rows.join('\n') + '\n';
+}
+function sampleLut(lut, r,g,b){
+  const N = lut.size, data = lut.data;
+  if(!lut.is3D){
+    function s1(ch,v){ const f=v*(N-1); const i0=Math.floor(f), i1=Math.min(N-1,i0+1), tt=f-i0; return data[i0*3+ch]+(data[i1*3+ch]-data[i0*3+ch])*tt; }
+    return [s1(0,r), s1(1,g), s1(2,b)];
+  }
+  const rf=r*(N-1), gf=g*(N-1), bf=b*(N-1);
+  const r0=Math.floor(rf), g0=Math.floor(gf), b0=Math.floor(bf);
+  const r1=Math.min(N-1,r0+1), g1=Math.min(N-1,g0+1), b1=Math.min(N-1,b0+1);
+  const rd=rf-r0, gd=gf-g0, bd=bf-b0;
+  function at(ri,gi,bi){ const idx=(ri+gi*N+bi*N*N)*3; return [data[idx],data[idx+1],data[idx+2]]; }
+  function lerp3(a,c,tt){ return [a[0]+(c[0]-a[0])*tt, a[1]+(c[1]-a[1])*tt, a[2]+(c[2]-a[2])*tt]; }
+  const c000=at(r0,g0,b0), c100=at(r1,g0,b0), c010=at(r0,g1,b0), c110=at(r1,g1,b0);
+  const c001=at(r0,g0,b1), c101=at(r1,g0,b1), c011=at(r0,g1,b1), c111=at(r1,g1,b1);
+  const c00=lerp3(c000,c100,rd), c10=lerp3(c010,c110,rd), c01=lerp3(c001,c101,rd), c11=lerp3(c011,c111,rd);
+  const c0=lerp3(c00,c10,gd), c1=lerp3(c01,c11,gd);
+  return lerp3(c0,c1,bd);
+}
+function bakeLut(adj, size){
+  const N = size;
+  const data = new Float32Array(N*N*N*3);
+  for(let bi=0; bi<N; bi++){
+    for(let gi=0; gi<N; gi++){
+      for(let ri=0; ri<N; ri++){
+        let r=ri/(N-1)*255, g=gi/(N-1)*255, b=bi/(N-1)*255;
+        [r,g,b] = applyPointAdjustments(r,g,b,adj);
+        const idx=(ri+gi*N+bi*N*N)*3;
+        data[idx]=r/255; data[idx+1]=g/255; data[idx+2]=b/255;
+      }
+    }
+  }
+  return {size:N, is3D:true, data};
+}
+function resampleLut(lut, newSize){
+  if(lut.size===newSize && lut.is3D) return lut;
+  const N = newSize;
+  const data = new Float32Array(N*N*N*3);
+  for(let bi=0; bi<N; bi++) for(let gi=0; gi<N; gi++) for(let ri=0; ri<N; ri++){
+    const [nr,ng,nb] = sampleLut(lut, ri/(N-1), gi/(N-1), bi/(N-1));
+    const idx=(ri+gi*N+bi*N*N)*3;
+    data[idx]=nr; data[idx+1]=ng; data[idx+2]=nb;
+  }
+  return {size:N, is3D:true, data};
+}
+
+// ============================================================
+// built-in starter LUTs — original recipes built from our own
+// color engine (no third-party LUT files bundled; see project notes)
+// ============================================================
+function mkAdj(overrides){ return Object.assign(defaultAdj(), overrides); }
+function mkHslAdj(overrides, hslOverrides){
+  const a = mkAdj(overrides);
+  for(const band in (hslOverrides||{})) Object.assign(a.hsl[band], hslOverrides[band]);
+  return a;
+}
+const BUILTIN_PRESETS = [
+  { id:'warm-film', name:'Warm Film', adj: mkAdj({ temperature:25, tint:5, contrast:10, highlights:-10, shadows:10, saturation:-5, splitHiHue:45, splitHiSat:15, splitShHue:210, splitShSat:10 }) },
+  { id:'cool-cinema', name:'Cool Cinema', adj: mkAdj({ temperature:-20, tint:-5, contrast:15, saturation:-10, splitShHue:200, splitShSat:20 }) },
+  { id:'faded-vintage', name:'Faded Vintage', adj: mkAdj({ contrast:-25, blacks:25, whites:-10, saturation:-20 }) },
+  { id:'high-contrast-bw', name:'High-Contrast B&W', adj: mkAdj({ saturation:-100, contrast:35, highlights:-10, shadows:10 }) },
+  { id:'teal-orange', name:'Teal & Orange', adj: mkAdj({ contrast:10, splitHiHue:30, splitHiSat:35, splitShHue:190, splitShSat:35 }) },
+  { id:'golden-hour', name:'Golden Hour', adj: mkAdj({ temperature:35, tint:8, highlights:-15, shadows:10, splitHiHue:40, splitHiSat:20 }) },
+  { id:'moody-blue', name:'Moody Blue', adj: mkAdj({ temperature:-15, contrast:20, blacks:-15, saturation:-8, splitShHue:220, splitShSat:25 }) },
+  { id:'soft-pastel', name:'Soft Pastel', adj: mkAdj({ contrast:-15, exposure:8, saturation:-15, whites:-10, blacks:15 }) },
+  { id:'cross-process', name:'Cross Process', adj: mkHslAdj({ tint:15, splitHiHue:70, splitHiSat:25, splitShHue:260, splitShSat:20 }, { green:{s:20}, yellow:{s:15} }) },
+  { id:'noir', name:'Noir', adj: mkAdj({ saturation:-100, contrast:40, blacks:-20, whites:10 }) },
+  { id:'clean-bright', name:'Clean & Bright', adj: mkAdj({ exposure:15, contrast:8, whites:15, saturation:5 }) },
+  { id:'vintage-fade-bw', name:'Vintage Fade B&W', adj: mkAdj({ saturation:-100, contrast:-20, blacks:25 }) },
+];
+
+// ============================================================
+// state
+// ============================================================
+let photo = { img:null, w:0, h:0 };
+let previewBaseCanvas = null, previewBaseData = null;
+let creatorAdj = defaultAdj();
+let activeSource = 'creator';   // 'creator' | builtin id | custom id
+let currentHslBand = 'red';
+let compareMode = false;
+let strengthVal = 100;
+let customLuts = [];            // [{id,name,source:'adj'|'raw', adj?, cubeData?}]
+const CUSTOM_KEY = 'drIggyLuts';
+
+const els = {
+  photoInput: document.getElementById('photoInput'),
+  lutInput: document.getElementById('lutInput'),
+  docCanvas: document.getElementById('docCanvas'),
+  canvasWrap: document.getElementById('canvasWrap'),
+  canvasArea: document.getElementById('canvasArea'),
+};
+const dctx = els.docCanvas.getContext('2d');
+
+function loadCustomLuts(){
+  try{
+    const raw = localStorage.getItem(CUSTOM_KEY);
+    if(!raw) return;
+    const parsed = JSON.parse(raw);
+    customLuts = parsed.map(entry=>{
+      if(entry.source==='raw'){
+        return { id:entry.id, name:entry.name, source:'raw', cubeData:{ size:entry.size, is3D:true, data:new Float32Array(entry.data) } };
+      }
+      return { id:entry.id, name:entry.name, source:'adj', adj:entry.adj };
+    });
+  }catch(e){ customLuts = []; }
+}
+function saveCustomLuts(){
+  try{
+    const serializable = customLuts.map(entry=>{
+      if(entry.source==='raw') return { id:entry.id, name:entry.name, source:'raw', size:entry.cubeData.size, data:Array.from(entry.cubeData.data) };
+      return { id:entry.id, name:entry.name, source:'adj', adj:entry.adj };
+    });
+    localStorage.setItem(CUSTOM_KEY, JSON.stringify(serializable));
+  }catch(e){ /* storage full or unavailable — silently skip persistence */ }
+}
+
+function getBakedLut(entry){
+  if(entry._baked) return entry._baked;
+  entry._baked = entry.adj ? bakeLut(entry.adj, 17) : entry.cubeData;
+  return entry._baked;
+}
+function findLutEntry(id){
+  return BUILTIN_PRESETS.find(p=>p.id===id) || customLuts.find(p=>p.id===id) || null;
+}
+
+function generateDemoScene(w,h){
+  const c = document.createElement('canvas'); c.width=w; c.height=h;
+  const ctx = c.getContext('2d');
+  const sky = ctx.createLinearGradient(0,0,0,h*0.65);
+  sky.addColorStop(0,'#1B4FC0'); sky.addColorStop(0.5,'#5C93DE'); sky.addColorStop(1,'#D9EAF6');
+  ctx.fillStyle = sky; ctx.fillRect(0,0,w,h*0.65);
+  ctx.fillStyle = '#FFE9A8'; ctx.beginPath(); ctx.arc(w*0.78, h*0.22, h*0.09, 0, Math.PI*2); ctx.fill();
+  const hb = ctx.createLinearGradient(0,h*0.45,0,h);
+  hb.addColorStop(0,'#9EDB88'); hb.addColorStop(1,'#1C5420');
+  ctx.fillStyle = hb;
+  ctx.beginPath(); ctx.moveTo(0,h*0.62);
+  ctx.quadraticCurveTo(w*0.3,h*0.48,w*0.65,h*0.58);
+  ctx.quadraticCurveTo(w*0.85,h*0.63,w,h*0.55);
+  ctx.lineTo(w,h); ctx.lineTo(0,h); ctx.closePath(); ctx.fill();
+  const hf = ctx.createLinearGradient(0,h*0.6,0,h);
+  hf.addColorStop(0,'#B8F0A0'); hf.addColorStop(1,'#2C7A2E');
+  ctx.fillStyle = hf;
+  ctx.beginPath(); ctx.moveTo(0,h*0.8);
+  ctx.quadraticCurveTo(w*0.25,h*0.62,w*0.5,h*0.78);
+  ctx.quadraticCurveTo(w*0.75,h*0.9,w,h*0.72);
+  ctx.lineTo(w,h); ctx.lineTo(0,h); ctx.closePath(); ctx.fill();
+  return c;
+}
+
+// ============================================================
+// render pipeline
+// ============================================================
+function fitCanvasDisplaySize(){
+  if(!els.docCanvas.width) return;
+  const maxW = els.canvasArea.clientWidth - 24, maxH = els.canvasArea.clientHeight - 60;
+  const scale = Math.min(1, maxW/els.docCanvas.width, maxH/els.docCanvas.height);
+  const dispW = Math.round(els.docCanvas.width*scale), dispH = Math.round(els.docCanvas.height*scale);
+  els.canvasWrap.style.width = dispW+'px'; els.canvasWrap.style.height = dispH+'px';
+  els.docCanvas.style.width = dispW+'px'; els.docCanvas.style.height = dispH+'px';
+}
+window.addEventListener('resize', fitCanvasDisplaySize);
+
+function rebuildPreviewBase(){
+  const srcCanvas = photo.img
+    ? (()=>{ const c=document.createElement('canvas'); c.width=photo.w; c.height=photo.h; c.getContext('2d').drawImage(photo.img,0,0,photo.w,photo.h); return c; })()
+    : generateDemoScene(600,400);
+  const maxDim = 1100;
+  const scale = Math.min(1, maxDim/Math.max(srcCanvas.width, srcCanvas.height));
+  const pw = Math.max(1,Math.round(srcCanvas.width*scale)), ph = Math.max(1,Math.round(srcCanvas.height*scale));
+  previewBaseCanvas = document.createElement('canvas'); previewBaseCanvas.width=pw; previewBaseCanvas.height=ph;
+  const pbctx = previewBaseCanvas.getContext('2d', {willReadFrequently:true});
+  pbctx.drawImage(srcCanvas, 0,0,pw,ph);
+  previewBaseData = pbctx.getImageData(0,0,pw,ph);
+  els.docCanvas.width = pw; els.docCanvas.height = ph;
+  fitCanvasDisplaySize();
+}
+
+function applyToImageData(srcData, source, adj, strength){
+  const out = new ImageData(new Uint8ClampedArray(srcData.data), srcData.width, srcData.height);
+  const d = out.data, sd = srcData.data;
+  const f = clampN(strength,0,100)/100;
+  if(f<=0) return out;
+  if(source==='creator'){
+    for(let i=0;i<d.length;i+=4){
+      const [r,g,b] = applyPointAdjustments(sd[i],sd[i+1],sd[i+2], adj);
+      d[i] = sd[i]+(r-sd[i])*f; d[i+1] = sd[i+1]+(g-sd[i+1])*f; d[i+2] = sd[i+2]+(b-sd[i+2])*f;
+    }
+    return out;
+  }
+  const entry = findLutEntry(source);
+  if(!entry) return out;
+  const lut = getBakedLut(entry);
+  for(let i=0;i<d.length;i+=4){
+    const [r,g,b] = sampleLut(lut, sd[i]/255, sd[i+1]/255, sd[i+2]/255);
+    const R=r*255, G=g*255, B=b*255;
+    d[i] = sd[i]+(R-sd[i])*f; d[i+1] = sd[i+1]+(G-sd[i+1])*f; d[i+2] = sd[i+2]+(B-sd[i+2])*f;
+  }
+  return out;
+}
+
+let renderQueued = false;
+function render(){
+  if(renderQueued) return;
+  renderQueued = true;
+  requestAnimationFrame(()=>{
+    renderQueued = false;
+    if(!previewBaseData) return;
+    if(compareMode){ dctx.putImageData(previewBaseData,0,0); return; }
+    const out = applyToImageData(previewBaseData, activeSource, creatorAdj, strengthVal);
+    dctx.putImageData(out,0,0);
+  });
+}
+function invalidateAll(){ rebuildPreviewBase(); render(); renderGalleries(); }
+
+// ============================================================
+// gallery
+// ============================================================
+function galleryThumbFor(entry, kind){
+  const demo = previewBaseCanvas || generateDemoScene(160,100);
+  const tw=88, th=Math.max(1, Math.round(tw*demo.height/demo.width));
+  const pc = document.createElement('canvas'); pc.width=tw; pc.height=th;
+  pc.getContext('2d').drawImage(demo,0,0,tw,th);
+  const data = pc.getContext('2d').getImageData(0,0,tw,th);
+  const out = entry.adj
+    ? applyToImageData(data, 'creator', entry.adj, 100)
+    : applyToImageData(data, entry.id, defaultAdj(), 100);
+  const oc = document.createElement('canvas'); oc.width=tw; oc.height=th;
+  oc.getContext('2d').putImageData(out,0,0);
+  return oc.toDataURL('image/jpeg',0.75);
+}
+function renderGalleries(){
+  const bEl = document.getElementById('lutGalleryBuiltin');
+  bEl.innerHTML = '';
+  BUILTIN_PRESETS.forEach(p=>{
+    const div = document.createElement('div');
+    div.className = 'lut-item builtin' + (activeSource===p.id?' active':'');
+    div.innerHTML = '<img class="lut-thumb" src="'+galleryThumbFor(p)+'"><div class="lut-name">'+p.name+'</div>';
+    div.addEventListener('click', ()=> selectLut(p.id));
+    bEl.appendChild(div);
+  });
+  const cEl = document.getElementById('lutGalleryCustom');
+  cEl.innerHTML = '';
+  if(!customLuts.length){
+    const hint = document.createElement('div');
+    hint.style.cssText = 'grid-column:1/-1; font-size:10px; color:var(--lr-text-dim); padding:4px;';
+    hint.textContent = LANG==='es' ? 'Guardá o subí un LUT para verlo acá.' : 'Save or upload a LUT to see it here.';
+    cEl.appendChild(hint);
+  }
+  customLuts.forEach(p=>{
+    const div = document.createElement('div');
+    div.className = 'lut-item custom' + (activeSource===p.id?' active':'');
+    div.title = t('removeLut')+': '+p.name;
+    div.innerHTML = '<img class="lut-thumb" src="'+galleryThumbFor(p)+'"><div class="lut-name">'+p.name+'</div>';
+    div.addEventListener('click', ()=> selectLut(p.id));
+    div.addEventListener('contextmenu', (e)=>{
+      e.preventDefault();
+      if(confirm(t('confirmDeleteLut',{name:p.name}))){
+        customLuts = customLuts.filter(x=>x.id!==p.id);
+        saveCustomLuts();
+        if(activeSource===p.id){ activeSource='creator'; render(); }
+        renderGalleries();
+      }
+    });
+    cEl.appendChild(div);
+  });
+}
+function selectLut(id){
+  activeSource = id;
+  const entry = findLutEntry(id);
+  if(entry && entry.adj){
+    creatorAdj = JSON.parse(JSON.stringify(entry.adj));
+    syncSlidersFromState();
+  }
+  render();
+  renderGalleries();
+}
+
+// ============================================================
+// creator sliders
+// ============================================================
+const BASIC_KEYS = ['temperature','tint','exposure','contrast','highlights','shadows','whites','blacks'];
+const PRESENCE_KEYS = ['vibrance','saturation'];
+const SPLIT_KEYS = ['splitHiHue','splitHiSat','splitShHue','splitShSat','splitBalance'];
+const ALL_ADJ_KEYS = BASIC_KEYS.concat(PRESENCE_KEYS, SPLIT_KEYS);
+
+ALL_ADJ_KEYS.forEach(key=>{
+  const input = document.getElementById(key);
+  if(!input) return;
+  input.addEventListener('input', ()=>{
+    document.getElementById('v-'+key).textContent = input.value;
+    creatorAdj[key] = +input.value;
+    activeSource = 'creator';
+    render();
+  });
+  input.addEventListener('dblclick', ()=>{
+    input.value = 0; document.getElementById('v-'+key).textContent = 0;
+    creatorAdj[key] = 0; activeSource='creator'; render();
+  });
+  input.addEventListener('change', renderGalleries);
+});
+
+const HSL_BAND_COLORS = { red:'#e04040', orange:'#e08030', yellow:'#e0d040', green:'#40c060', aqua:'#40c0c0', blue:'#4060e0', purple:'#8040c0', magenta:'#c040a0' };
+function buildHslBandButtons(){
+  const wrap = document.getElementById('hslBands');
+  wrap.innerHTML = '';
+  Object.keys(HSL_BAND_COLORS).forEach(band=>{
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'hsl-band-btn' + (band===currentHslBand ? ' active' : '');
+    b.style.background = HSL_BAND_COLORS[band];
+    b.title = band;
+    b.addEventListener('click', ()=>{ currentHslBand = band; buildHslBandButtons(); syncHslSlidersFromBand(); });
+    wrap.appendChild(b);
+  });
+}
+buildHslBandButtons();
+function syncHslSlidersFromBand(){
+  const hb = creatorAdj.hsl[currentHslBand];
+  document.getElementById('hslH').value = hb.h; document.getElementById('v-hslH').textContent = hb.h;
+  document.getElementById('hslS').value = hb.s; document.getElementById('v-hslS').textContent = hb.s;
+  document.getElementById('hslL').value = hb.l; document.getElementById('v-hslL').textContent = hb.l;
+}
+['hslH','hslS','hslL'].forEach(key=>{
+  const input = document.getElementById(key);
+  const prop = key==='hslH' ? 'h' : key==='hslS' ? 's' : 'l';
+  input.addEventListener('input', ()=>{
+    document.getElementById('v-'+key).textContent = input.value;
+    creatorAdj.hsl[currentHslBand][prop] = +input.value;
+    activeSource = 'creator';
+    render();
+  });
+  input.addEventListener('dblclick', ()=>{
+    input.value = 0; document.getElementById('v-'+key).textContent = 0;
+    creatorAdj.hsl[currentHslBand][prop] = 0; activeSource='creator'; render();
+  });
+  input.addEventListener('change', renderGalleries);
+});
+
+function syncSlidersFromState(){
+  ALL_ADJ_KEYS.forEach(key=>{
+    const input = document.getElementById(key);
+    if(!input) return;
+    input.value = creatorAdj[key]; document.getElementById('v-'+key).textContent = creatorAdj[key];
+  });
+  syncHslSlidersFromBand();
+}
+document.querySelectorAll('.lr-section-head').forEach(head=>{
+  head.addEventListener('click', ()=> head.parentElement.classList.toggle('collapsed'));
+});
+document.getElementById('btnResetCreator').addEventListener('click', ()=>{
+  creatorAdj = defaultAdj();
+  activeSource = 'creator';
+  syncSlidersFromState();
+  render();
+  renderGalleries();
+});
+
+document.getElementById('btnCompare').addEventListener('click', (e)=>{
+  compareMode = !compareMode;
+  e.currentTarget.classList.toggle('toggled', compareMode);
+  render();
+});
+document.getElementById('strengthSlider').addEventListener('input', (e)=>{
+  strengthVal = +e.target.value;
+  document.getElementById('v-strength').textContent = strengthVal+'%';
+  render();
+});
+
+// ============================================================
+// save / export
+// ============================================================
+document.getElementById('btnSaveLut').addEventListener('click', ()=>{
+  let name;
+  try{ name = prompt(t('saveLutPrompt'), t('saveLutDefault')); }catch(e){ name = null; }
+  name = (name || '').trim() || t('saveLutDefault');
+  const entry = { id: uid(), name, source:'adj', adj: JSON.parse(JSON.stringify(creatorAdj)) };
+  customLuts.push(entry);
+  saveCustomLuts();
+  activeSource = entry.id;
+  renderGalleries();
+  const cube = writeCube(bakeLut(entry.adj, 33), name);
+  downloadText(name.replace(/[^a-z0-9\-_ ]/gi,'').trim().replace(/\s+/g,'_')+'.cube', cube);
+  alert(t('lutSaved', {name}));
+});
+document.getElementById('btnExportCube').addEventListener('click', ()=>{
+  const entry = findLutEntry(activeSource);
+  let finalLut;
+  if(entry && entry.adj){
+    finalLut = bakeLut(entry.adj, 33);           // parametric LUT: re-bake at export quality
+  } else if(entry && entry.cubeData){
+    finalLut = entry.cubeData.size < 33 ? resampleLut(entry.cubeData, 33) : entry.cubeData; // uploaded LUT: resample, don't re-derive from sliders
+  } else {
+    finalLut = bakeLut(creatorAdj, 33);           // live creator state, not yet saved
+  }
+  const name = (entry ? entry.name : 'Custom LUT');
+  const cube = writeCube(finalLut, name);
+  downloadText(name.replace(/[^a-z0-9\-_ ]/gi,'').trim().replace(/\s+/g,'_')+'.cube', cube);
+});
+function downloadText(filename, text){
+  const blob = new Blob([text], {type:'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+document.getElementById('btnUploadLut').addEventListener('click', ()=> els.lutInput.click());
+els.lutInput.addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  try{
+    const text = await file.text();
+    let cubeData = parseCube(text);
+    if(cubeData.is3D && cubeData.size > 33) cubeData = resampleLut(cubeData, 33);
+    const name = file.name.replace(/\.cube$/i,'');
+    const entry = { id: uid(), name, source:'raw', cubeData };
+    customLuts.push(entry);
+    saveCustomLuts();
+    activeSource = entry.id;
+    creatorAdj = defaultAdj();
+    syncSlidersFromState();
+    render();
+    renderGalleries();
+    alert(t('lutUploaded', {name}));
+  }catch(err){
+    console.error(err);
+    alert(t('lutParseFail', {name:file.name, detail: err&&err.message?err.message:err}));
+  }
+  els.lutInput.value = '';
+});
+
+// ============================================================
+// photo open
+// ============================================================
+document.getElementById('btnOpenPhoto').addEventListener('click', ()=> els.photoInput.click());
+els.photoInput.addEventListener('change', (e)=> handlePhotoFile(e.target.files));
+els.canvasArea.addEventListener('dragover', ev=> ev.preventDefault());
+els.canvasArea.addEventListener('drop', ev=>{ ev.preventDefault(); handlePhotoFile(ev.dataTransfer.files); });
+
+async function handlePhotoFile(fileList){
+  const file = fileList && fileList[0];
+  if(!file) return;
+  try{
+    const url = URL.createObjectURL(file);
+    const img = await new Promise((resolve,reject)=>{
+      const im = new Image();
+      im.onload = ()=>{ resolve(im); URL.revokeObjectURL(url); };
+      im.onerror = ()=>{ URL.revokeObjectURL(url); reject(new Error('load failed')); };
+      im.src = url;
+    });
+    photo = { img, w: img.naturalWidth, h: img.naturalHeight };
+    document.getElementById('btnSendEditor').disabled = false;
+    document.getElementById('btnExportPng').disabled = false;
+    invalidateAll();
+  }catch(err){
+    console.error(err);
+    alert(t('openFailAlert', {name:file.name}));
+  }
+  els.photoInput.value = '';
+}
+
+// ============================================================
+// export PNG (full resolution) + send to Photo Editor
+// ============================================================
+function renderFullRes(){
+  const w = photo.img ? photo.w : 900, h = photo.img ? photo.h : 600;
+  const srcCanvas = document.createElement('canvas'); srcCanvas.width=w; srcCanvas.height=h;
+  const sctx = srcCanvas.getContext('2d');
+  if(photo.img) sctx.drawImage(photo.img,0,0,w,h); else sctx.drawImage(generateDemoScene(w,h),0,0);
+  const data = sctx.getImageData(0,0,w,h);
+  const out = applyToImageData(data, activeSource, creatorAdj, strengthVal);
+  const outCanvas = document.createElement('canvas'); outCanvas.width=w; outCanvas.height=h;
+  outCanvas.getContext('2d').putImageData(out,0,0);
+  return outCanvas;
+}
+document.getElementById('btnExportPng').addEventListener('click', ()=>{
+  if(!photo.img) return;
+  const c = renderFullRes();
+  const a = document.createElement('a');
+  a.download = 'lut-photo.png';
+  a.href = c.toDataURL('image/png');
+  a.click();
+});
+
+const HANDOFF_DB='drIggysHandoff', HANDOFF_STORE='images';
+function openHandoffDB(){
+  return new Promise((resolve,reject)=>{
+    const req = indexedDB.open(HANDOFF_DB, 1);
+    req.onupgradeneeded = ()=>{ req.result.createObjectStore(HANDOFF_STORE); };
+    req.onsuccess = ()=> resolve(req.result);
+    req.onerror = ()=> reject(req.error);
+  });
+}
+document.getElementById('btnSendEditor').addEventListener('click', async ()=>{
+  if(!photo.img){ alert(t('noPhotoAlert')); return; }
+  const c = renderFullRes();
+  const blob = await new Promise(res=> c.toBlob(res,'image/png'));
+  try{
+    const db = await openHandoffDB();
+    await new Promise((resolve,reject)=>{
+      const tx = db.transaction(HANDOFF_STORE,'readwrite');
+      tx.objectStore(HANDOFF_STORE).put(blob,'pending');
+      tx.oncomplete = resolve; tx.onerror = ()=>reject(tx.error);
+    });
+    window.location.href = 'photo-editor.html';
+  }catch(err){ console.error(err); }
+});
+
+// ============================================================
+// init
+// ============================================================
+loadCustomLuts();
+syncSlidersFromState();
+invalidateAll();
+applyLanguage();
+</script>
+
+</body>
+</html>
