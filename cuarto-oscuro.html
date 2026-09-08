@@ -326,6 +326,7 @@
             <button id="downloadOne" disabled data-i18n="downloadOne">Download this one</button>
             <button id="downloadAll" disabled data-i18n="downloadAll">Download all (.zip)</button>
           </div>
+          <button id="editInPhotoEditor" disabled data-i18n="editInPhotoEditor">Edit in Photo Editor</button>
         </div>
 
         <hr>
@@ -433,6 +434,7 @@ const I18N = {
     tip6:'Keep the negative flat (glass or a film holder) and wipe dust off it and the lens first.',
     stageEmpty:'Drag your first photo here, or use the box on the left, to get started.',
     processOne:'Process this photo', downloadOne:'Download this one', downloadAll:'Download all (.zip)',
+    editInPhotoEditor:'Edit in Photo Editor',
     stepExtra:'EXTRA — ENHANCE QUALITY', qualityBoostLabel:'Extra quality enhancement',
     qualityBoostDesc:' — boosts fine local contrast and detail, on top of the sliders below',
     step1:'1 — CROP', step1desc:"Each photo is cropped automatically on upload. If it's off, drag the 4 corners by hand or try auto-detect again.",
@@ -465,6 +467,7 @@ const I18N = {
     tip6:'Mantené el negativo plano (vidrio o un portanegativos) y limpiá el polvo de él y del lente antes.',
     stageEmpty:'Arrastrá tu primera foto acá, o usá la caja de la izquierda, para empezar.',
     processOne:'Procesar esta foto', downloadOne:'Descargar esta', downloadAll:'Descargar todas (.zip)',
+    editInPhotoEditor:'Editar en Photo Editor',
     stepExtra:'EXTRA — MEJORAR CALIDAD', qualityBoostLabel:'Mejora extra de calidad',
     qualityBoostDesc:' — realza el contraste local fino y el detalle, además de los controles de abajo',
     step1:'1 — RECORTE', step1desc:'Cada foto se recorta sola al subirla. Si queda mal, arrastrá los 4 puntos a mano o probá la detección automática de nuevo.',
@@ -690,6 +693,7 @@ function selectItem(id){
   els.qualityBoost.checked=it.settings.qualityBoost; els.isNegative.checked=it.settings.isNegative;
   updateValLabels();
   document.getElementById('downloadOne').disabled = !it.processedCanvas;
+  document.getElementById('editInPhotoEditor').disabled = !it.processedCanvas;
   renderFilmstrip();
   buildStage();
 }
@@ -1369,6 +1373,7 @@ document.getElementById('processOne').addEventListener('click', async ()=>{
     await processItem(it);
     viewMode='processed'; drawStage();
     document.getElementById('downloadOne').disabled=false;
+    document.getElementById('editInPhotoEditor').disabled=false;
     document.getElementById('downloadAll').disabled = !items.some(i=>i.processedCanvas);
     renderFilmstrip();
   } finally {
@@ -1395,6 +1400,7 @@ document.getElementById('processAll').addEventListener('click', async ()=>{
   btn.textContent = prevText; btn.disabled = false;
   document.getElementById('downloadAll').disabled=false;
   document.getElementById('downloadOne').disabled=false;
+  document.getElementById('editInPhotoEditor').disabled=false;
   drawStage(); renderFilmstrip();
 });
 
@@ -1404,6 +1410,28 @@ document.getElementById('downloadOne').addEventListener('click', ()=>{
   a.download = 'restored_'+(it.name||'photo')+'.png';
   a.href = it.processedCanvas.toDataURL('image/png');
   a.click();
+});
+
+// ---------- send a photo to the Lite Photo Editor (no server, no re-upload) ----------
+const HANDOFF_DB='drIggysHandoff', HANDOFF_STORE='images';
+function openHandoffDB(){
+  return new Promise((resolve,reject)=>{
+    const req = indexedDB.open(HANDOFF_DB, 1);
+    req.onupgradeneeded = ()=>{ req.result.createObjectStore(HANDOFF_STORE); };
+    req.onsuccess = ()=> resolve(req.result);
+    req.onerror = ()=> reject(req.error);
+  });
+}
+document.getElementById('editInPhotoEditor').addEventListener('click', async ()=>{
+  const it = currentItem(); if(!it || !it.processedCanvas) return;
+  const blob = await new Promise(res => it.processedCanvas.toBlob(res, 'image/png'));
+  const db = await openHandoffDB();
+  await new Promise((resolve,reject)=>{
+    const tx = db.transaction(HANDOFF_STORE,'readwrite');
+    tx.objectStore(HANDOFF_STORE).put(blob, 'pending');
+    tx.oncomplete = resolve; tx.onerror = ()=>reject(tx.error);
+  });
+  window.location.href = 'photo-editor.html';
 });
 
 document.getElementById('downloadAll').addEventListener('click', async ()=>{
