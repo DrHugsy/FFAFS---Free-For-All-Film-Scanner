@@ -15,6 +15,8 @@ No necesitás tocar este archivo para nada de esto — ya viene configurado.
 """
 import io
 import os
+import smtplib
+from email.mime.text import MIMEText
 
 from flask import Flask, request, send_file, send_from_directory, abort, redirect
 from flask_limiter import Limiter
@@ -108,6 +110,56 @@ def decode_raw():
     buf.seek(0)
     # data, rgb e img se descartan acá; no queda nada guardado en el servidor.
     return send_file(buf, mimetype="image/png")
+
+
+@app.route("/api/feedback", methods=["POST"])
+@limiter.limit("5 per minute")
+def feedback():
+    """
+    Manda el mensaje del formulario de /settings#feedback por mail, usando
+    credenciales SMTP que viven SOLO como variables de entorno en la VM —
+    nunca hardcodeadas acá ni commiteadas al repo. Si no están configuradas,
+    devuelve 503 en vez de fallar feo; el frontend ya maneja ese caso.
+
+    Variables de entorno necesarias (poné estas en la VM, no acá):
+      FEEDBACK_SMTP_USER  — cuenta de envío (ej. una de Gmail)
+      FEEDBACK_SMTP_PASS  — contraseña de aplicación de esa cuenta (no la contraseña normal)
+      FEEDBACK_TO_EMAIL   — a dónde llega el feedback (tu mail real; nunca se lo mandamos al navegador)
+      FEEDBACK_SMTP_HOST  — opcional, default smtp.gmail.com
+      FEEDBACK_SMTP_PORT  — opcional, default 465 (SSL)
+    """
+    data = request.get_json(silent=True) or {}
+    message = (data.get("message") or "").strip()
+    name = (data.get("name") or "").strip()[:80]
+
+    if not message:
+        return ("Escribí un mensaje antes de enviar.", 400)
+    if len(message) > 4000:
+        return ("El mensaje es demasiado largo (máximo 4000 caracteres).", 400)
+
+    smtp_user = os.environ.get("FEEDBACK_SMTP_USER")
+    smtp_pass = os.environ.get("FEEDBACK_SMTP_PASS")
+    feedback_to = os.environ.get("FEEDBACK_TO_EMAIL")
+    smtp_host = os.environ.get("FEEDBACK_SMTP_HOST", "smtp.gmail.com")
+    smtp_port = int(os.environ.get("FEEDBACK_SMTP_PORT", "465"))
+
+    if not (smtp_user and smtp_pass and feedback_to):
+        return ("El feedback todavía no está configurado del lado del servidor.", 503)
+
+    body = f"De: {name or 'Anónimo'}\n\n{message}"
+    msg = MIMEText(body, _charset="utf-8")
+    msg["Subject"] = "Feedback — Dr Iggy's"
+    msg["From"] = smtp_user
+    msg["To"] = feedback_to
+
+    try:
+        with smtplib.SMTP_SSL(smtp_host, smtp_port) as server:
+            server.login(smtp_user, smtp_pass)
+            server.send_message(msg)
+    except Exception as e:  # noqa: BLE001 - no queremos tirar un 500 pelado
+        return (f"No se pudo enviar el feedback: {e}", 502)
+
+    return {"status": "ok"}
 
 
 @app.route("/health")

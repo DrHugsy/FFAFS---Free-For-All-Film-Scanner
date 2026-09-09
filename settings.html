@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settings — Dr Iggy's</title>
+<meta name="description" content="Site settings for Dr Iggy's: language, local data, and a way to send feedback.">
+<link rel="canonical" href="https://www.driggys.com/settings">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Settings — Dr Iggy's">
+<meta property="og:description" content="Site settings for Dr Iggy's: language, local data, and a way to send feedback.">
+<meta property="og:url" content="https://www.driggys.com/settings">
+<meta property="og:image" content="https://www.driggys.com/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Settings — Dr Iggy's">
+<meta name="twitter:description" content="Site settings for Dr Iggy's: language, local data, and a way to send feedback.">
+<meta name="twitter:image" content="https://www.driggys.com/og-image.png">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cascadia+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --font-display:'Cascadia Mono','Consolas',monospace;
+    --font-body:'Cascadia Mono','Consolas',monospace;
+    --bg:#000000; --surface:#0E0E0E; --surface-2:#1A1A1A; --border:rgba(255,255,255,.14); --border-strong:rgba(255,255,255,.32);
+    --text:#F2F2F2; --text-dim:#9A9A9A; --text-faint:#5C5C5C;
+    --done:#5FD07A; --warn:#FF8080;
+  }
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  html,body{ height:100%; }
+  body{
+    margin:0; background:var(--bg); color:var(--text); font-family:var(--font-body);
+    font-size:14.5px; line-height:1.6; min-height:100vh; position:relative; overflow-x:hidden;
+  }
+  .wrap{ max-width:680px; margin:0 auto; position:relative; z-index:1; padding:24px 20px 60px; }
+  .nav{ display:flex; align-items:center; justify-content:space-between; margin-bottom:28px; }
+  .nav-left{ display:flex; align-items:center; gap:12px; position:relative; }
+  .brand{ display:flex; align-items:center; gap:10px; text-decoration:none; }
+  .brand img{ width:28px; height:28px; }
+  .brand span{ font-family:var(--font-display); font-weight:600; font-size:16px; color:var(--text); }
+
+  button{ font-family:var(--font-body); }
+  .hamburger{
+    width:34px; height:34px; padding:0; flex:none; background:var(--surface); border:1px solid var(--border);
+    color:var(--text); display:flex; align-items:center; justify-content:center; cursor:pointer;
+    transition:border-color .12s ease, transform .08s ease;
+  }
+  .hamburger svg{ width:16px; height:16px; }
+  .hamburger:hover{ border-color:var(--border-strong); }
+  .hamburger:active{ transform:scale(.9); }
+  .menu-backdrop{ position:fixed; inset:0; z-index:40; display:none; }
+  .menu-backdrop.open{ display:block; }
+  .nav-menu{
+    position:absolute; top:calc(100% + 8px); left:0; min-width:210px; background:var(--surface);
+    border:1px solid var(--border-strong); border-top:3px solid #fff; z-index:50;
+    display:none; flex-direction:column; padding:6px;
+  }
+  .nav-menu.open{ display:flex; }
+  .nav-menu a{
+    display:flex; align-items:center; gap:9px; padding:9px 10px; text-decoration:none !important; color:var(--text-dim);
+    font-size:12.5px; font-weight:600; transition:background .1s ease, color .1s ease;
+  }
+  .nav-menu a:hover{ background:var(--surface-2); color:var(--text); }
+  .nav-menu a:active{ transform:scale(.98); }
+  .nav-menu a.current{ color:#000; background:#fff; }
+  .nav-menu .menu-sep{ height:1px; background:var(--border); margin:5px 2px; }
+
+  .lang-toggle{ display:flex; background:var(--surface); border:1px solid var(--border); padding:3px; gap:2px; }
+  .lang-toggle button{
+    border:none; background:none; color:var(--text-dim); font-family:var(--font-body); font-weight:600;
+    font-size:12px; padding:6px 13px; cursor:pointer; min-height:auto; transition:transform .08s ease;
+  }
+  .lang-toggle button.active{ background:#fff; color:#000; }
+  .lang-toggle button:active{ transform:scale(.9); }
+
+  h1{ font-family:var(--font-display); font-size:22px; margin:0 0 6px; }
+  .sub{ font-size:12.5px; color:var(--text-faint); margin:0 0 22px; }
+  p{ font-size:13px; line-height:1.65; color:var(--text-dim); margin:0 0 12px; }
+  a{ color:var(--text); }
+
+  .section{ background:var(--surface); border:1px solid var(--border); border-top:3px solid var(--border-strong); padding:24px 26px; margin-bottom:14px; scroll-margin-top:20px; }
+  .section h2{ font-family:var(--font-display); font-size:14.5px; margin:0 0 4px; color:var(--text); display:flex; align-items:center; gap:9px; }
+  .section h2 svg{ width:17px; height:17px; flex:none; color:var(--text-dim); }
+  .section .desc{ font-size:12px; color:var(--text-faint); margin:0 0 16px; }
+
+  .field-row{ display:flex; align-items:center; justify-content:space-between; gap:16px; padding:10px 0; border-top:1px solid var(--border); }
+  .field-row:first-of-type{ border-top:none; }
+  .field-label{ font-size:12.5px; color:var(--text); font-weight:600; }
+  .field-hint{ font-size:11px; color:var(--text-faint); margin-top:2px; }
+
+  button.action{
+    font-weight:600; font-size:12px; padding:8px 14px; min-height:auto;
+    border:1px solid var(--border); color:var(--text); cursor:pointer;
+    background:var(--surface-2); transition:background .12s ease, border-color .12s ease, transform .08s ease;
+  }
+  button.action:hover{ border-color:var(--border-strong); background:var(--surface); }
+  button.action:active{ transform:scale(.96); }
+  button.action.danger:hover{ border-color:var(--warn); color:var(--warn); }
+
+  textarea, input[type=text]{
+    width:100%; font-family:var(--font-body); font-size:13px; color:var(--text); background:var(--surface-2);
+    border:1px solid var(--border); padding:10px 12px; resize:vertical;
+  }
+  textarea:focus, input[type=text]:focus{ outline:none; border-color:var(--border-strong); }
+  label.f{ display:block; font-size:11.5px; color:var(--text-dim); font-weight:600; margin-bottom:6px; }
+  .field-group{ margin-bottom:14px; }
+
+  button.primary{
+    font-weight:700; font-size:13px; padding:10px 20px; min-height:auto; color:#000; background:#fff;
+    border:none; cursor:pointer; transition:background .12s ease, transform .08s ease;
+  }
+  button.primary:hover{ background:#e2e2e2; }
+  button.primary:active{ transform:scale(.97); }
+  button.primary:disabled{ opacity:.5; cursor:not-allowed; }
+
+  .form-status{ font-size:12px; margin-top:10px; display:none; }
+  .form-status.ok{ color:var(--done); display:block; }
+  .form-status.err{ color:var(--warn); display:block; }
+
+  .back-btn{
+    display:inline-block; margin-top:10px; text-decoration:none; font-family:var(--font-body); font-weight:600;
+    font-size:13px; padding:10px 20px; color:#000; background:#fff; transition:background .12s ease, transform .08s ease;
+  }
+  .back-btn:hover{ background:#e2e2e2; }
+  .back-btn:active{ transform:scale(.97); }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="nav">
+    <div class="nav-left">
+      <button class="hamburger" id="btnMenu" aria-label="Menu" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <a class="brand" href="/">
+        <img src="/brand-icon.png" alt="Iggy">
+        <span>Dr Iggy's</span>
+      </a>
+      <div class="menu-backdrop" id="menuBackdrop"></div>
+      <div class="nav-menu" id="navMenu">
+        <a href="/" data-i18n="menuHome">Home</a>
+        <div class="menu-sep"></div>
+        <a href="/film-scanner">Film Scanner</a>
+        <a href="/photo-editor">Photo Editor</a>
+        <a href="/lut-lab">LUT Lab</a>
+        <a href="/convert">Image Converter</a>
+        <a href="/favicon-generator">Favicon Generator</a>
+        <a href="/qr-generator">QR Generator</a>
+        <div class="menu-sep"></div>
+        <a href="/settings" class="current" data-i18n="menuSettings">Settings</a>
+        <a href="/settings#feedback" data-i18n="menuFeedback">Feedback</a>
+        <a href="/about" data-i18n="menuAbout">About</a>
+        <a href="/terms" data-i18n="terms">Terms of Service</a>
+      </div>
+    </div>
+    <div class="lang-toggle">
+      <button id="btnLangEn">EN</button>
+      <button id="btnLangEs">ES</button>
+    </div>
+  </div>
+
+  <h1 data-i18n="title">Settings</h1>
+  <p class="sub" data-i18n="subtitle">Language, local data, and a way to reach the person behind this site.</p>
+
+  <div class="section">
+    <h2>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="3" y1="12" x2="21" y2="12"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18"/></svg>
+      <span data-i18n="langTitle">Language</span>
+    </h2>
+    <p class="desc" data-i18n="langDesc">Applies everywhere on the site — it's remembered on this device only, via your browser's local storage.</p>
+    <div class="field-row">
+      <div>
+        <div class="field-label" data-i18n="langFieldLabel">Site language</div>
+      </div>
+      <div class="lang-toggle" id="settingsLangToggle">
+        <button id="btnLangEn2">EN</button>
+        <button id="btnLangEs2">ES</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.4 8.4-8 10-4.6-1.6-8-5-8-10V6z"/></svg>
+      <span data-i18n="privacyTitle">Local data</span>
+    </h2>
+    <p class="desc" data-i18n="privacyDesc">This site doesn't have accounts and doesn't track you. The only thing it remembers on your device is your language choice — nothing is ever sent to a server for that. Full details in <a href="/about" data-i18n="aboutLink">About</a>.</p>
+    <div class="field-row">
+      <div>
+        <div class="field-label" data-i18n="clearFieldLabel">Clear local preferences</div>
+        <div class="field-hint" data-i18n="clearFieldHint">Resets your language choice back to default.</div>
+      </div>
+      <button class="action danger" id="btnClearData" data-i18n="clearBtn">Clear</button>
+    </div>
+  </div>
+
+  <div class="section" id="feedback">
+    <h2>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span data-i18n="feedbackTitle">Feedback</span>
+    </h2>
+    <p class="desc" data-i18n="feedbackDesc">Found a bug, or a tool you'd like to see? Send a message — it goes straight to the person building this, no reply address required.</p>
+    <form id="feedbackForm">
+      <div class="field-group">
+        <label class="f" for="fbName" data-i18n="fbNameLabel">Name (optional)</label>
+        <input type="text" id="fbName" maxlength="80">
+      </div>
+      <div class="field-group">
+        <label class="f" for="fbMessage" data-i18n="fbMessageLabel">Message</label>
+        <textarea id="fbMessage" rows="5" maxlength="4000" required></textarea>
+      </div>
+      <button class="primary" type="submit" id="btnSendFeedback" data-i18n="fbSend">Send</button>
+      <div class="form-status" id="fbStatus"></div>
+    </form>
+  </div>
+
+  <a class="back-btn" href="/" data-i18n="back">Back to Home</a>
+</div>
+
+<script>
+const I18N = {
+  en:{
+    menuHome:'Home', menuSettings:'Settings', menuFeedback:'Feedback', menuAbout:'About', terms:'Terms of Service',
+    title:'Settings', subtitle:'Language, local data, and a way to reach the person behind this site.',
+    langTitle:'Language', langDesc:'Applies everywhere on the site — it\'s remembered on this device only, via your browser\'s local storage.',
+    langFieldLabel:'Site language',
+    privacyTitle:'Local data',
+    privacyDesc:'This site doesn\'t have accounts and doesn\'t track you. The only thing it remembers on your device is your language choice — nothing is ever sent to a server for that. Full details in <a href="/about">About</a>.',
+    aboutLink:'About',
+    clearFieldLabel:'Clear local preferences', clearFieldHint:'Resets your language choice back to default.', clearBtn:'Clear', clearDone:'Cleared.',
+    feedbackTitle:'Feedback',
+    feedbackDesc:'Found a bug, or a tool you\'d like to see? Send a message — it goes straight to the person building this, no reply address required.',
+    fbNameLabel:'Name (optional)', fbMessageLabel:'Message', fbSend:'Send', fbSending:'Sending…',
+    fbOk:'Thanks — that was sent.', fbEmpty:'Write a message first.',
+    fbErrGeneric:'Couldn\'t send that. Try again in a bit.',
+    fbErrNotConfigured:'Feedback isn\'t hooked up on the server yet — sorry about that.',
+    back:'Back to Home',
+  },
+  es:{
+    menuHome:'Inicio', menuSettings:'Ajustes', menuFeedback:'Feedback', menuAbout:'Acerca de', terms:'Términos de servicio',
+    title:'Ajustes', subtitle:'Idioma, datos locales, y una forma de contactar a quien hace este sitio.',
+    langTitle:'Idioma', langDesc:'Aplica en todo el sitio — se recuerda solo en este dispositivo, vía el almacenamiento local del navegador.',
+    langFieldLabel:'Idioma del sitio',
+    privacyTitle:'Datos locales',
+    privacyDesc:'Este sitio no tiene cuentas y no te rastrea. Lo único que recuerda en tu dispositivo es tu idioma elegido — eso nunca se manda a ningún servidor. Más detalles en <a href="/about">Acerca de</a>.',
+    aboutLink:'Acerca de',
+    clearFieldLabel:'Borrar preferencias locales', clearFieldHint:'Reinicia tu idioma elegido al valor por defecto.', clearBtn:'Borrar', clearDone:'Borrado.',
+    feedbackTitle:'Feedback',
+    feedbackDesc:'¿Encontraste un bug, o te gustaría otra herramienta? Mandá un mensaje — llega directo a quien hace esto, sin necesidad de una dirección de respuesta.',
+    fbNameLabel:'Nombre (opcional)', fbMessageLabel:'Mensaje', fbSend:'Enviar', fbSending:'Enviando…',
+    fbOk:'Gracias — se envió.', fbEmpty:'Escribí un mensaje primero.',
+    fbErrGeneric:'No se pudo enviar. Probá de nuevo en un rato.',
+    fbErrNotConfigured:'El feedback todavía no está configurado del lado del servidor — perdón por eso.',
+    back:'Volver al Inicio',
+  }
+};
+const LANG_KEY = 'drIggyLang';
+let LANG = (function(){ try{ return localStorage.getItem(LANG_KEY) || 'en'; }catch(e){ return 'en'; } })();
+function setLanguage(lang){ LANG = lang; try{ localStorage.setItem(LANG_KEY, LANG); }catch(e){} applyLanguage(); }
+function applyLanguage(){
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const key = el.getAttribute('data-i18n');
+    if(I18N[LANG][key] !== undefined) el.innerHTML = I18N[LANG][key];
+  });
+  [document.getElementById('btnLangEn'), document.getElementById('btnLangEn2')].forEach(b=> b.classList.toggle('active', LANG==='en'));
+  [document.getElementById('btnLangEs'), document.getElementById('btnLangEs2')].forEach(b=> b.classList.toggle('active', LANG==='es'));
+  document.documentElement.lang = LANG;
+}
+document.getElementById('btnLangEn').addEventListener('click', ()=> setLanguage('en'));
+document.getElementById('btnLangEs').addEventListener('click', ()=> setLanguage('es'));
+document.getElementById('btnLangEn2').addEventListener('click', ()=> setLanguage('en'));
+document.getElementById('btnLangEs2').addEventListener('click', ()=> setLanguage('es'));
+
+const btnMenu = document.getElementById('btnMenu');
+const navMenu = document.getElementById('navMenu');
+const menuBackdrop = document.getElementById('menuBackdrop');
+function toggleMenu(open){
+  const willOpen = open !== undefined ? open : !navMenu.classList.contains('open');
+  navMenu.classList.toggle('open', willOpen);
+  menuBackdrop.classList.toggle('open', willOpen);
+  btnMenu.setAttribute('aria-expanded', String(willOpen));
+}
+btnMenu.addEventListener('click', ()=> toggleMenu());
+menuBackdrop.addEventListener('click', ()=> toggleMenu(false));
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') toggleMenu(false); });
+
+document.getElementById('btnClearData').addEventListener('click', ()=>{
+  try{
+    localStorage.removeItem(LANG_KEY);
+    indexedDB.deleteDatabase('drIggysHandoff');
+  }catch(e){}
+  const btn = document.getElementById('btnClearData');
+  const prev = btn.textContent;
+  btn.textContent = I18N[LANG].clearDone;
+  setTimeout(()=> btn.textContent = prev, 1500);
+});
+
+const feedbackForm = document.getElementById('feedbackForm');
+const fbStatus = document.getElementById('fbStatus');
+feedbackForm.addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const message = document.getElementById('fbMessage').value.trim();
+  const name = document.getElementById('fbName').value.trim();
+  fbStatus.className = 'form-status';
+  if(!message){
+    fbStatus.textContent = I18N[LANG].fbEmpty;
+    fbStatus.className = 'form-status err';
+    return;
+  }
+  const btn = document.getElementById('btnSendFeedback');
+  btn.disabled = true;
+  const prevLabel = btn.textContent;
+  btn.textContent = I18N[LANG].fbSending;
+  try{
+    const res = await fetch('/api/feedback', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ message, name }),
+    });
+    if(res.ok){
+      fbStatus.textContent = I18N[LANG].fbOk;
+      fbStatus.className = 'form-status ok';
+      feedbackForm.reset();
+    } else if(res.status === 503){
+      fbStatus.textContent = I18N[LANG].fbErrNotConfigured;
+      fbStatus.className = 'form-status err';
+    } else {
+      fbStatus.textContent = I18N[LANG].fbErrGeneric;
+      fbStatus.className = 'form-status err';
+    }
+  }catch(e){
+    fbStatus.textContent = I18N[LANG].fbErrGeneric;
+    fbStatus.className = 'form-status err';
+  }
+  btn.disabled = false;
+  btn.textContent = prevLabel;
+});
+
+applyLanguage();
+</script>
+
+</body>
+</html>

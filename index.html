@@ -64,7 +64,8 @@
 
   .side-nav{
     position:fixed; left:18px; top:0; bottom:0; width:70px; z-index:15;
-    display:none; flex-direction:column; align-items:center; justify-content:center; gap:6px;
+    display:none; flex-direction:column; align-items:center; gap:6px;
+    padding-top:104px;
   }
   .side-nav a{
     display:flex; flex-direction:column; align-items:center; gap:5px; width:100%; padding:8px 2px;
@@ -75,7 +76,8 @@
   .side-nav a:hover{ color:var(--text); background:var(--surface-2); }
   .side-nav a.current{ color:#000; background:#fff; }
   .side-nav a:active{ transform:scale(.94); }
-  .side-nav .side-sep{ width:28px; height:1px; background:var(--border); margin:6px 0; }
+  .side-nav .side-sep{ width:28px; height:1px; background:var(--border); margin:6px 0; flex:none; }
+  .side-nav .side-sep-push{ margin-top:auto; }
   @media (min-width:1180px){
     .side-nav{ display:flex; }
     .nav .hamburger{ display:none; }
@@ -121,50 +123,45 @@
   .lang-toggle button.active{ background:#fff; color:#000; }
   .lang-toggle button:active{ transform:scale(.9); }
 
-  .hero{
-    text-align:center; position:relative; flex:none;
-    min-height:82vh; min-height:82svh;
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    padding:70px 0 50px;
-  }
-  .scroll-cue{
-    position:absolute; left:50%; bottom:6px; transform:translateX(-50%);
-    display:flex; flex-direction:column; align-items:center; gap:4px;
-    color:var(--text-faint); text-decoration:none; font-size:10px; letter-spacing:.05em; text-transform:uppercase;
-    animation:scrollCueBob 2s ease-in-out infinite; transition:color .15s ease;
-  }
-  .scroll-cue:hover{ color:var(--text-dim); }
-  .scroll-cue svg{ width:16px; height:16px; }
-  @keyframes scrollCueBob{ 0%,100%{ transform:translateX(-50%) translateY(0); } 50%{ transform:translateX(-50%) translateY(6px); } }
-  .hero .mascot{
-    width:128px; height:auto; display:block; margin:0 auto 14px; cursor:pointer;
-    transition:transform .12s ease; user-select:none; -webkit-user-drag:none;
-  }
-  .hero .mascot:active{ transform:scale(.94); }
-  .hero .mascot.wiggle{ animation:mascotWiggle .5s ease; }
-  @keyframes mascotWiggle{
-    0%,100%{ transform:rotate(0); }
-    20%{ transform:rotate(-6deg) scale(1.03); }
-    40%{ transform:rotate(5deg) scale(1.03); }
-    60%{ transform:rotate(-3deg); }
-    80%{ transform:rotate(2deg); }
-  }
-  .woof-text{
-    position:absolute; left:50%; top:70px; pointer-events:none; z-index:20;
-    font-family:var(--font-display); font-weight:700; font-size:20px; color:#fff;
-    text-shadow:0 0 10px rgba(0,0,0,.8); animation:woofFloat 1.1s ease-out forwards;
-    white-space:nowrap;
-  }
-  @keyframes woofFloat{
-    0%{ transform:translate(-50%,0) scale(.5); opacity:0; }
-    18%{ transform:translate(-50%,-18px) scale(1.15); opacity:1; }
-    100%{ transform:translate(-50%,-90px) scale(1); opacity:0; }
-  }
+  .hero{ text-align:center; position:relative; flex:none; padding:54px 0 38px; }
   .hero h1{ font-size:clamp(20px,4vw,28px); font-weight:700; letter-spacing:-.01em; margin-bottom:10px; }
   .hero h1 .hi{ color:var(--text-dim); font-weight:400; }
   .hero p{ margin:0 auto; max-width:420px; color:var(--text-dim); font-size:13.5px; min-height:2.2em; }
   .type-cursor{ display:inline-block; width:6px; height:1em; background:var(--text-dim); margin-left:1px; vertical-align:-2px; animation:blink 1s steps(1) infinite; }
   @keyframes blink{ 50%{ opacity:0; } }
+
+  .mascot-corner-wrap{ position:fixed; right:18px; bottom:18px; z-index:25; }
+  .mascot-corner{
+    width:62px; height:auto; display:block; cursor:pointer;
+    transition:transform .12s ease; user-select:none; -webkit-user-drag:none;
+  }
+  .mascot-corner:hover{ transform:scale(1.06); }
+  .mascot-corner:active{ transform:scale(.9); }
+  .mascot-corner.wiggle{ animation:mascotWiggle .5s ease; }
+  @keyframes mascotWiggle{
+    0%,100%{ transform:rotate(0); }
+    20%{ transform:rotate(-6deg) scale(1.05); }
+    40%{ transform:rotate(5deg) scale(1.05); }
+    60%{ transform:rotate(-3deg); }
+    80%{ transform:rotate(2deg); }
+  }
+  .woof-text{
+    position:absolute; left:50%; bottom:100%; margin-bottom:4px; pointer-events:none; z-index:26;
+    font-family:var(--font-display); font-weight:700; font-size:18px; color:#fff;
+    text-shadow:0 0 10px rgba(0,0,0,.8); animation:woofFloat 1.1s ease-out forwards; white-space:nowrap;
+  }
+  @keyframes woofFloat{
+    0%{ transform:translate(-50%,0) scale(.5); opacity:0; }
+    18%{ transform:translate(-50%,-14px) scale(1.15); opacity:1; }
+    100%{ transform:translate(-50%,-80px) scale(1); opacity:0; }
+  }
+  @media (max-width:520px){
+    .mascot-corner-wrap{ right:10px; bottom:10px; }
+    .mascot-corner{ width:42px; opacity:.75; }
+    .mascot-corner:active{ opacity:1; }
+  }
+
+  .paper-plane{ position:fixed; top:0; left:0; width:38px; height:38px; z-index:0; pointer-events:none; opacity:.16; will-change:transform; }
 
   .tools{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   @media (min-width:860px){
@@ -232,12 +229,20 @@
 
   @media (max-width:520px){
     .tools{ grid-template-columns:1fr; }
-    .hero{ min-height:78vh; min-height:78svh; padding:40px 0 46px; }
-    .hero .mascot{ width:104px; height:auto; }
+    .hero{ padding:36px 0 30px; }
   }
 </style>
 </head>
 <body>
+
+<svg class="paper-plane" id="paperPlane" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <path d="M6 52 L92 14 L54 52 L92 90 Z" fill="none" stroke="#fff" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M54 52 L6 52" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity=".6"/>
+</svg>
+
+<div class="mascot-corner-wrap" id="mascotWrap">
+  <img class="mascot-corner" id="mascotBtn" src="/mascot.png" alt="Iggy, the site mascot — click for a surprise">
+</div>
 
 <nav class="side-nav" id="sideNav" aria-label="Site navigation">
   <a href="/" class="current">
@@ -269,7 +274,15 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="21" y2="14"/><line x1="14" y1="21" x2="21" y2="21"/><line x1="17.5" y1="14" x2="17.5" y2="21"/></svg>
     <span data-i18n="sideQr">QR Code</span>
   </a>
-  <div class="side-sep"></div>
+  <div class="side-sep side-sep-push"></div>
+  <a href="/settings">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    <span data-i18n="sideSettings">Settings</span>
+  </a>
+  <a href="/settings#feedback">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    <span data-i18n="sideFeedback">Feedback</span>
+  </a>
   <a href="/about">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><circle cx="12" cy="7.5" r=".6" fill="currentColor" stroke="none"/></svg>
     <span data-i18n="sideAbout">About</span>
@@ -278,6 +291,7 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v5h5"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
     <span data-i18n="sideTerms">Terms</span>
   </a>
+  <div style="height:24px"></div>
 </nav>
 
 <div class="page">
@@ -302,6 +316,8 @@
         <a href="/favicon-generator" data-i18n="faviconGenName">Favicon Generator</a>
         <a href="/qr-generator" data-i18n="qrGeneratorName">QR Generator</a>
         <div class="menu-sep"></div>
+        <a href="/settings" data-i18n="menuSettings">Settings</a>
+        <a href="/settings#feedback" data-i18n="menuFeedback">Feedback</a>
         <a href="/about" data-i18n="menuAbout">About</a>
         <a href="/terms" data-i18n="terms">Terms of Service</a>
       </div>
@@ -313,13 +329,8 @@
   </div>
 
   <div class="hero">
-    <img class="mascot" src="/mascot.png" alt="Iggy, the site mascot">
     <h1><span data-i18n="heroTitleA">Dr Iggy's</span> <span class="hi" data-i18n="heroTitleB">free design tools</span></h1>
     <p id="heroTyped" aria-label="Small, free, no-signup tools. No account, no upload limits, nothing to install."></p>
-    <a class="scroll-cue" href="#toolsSection">
-      <span data-i18n="scrollCue">Tools</span>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-    </a>
   </div>
 
   <p class="tools-label" id="toolsSection" data-i18n="toolsLabel">Tools</p>
@@ -456,6 +467,7 @@ const I18N = {
     menuHome:'Home', menuAbout:'About', toolsLabel:'Tools', scrollCue:'Tools',
     sideHome:'Home', sideFilmScanner:'Scanner', sidePhotoEditor:'Editor', sideLutLab:'LUT Lab',
     sideConvert:'Convert', sideFavicon:'Favicon', sideQr:'QR Code', sideAbout:'About', sideTerms:'Terms',
+    sideSettings:'Settings', sideFeedback:'Feedback', menuSettings:'Settings', menuFeedback:'Feedback',
     heroTitleA:"Dr Iggy's", heroTitleB:'free design tools',
     heroDesc:'Small, free, no-signup tools. No account, no upload limits, nothing to install.',
     filmScannerName:'Film Scanner',
@@ -476,6 +488,7 @@ const I18N = {
     menuHome:'Inicio', menuAbout:'Acerca de', toolsLabel:'Herramientas', scrollCue:'Herramientas',
     sideHome:'Inicio', sideFilmScanner:'Escáner', sidePhotoEditor:'Editor', sideLutLab:'LUT Lab',
     sideConvert:'Convertir', sideFavicon:'Favicon', sideQr:'Código QR', sideAbout:'Acerca de', sideTerms:'Términos',
+    sideSettings:'Ajustes', sideFeedback:'Feedback', menuSettings:'Ajustes', menuFeedback:'Feedback',
     heroTitleA:"Dr Iggy's", heroTitleB:'herramientas gratis de diseño',
     heroDesc:'Herramientas chicas, gratis, sin registro. Sin cuenta, sin límite de subida, sin instalar nada.',
     filmScannerName:'Escáner de Negativos',
@@ -629,8 +642,8 @@ function playBark(){
   noise.connect(bp); bp.connect(noiseGain); noiseGain.connect(ctx.destination);
   noise.start(now);
 }
-const mascotEl = document.querySelector('.hero .mascot');
-const heroEl = document.querySelector('.hero');
+const mascotEl = document.getElementById('mascotBtn');
+const mascotWrap = document.getElementById('mascotWrap');
 mascotEl.addEventListener('click', ()=>{
   try{ playBark(); }catch(e){}
   mascotEl.classList.remove('wiggle');
@@ -639,11 +652,34 @@ mascotEl.addEventListener('click', ()=>{
   const woof = document.createElement('span');
   woof.className = 'woof-text';
   woof.textContent = 'Woof!';
-  woof.style.transform = `translateX(${(Math.random()*40-20)}px)`;
-  woof.style.setProperty('--rot', (Math.random()*16-8) + 'deg');
-  heroEl.appendChild(woof);
+  woof.style.transform = `translateX(${(Math.random()*30-15)}px)`;
+  mascotWrap.appendChild(woof);
   setTimeout(()=> woof.remove(), 1200);
 });
+
+// subtle background paper plane, bouncing DVD-screensaver style
+(function(){
+  const plane = document.getElementById('paperPlane');
+  if(!plane) return;
+  const size = 38;
+  let x = Math.random() * Math.max(1, window.innerWidth - size);
+  let y = Math.random() * Math.max(1, window.innerHeight - size);
+  let vx = (Math.random() < 0.5 ? -1 : 1) * (0.32 + Math.random() * 0.22);
+  let vy = (Math.random() < 0.5 ? -1 : 1) * (0.32 + Math.random() * 0.22);
+  function frame(){
+    const maxX = window.innerWidth - size;
+    const maxY = window.innerHeight - size;
+    x += vx; y += vy;
+    if(x <= 0){ x = 0; vx = Math.abs(vx); }
+    else if(x >= maxX){ x = maxX; vx = -Math.abs(vx); }
+    if(y <= 0){ y = 0; vy = Math.abs(vy); }
+    else if(y >= maxY){ y = maxY; vy = -Math.abs(vy); }
+    const angle = Math.atan2(vy, vx) * 180 / Math.PI;
+    plane.style.transform = `translate(${x}px, ${y}px) rotate(${angle}deg)`;
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
 
 applyLanguage();
 </script>
