@@ -114,7 +114,6 @@
     color:var(--text-dim); cursor:pointer; font-size:12.5px;
   }
   .drop:hover{ border-color:#fff; color:var(--text); }
-  .drop .sym{ color:var(--accent); }
 
   .section{ display:flex; flex-direction:column; gap:10px; }
   .section-title{ font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.03em; }
@@ -223,7 +222,7 @@
     <div class="win-body">
 
       <div class="drop" id="drop">
-        <span class="sym">$</span> <span data-i18n="dropLine">drop a video here, or click to choose — MP4, WebM, MOV (whatever your browser can play)</span>
+        <span data-i18n="dropLine">drop a video here, or click to choose — MP4, WebM, MOV (whatever your browser can play)</span>
       </div>
       <input type="file" id="fileInput" accept="video/*">
       <p class="error-note" id="errorNote"></p>

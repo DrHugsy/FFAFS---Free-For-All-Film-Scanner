@@ -176,7 +176,6 @@
     color:var(--text-dim); cursor:pointer; font-size:12.5px;
   }
   .drop:hover{ border-color:#fff; color:var(--text); }
-  .drop .sym{ color:var(--accent); }
 
   .files{ display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px; padding:0 16px 16px; }
   .file-card{ border:1px solid var(--border); background:var(--surface-2); display:flex; flex-direction:column; }
@@ -270,7 +269,7 @@
           <canvas id="previewCanvas" style="display:none"></canvas>
         </div>
         <div class="drop" id="drop">
-          <span class="sym">$</span> <span data-i18n="dropLine">drop photos here, or click to choose — you can add several at once</span>
+          <span data-i18n="dropLine">drop photos here, or click to choose — you can add several at once</span>
         </div>
         <div class="files" id="filesGrid"></div>
       </div>
