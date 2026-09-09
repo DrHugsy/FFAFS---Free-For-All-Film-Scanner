@@ -119,8 +119,15 @@
   .tool-icon-tile{
     width:42px; height:42px; flex:none; background:var(--surface-2);
     border:1px solid var(--border); display:flex; align-items:center; justify-content:center;
+    transition:background .14s ease, border-color .14s ease;
   }
   .tool-icon-tile svg{ width:26px; height:26px; }
+  .tool-tile.c-blue .tool-icon-tile{ background:rgba(74,125,238,.20); border-color:rgba(74,125,238,.5); }
+  .tool-tile.c-green .tool-icon-tile{ background:rgba(127,203,104,.20); border-color:rgba(127,203,104,.5); }
+  .tool-tile.c-violet .tool-icon-tile{ background:rgba(176,115,255,.20); border-color:rgba(176,115,255,.5); }
+  .tool-tile.c-orange .tool-icon-tile{ background:rgba(255,138,91,.20); border-color:rgba(255,138,91,.5); }
+  .tool-tile.c-pink .tool-icon-tile{ background:rgba(255,111,165,.20); border-color:rgba(255,111,165,.5); }
+  .tool-tile.c-teal .tool-icon-tile{ background:rgba(77,208,192,.20); border-color:rgba(77,208,192,.5); }
   .tool-tag{
     font-size:9.5px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:#000;
     background:#fff; padding:3px 7px; white-space:nowrap; flex:none;
@@ -171,6 +178,7 @@
         <a href="/favicon-generator" data-i18n="faviconGenName">Favicon Generator</a>
         <a href="/qr-generator" data-i18n="qrGeneratorName">QR Generator</a>
         <div class="menu-sep"></div>
+        <a href="/about" data-i18n="menuAbout">About</a>
         <a href="/terms" data-i18n="terms">Terms of Service</a>
       </div>
     </div>
@@ -197,7 +205,7 @@
   <p class="tools-label" data-i18n="toolsLabel">Tools</p>
 
   <div class="tools">
-    <a class="tool-tile" href="/film-scanner">
+    <a class="tool-tile c-blue" href="/film-scanner">
       <div class="tool-tile-top">
         <div class="tool-icon-tile">
           <svg viewBox="0 0 56 56">
@@ -216,7 +224,7 @@
       <div class="tool-desc" data-i18n="filmScannerDesc">Negatives → full-color photos.</div>
     </a>
 
-    <a class="tool-tile" href="/photo-editor">
+    <a class="tool-tile c-green" href="/photo-editor">
       <div class="tool-tile-top">
         <div class="tool-icon-tile">
           <svg viewBox="0 0 56 56">
@@ -236,7 +244,7 @@
       <div class="tool-desc" data-i18n="photoEditorDesc">Lightroom-style editing.</div>
     </a>
 
-    <a class="tool-tile" href="/lut-lab">
+    <a class="tool-tile c-violet" href="/lut-lab">
       <div class="tool-tile-top">
         <div class="tool-icon-tile">
           <svg viewBox="0 0 56 56">
@@ -253,7 +261,7 @@
       <div class="tool-desc" data-i18n="lutLabDesc">Browse, apply, build LUTs.</div>
     </a>
 
-    <a class="tool-tile" href="/convert">
+    <a class="tool-tile c-orange" href="/convert">
       <div class="tool-tile-top">
         <div class="tool-icon-tile">
           <svg viewBox="0 0 56 56">
@@ -270,7 +278,7 @@
       <div class="tool-desc" data-i18n="convertDesc">Any format, in bulk.</div>
     </a>
 
-    <a class="tool-tile" href="/favicon-generator">
+    <a class="tool-tile c-pink" href="/favicon-generator">
       <div class="tool-tile-top">
         <div class="tool-icon-tile">
           <svg viewBox="0 0 56 56">
@@ -285,7 +293,7 @@
       <div class="tool-desc" data-i18n="faviconGenDesc">One image, every icon size.</div>
     </a>
 
-    <a class="tool-tile" href="/qr-generator">
+    <a class="tool-tile c-teal" href="/qr-generator">
       <div class="tool-tile-top">
         <div class="tool-icon-tile">
           <svg viewBox="0 0 56 56">
@@ -319,7 +327,7 @@
 <script>
 const I18N = {
   en:{
-    menuHome:'Home', toolsLabel:'Tools',
+    menuHome:'Home', menuAbout:'About', toolsLabel:'Tools',
     heroTitleA:"Dr Iggy's", heroTitleB:'free design tools',
     heroDesc:'Small, free, no-signup tools. No account, no upload limits, nothing to install.',
     filmScannerName:'Film Scanner',
@@ -337,7 +345,7 @@ const I18N = {
     available:'Available', soon:'Soon', terms:'Terms of Service',
   },
   es:{
-    menuHome:'Inicio', toolsLabel:'Herramientas',
+    menuHome:'Inicio', menuAbout:'Acerca de', toolsLabel:'Herramientas',
     heroTitleA:"Dr Iggy's", heroTitleB:'herramientas gratis de diseño',
     heroDesc:'Herramientas chicas, gratis, sin registro. Sin cuenta, sin límite de subida, sin instalar nada.',
     filmScannerName:'Escáner de Negativos',
