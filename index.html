@@ -85,8 +85,10 @@
 
   .nav{ display:flex; align-items:center; justify-content:space-between; padding:22px 0; margin-bottom:8px; flex:none; }
   .nav-left{ display:flex; align-items:center; gap:12px; position:relative; }
-  .brand{ display:flex; align-items:center; gap:10px; text-decoration:none; }
-  .brand img{ width:28px; height:28px; flex:none; }
+  .brand{ display:flex; align-items:center; gap:10px; text-decoration:none; padding:4px 8px; margin:-4px -8px; border-radius:8px; transition:background .15s ease; }
+  .brand:hover{ background:var(--surface-2); }
+  .brand:hover img{ transform:scale(1.08) rotate(-3deg); }
+  .brand img{ width:28px; height:28px; flex:none; transition:transform .15s ease; }
   .brand span{ font-family:var(--font-display); font-weight:600; font-size:16px; color:var(--text); }
 
   button{ font-family:var(--font-body); }
@@ -126,13 +128,18 @@
   .hero{ text-align:center; position:relative; flex:none; padding:54px 0 38px; }
   .hero h1{ font-size:clamp(20px,4vw,28px); font-weight:700; letter-spacing:-.01em; margin-bottom:10px; }
   .hero h1 .hi{ color:var(--text-dim); font-weight:400; }
-  .hero p{ margin:0 auto; max-width:420px; color:var(--text-dim); font-size:13.5px; min-height:2.2em; }
+  .hero p{ margin:0; color:var(--text-dim); font-size:13.5px; white-space:nowrap; line-height:1.55; }
+  @media (max-width:900px){
+    .hero p{ white-space:normal; max-width:420px; margin:0 auto; min-height:3.1em; }
+  }
   .type-cursor{ display:inline-block; width:6px; height:1em; background:var(--text-dim); margin-left:1px; vertical-align:-2px; animation:blink 1s steps(1) infinite; }
   @keyframes blink{ 50%{ opacity:0; } }
 
-  .mascot-corner-wrap{ position:fixed; right:18px; bottom:18px; z-index:25; }
+  .mascot-corner-wrap{ position:absolute; top:-76px; z-index:5; }
+  .mascot-corner-wrap.pos-left{ left:-6px; }
+  .mascot-corner-wrap.pos-right{ right:-6px; }
   .mascot-corner{
-    width:62px; height:auto; display:block; cursor:pointer;
+    width:58px; height:auto; display:block; cursor:pointer;
     transition:transform .12s ease; user-select:none; -webkit-user-drag:none;
   }
   .mascot-corner:hover{ transform:scale(1.06); }
@@ -156,14 +163,13 @@
     100%{ transform:translate(-50%,-80px) scale(1); opacity:0; }
   }
   @media (max-width:520px){
-    .mascot-corner-wrap{ right:10px; bottom:10px; }
-    .mascot-corner{ width:42px; opacity:.75; }
-    .mascot-corner:active{ opacity:1; }
+    .mascot-corner-wrap{ top:-60px; }
+    .mascot-corner{ width:44px; }
   }
 
   .paper-plane{ position:fixed; top:0; left:0; width:38px; height:38px; z-index:0; pointer-events:none; opacity:.16; will-change:transform; }
 
-  .tools{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .tools{ position:relative; display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   @media (min-width:860px){
     .tools{ grid-template-columns:repeat(3,1fr); }
   }
@@ -236,13 +242,10 @@
 <body>
 
 <svg class="paper-plane" id="paperPlane" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-  <path d="M6 52 L92 14 L54 52 L92 90 Z" fill="none" stroke="#fff" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M54 52 L6 52" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity=".6"/>
+  <path d="M92 52 L6 14 L44 52 L6 90 Z" fill="none" stroke="#fff" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M44 52 L92 52" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity=".6"/>
 </svg>
-
-<div class="mascot-corner-wrap" id="mascotWrap">
-  <img class="mascot-corner" id="mascotBtn" src="/mascot.png" alt="Iggy, the site mascot — click for a surprise">
-</div>
+<svg id="planeTrail" style="position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; pointer-events:none;" aria-hidden="true"></svg>
 
 <nav class="side-nav" id="sideNav" aria-label="Site navigation">
   <a href="/" class="current">
@@ -336,23 +339,24 @@
   <p class="tools-label" id="toolsSection" data-i18n="toolsLabel">Tools</p>
 
   <div class="tools">
-    <a class="tool-tile c-blue" href="/film-scanner">
+    <div class="mascot-corner-wrap" id="mascotWrap">
+      <img class="mascot-corner" id="mascotBtn" src="/mascot.png" alt="Iggy, the site mascot — click for a surprise">
+    </div>
+    <a class="tool-tile c-orange" href="/convert">
       <div class="tool-tile-top">
         <div class="tool-icon-tile">
           <svg viewBox="0 0 56 56">
-            <rect x="4" y="10" width="48" height="36" rx="3" fill="#231F20"/>
-            <g fill="#F2E9D8">
-              <circle cx="10" cy="17" r="2.2"/><circle cx="10" cy="28" r="2.2"/><circle cx="10" cy="39" r="2.2"/>
-              <circle cx="46" cy="17" r="2.2"/><circle cx="46" cy="28" r="2.2"/><circle cx="46" cy="39" r="2.2"/>
-            </g>
-            <rect x="17" y="15" width="22" height="26" rx="1.5" fill="#4A7DEE"/>
-            <circle cx="28" cy="28" r="6" fill="#FCEAA8" stroke="#0F3AA8" stroke-width="1.5"/>
+            <rect x="4" y="10" width="20" height="26" rx="2" fill="#4A7DEE"/>
+            <text x="14" y="27" font-size="9" font-weight="bold" text-anchor="middle" fill="#fff" font-family="monospace">A</text>
+            <path d="M27 23 L35 23 M31 18 L37 23 L31 28" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <rect x="32" y="10" width="20" height="26" rx="2" fill="#7FCB68"/>
+            <text x="42" y="27" font-size="9" font-weight="bold" text-anchor="middle" fill="#fff" font-family="monospace">B</text>
           </svg>
         </div>
         <span class="tool-tag" data-i18n="available">Available</span>
       </div>
-      <div class="tool-name" data-i18n="filmScannerName">Film Scanner</div>
-      <div class="tool-desc" data-i18n="filmScannerDesc">Negatives → full-color photos.</div>
+      <div class="tool-name" data-i18n="convertName">Image Converter</div>
+      <div class="tool-desc" data-i18n="convertDesc">Any format, in bulk.</div>
       <div class="tool-cta"><span data-i18n="openTool">Open</span><span class="arrow">→</span></div>
     </a>
 
@@ -395,21 +399,23 @@
       <div class="tool-cta"><span data-i18n="openTool">Open</span><span class="arrow">→</span></div>
     </a>
 
-    <a class="tool-tile c-orange" href="/convert">
+    <a class="tool-tile c-blue" href="/film-scanner">
       <div class="tool-tile-top">
         <div class="tool-icon-tile">
           <svg viewBox="0 0 56 56">
-            <rect x="4" y="10" width="20" height="26" rx="2" fill="#4A7DEE"/>
-            <text x="14" y="27" font-size="9" font-weight="bold" text-anchor="middle" fill="#fff" font-family="monospace">A</text>
-            <path d="M27 23 L35 23 M31 18 L37 23 L31 28" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-            <rect x="32" y="10" width="20" height="26" rx="2" fill="#7FCB68"/>
-            <text x="42" y="27" font-size="9" font-weight="bold" text-anchor="middle" fill="#fff" font-family="monospace">B</text>
+            <rect x="4" y="10" width="48" height="36" rx="3" fill="#231F20"/>
+            <g fill="#F2E9D8">
+              <circle cx="10" cy="17" r="2.2"/><circle cx="10" cy="28" r="2.2"/><circle cx="10" cy="39" r="2.2"/>
+              <circle cx="46" cy="17" r="2.2"/><circle cx="46" cy="28" r="2.2"/><circle cx="46" cy="39" r="2.2"/>
+            </g>
+            <rect x="17" y="15" width="22" height="26" rx="1.5" fill="#4A7DEE"/>
+            <circle cx="28" cy="28" r="6" fill="#FCEAA8" stroke="#0F3AA8" stroke-width="1.5"/>
           </svg>
         </div>
         <span class="tool-tag" data-i18n="available">Available</span>
       </div>
-      <div class="tool-name" data-i18n="convertName">Image Converter</div>
-      <div class="tool-desc" data-i18n="convertDesc">Any format, in bulk.</div>
+      <div class="tool-name" data-i18n="filmScannerName">Film Scanner</div>
+      <div class="tool-desc" data-i18n="filmScannerDesc">Negatives → full-color photos.</div>
       <div class="tool-cta"><span data-i18n="openTool">Open</span><span class="arrow">→</span></div>
     </a>
 
@@ -644,6 +650,7 @@ function playBark(){
 }
 const mascotEl = document.getElementById('mascotBtn');
 const mascotWrap = document.getElementById('mascotWrap');
+mascotWrap.classList.add(Math.random() < 0.5 ? 'pos-left' : 'pos-right');
 mascotEl.addEventListener('click', ()=>{
   try{ playBark(); }catch(e){}
   mascotEl.classList.remove('wiggle');
@@ -657,15 +664,31 @@ mascotEl.addEventListener('click', ()=>{
   setTimeout(()=> woof.remove(), 1200);
 });
 
-// subtle background paper plane, bouncing DVD-screensaver style
+// subtle background paper plane, bouncing DVD-screensaver style, with a faint fading trail
 (function(){
   const plane = document.getElementById('paperPlane');
+  const trailSvg = document.getElementById('planeTrail');
   if(!plane) return;
   const size = 38;
   let x = Math.random() * Math.max(1, window.innerWidth - size);
   let y = Math.random() * Math.max(1, window.innerHeight - size);
   let vx = (Math.random() < 0.5 ? -1 : 1) * (0.32 + Math.random() * 0.22);
   let vy = (Math.random() < 0.5 ? -1 : 1) * (0.32 + Math.random() * 0.22);
+
+  const TRAIL_LEN = 6;
+  const trailDots = [];
+  if(trailSvg){
+    for(let i=0;i<TRAIL_LEN;i++){
+      const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      c.setAttribute('fill', '#fff');
+      c.style.opacity = '0';
+      trailSvg.appendChild(c);
+      trailDots.push(c);
+    }
+  }
+  let history = [];
+  let frameCount = 0;
+
   function frame(){
     const maxX = window.innerWidth - size;
     const maxY = window.innerHeight - size;
@@ -676,6 +699,20 @@ mascotEl.addEventListener('click', ()=>{
     else if(y >= maxY){ y = maxY; vy = -Math.abs(vy); }
     const angle = Math.atan2(vy, vx) * 180 / Math.PI;
     plane.style.transform = `translate(${x}px, ${y}px) rotate(${angle}deg)`;
+
+    frameCount++;
+    if(trailDots.length && frameCount % 3 === 0){
+      history.unshift({ x: x + size/2, y: y + size/2 });
+      if(history.length > TRAIL_LEN) history.length = TRAIL_LEN;
+      history.forEach((pos, i)=>{
+        const dot = trailDots[i];
+        const t = 1 - (i + 1) / (TRAIL_LEN + 1);
+        dot.setAttribute('cx', pos.x);
+        dot.setAttribute('cy', pos.y);
+        dot.setAttribute('r', (2.2 * t + 0.4).toFixed(2));
+        dot.style.opacity = (0.12 * t).toFixed(3);
+      });
+    }
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
