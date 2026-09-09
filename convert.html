@@ -3,20 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Image Converter — Doctor Iggy's</title>
+<title>Image Converter — Dr Iggy's</title>
 <meta name="description" content="Free online image converter: upload photos in any mix of formats and convert them all to JPEG, PNG, WebP, AVIF, JPEG XL, BMP, ICO, TIFF or PDF — right in your browser, no signup, no upload limit.">
 <link rel="canonical" href="https://www.driggys.com/convert.html">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='0' fill='%23000'/%3E%3Ccircle cx='12' cy='15' r='2.4' fill='%23fff'/%3E%3Ccircle cx='20' cy='15' r='2.4' fill='%23fff'/%3E%3Cpath d='M11 21 Q16 25 21 21' stroke='%23fff' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cascadia+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/heic-to@1.5.2/dist/iife/heic-to.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/utif@3.1.0/UTIF.js"></script>
 <style>
   :root{
-    --font-display:'JetBrains Mono','Consolas',monospace;
-    --font-body:'JetBrains Mono','Consolas',monospace;
+    --font-display:'Cascadia Mono','Consolas',monospace;
+    --font-body:'Cascadia Mono','Consolas',monospace;
 
     --bg:#000000; --surface:#0E0E0E; --surface-2:#1A1A1A; --surface-3:#242424;
     --border:rgba(255,255,255,.14); --border-strong:rgba(255,255,255,.32);
@@ -35,9 +35,34 @@
   .page{ max-width:1100px; margin:0 auto; padding:14px 20px 60px; }
 
   .nav{ display:flex; align-items:center; justify-content:space-between; padding:8px 0; margin-bottom:6px; }
+  .nav-left{ display:flex; align-items:center; gap:12px; position:relative; }
   .brand{ display:flex; align-items:center; gap:10px; text-decoration:none; }
   .brand svg{ width:28px; height:28px; flex:none; }
   .brand span{ font-family:var(--font-display); font-weight:600; font-size:16px; color:var(--text); }
+  .hamburger{
+    width:34px; height:34px; padding:0; background:var(--surface); flex:none;
+    border:1px solid var(--border); color:var(--text); display:flex; align-items:center; justify-content:center;
+    cursor:pointer; min-height:auto; transition:border-color .12s ease, transform .08s ease;
+  }
+  .hamburger svg{ width:16px; height:16px; }
+  .hamburger:hover{ border-color:var(--border-strong); }
+  .hamburger:active{ transform:scale(.9); }
+  .menu-backdrop{ position:fixed; inset:0; z-index:40; display:none; }
+  .menu-backdrop.open{ display:block; }
+  .nav-menu{
+    position:absolute; top:calc(100% + 8px); left:0; min-width:210px; background:var(--surface);
+    border:1px solid var(--border-strong); border-top:3px solid #fff; z-index:50;
+    display:none; flex-direction:column; padding:6px;
+  }
+  .nav-menu.open{ display:flex; }
+  .nav-menu a{
+    display:flex; align-items:center; gap:9px; padding:9px 10px; text-decoration:none; color:var(--text-dim);
+    font-size:12.5px; font-weight:600; transition:background .1s ease, color .1s ease;
+  }
+  .nav-menu a:hover{ background:var(--surface-2); color:var(--text); }
+  .nav-menu a:active{ transform:scale(.98); }
+  .nav-menu a.current{ color:#000; background:#fff; }
+  .nav-menu .menu-sep{ height:1px; background:var(--border); margin:5px 2px; }
   .nav-right{ display:flex; align-items:center; gap:10px; }
   .icon-btn{
     width:34px; height:34px; padding:0; background:var(--surface);
@@ -139,15 +164,31 @@
 <div class="page">
 
   <div class="nav">
-    <a class="brand" href="index.html">
-      <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-        <rect width="32" height="32" rx="0" fill="#000" stroke="#fff" stroke-opacity=".2"/>
-        <circle cx="12" cy="15" r="2.4" fill="#fff"/>
-        <circle cx="20" cy="15" r="2.4" fill="#fff"/>
-        <path d="M11 21 Q16 25 21 21" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-      </svg>
-      <span>Doctor Iggy's</span>
-    </a>
+    <div class="nav-left">
+      <button class="hamburger" id="btnMenu" aria-label="Menu" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <a class="brand" href="index.html">
+        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+          <rect width="32" height="32" rx="0" fill="#000" stroke="#fff" stroke-opacity=".2"/>
+          <circle cx="12" cy="15" r="2.4" fill="#fff"/>
+          <circle cx="20" cy="15" r="2.4" fill="#fff"/>
+          <path d="M11 21 Q16 25 21 21" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+        </svg>
+        <span>Dr Iggy's</span>
+      </a>
+      <div class="menu-backdrop" id="menuBackdrop"></div>
+      <div class="nav-menu" id="navMenu">
+        <a href="index.html">Home</a>
+        <div class="menu-sep"></div>
+        <a href="cuarto-oscuro.html">Film Scanner</a>
+        <a href="photo-editor.html">Photo Editor</a>
+        <a href="lut-lab.html">LUT Lab</a>
+        <a href="convert.html" class="current">Image Converter</a>
+        <div class="menu-sep"></div>
+        <a href="terms.html">Terms of Service</a>
+      </div>
+    </div>
     <div class="nav-right">
       <button class="icon-btn" id="btnFullscreen" title="Fullscreen">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
@@ -211,7 +252,7 @@
   </div>
 
   <div class="site-footer">
-    © 2026 Image Converter — Doctor Iggy's. <a href="terms.html" data-i18n="terms">Terms of Service</a>.
+    © 2026 Image Converter — Dr Iggy's. <a href="terms.html" data-i18n="terms">Terms of Service</a>.
   </div>
 
 </div>
@@ -268,6 +309,19 @@ document.getElementById('btnFullscreen').addEventListener('click', ()=>{
   if(document.fullscreenElement) document.exitFullscreen?.().catch(()=>{});
   else document.documentElement.requestFullscreen?.().catch(()=>{});
 });
+
+const btnMenu = document.getElementById('btnMenu');
+const navMenu = document.getElementById('navMenu');
+const menuBackdrop = document.getElementById('menuBackdrop');
+function toggleMenu(open){
+  const willOpen = open !== undefined ? open : !navMenu.classList.contains('open');
+  navMenu.classList.toggle('open', willOpen);
+  menuBackdrop.classList.toggle('open', willOpen);
+  btnMenu.setAttribute('aria-expanded', String(willOpen));
+}
+btnMenu.addEventListener('click', ()=> toggleMenu());
+menuBackdrop.addEventListener('click', ()=> toggleMenu(false));
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') toggleMenu(false); });
 
 // ============================================================
 // formats

@@ -3,15 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Free Online Film Scanner — Doctor Iggy's</title>
+<title>Free Online Film Scanner — Dr Iggy's</title>
 <meta name="description" content="Turn photographed film negatives into full-color photos for free, right in your browser. Automatic crop, color correction, and restoration — no signup, no download, no limit on photos.">
 <link rel="canonical" href="https://www.driggys.com/cuarto-oscuro.html">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Free Online Film Scanner — Doctor Iggy's">
+<meta property="og:title" content="Free Online Film Scanner — Dr Iggy's">
 <meta property="og:description" content="Turn photographed film negatives into full-color photos for free, right in your browser. No signup, no download, no limit on photos.">
 <meta property="og:url" content="https://www.driggys.com/cuarto-oscuro.html">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Free Online Film Scanner — Doctor Iggy's">
+<meta name="twitter:title" content="Free Online Film Scanner — Dr Iggy's">
 <meta name="twitter:description" content="Turn photographed film negatives into full-color photos for free, right in your browser.">
 <script type="application/ld+json">
 {
@@ -29,11 +29,11 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cascadia+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --font-display:'JetBrains Mono','Consolas',monospace;
-    --font-body:'JetBrains Mono','Consolas',monospace;
+    --font-display:'Cascadia Mono','Consolas',monospace;
+    --font-body:'Cascadia Mono','Consolas',monospace;
     --font:var(--font-body);
 
     --bg:#000000; --surface:#0E0E0E; --surface-2:#1A1A1A; --surface-3:#242424;
@@ -77,9 +77,34 @@
   .page{ max-width:1180px; margin:0 auto; display:flex; flex-direction:column; gap:16px; position:relative; z-index:1; }
 
   .nav{ display:flex; align-items:center; justify-content:space-between; padding:4px 0 4px; }
+  .nav-left{ display:flex; align-items:center; gap:12px; position:relative; }
   .brand{ display:flex; align-items:center; gap:10px; text-decoration:none; }
   .brand svg{ width:30px; height:30px; flex:none; }
   .brand span{ font-family:var(--font-display); font-weight:600; font-size:17px; color:var(--text); }
+  .hamburger{
+    width:36px; height:36px; padding:0; border-radius:0; background:var(--surface); flex:none;
+    border:1px solid var(--border); color:var(--text); display:flex; align-items:center; justify-content:center;
+    cursor:pointer; transition:border-color .12s ease, transform .08s ease;
+  }
+  .hamburger svg{ width:16px; height:16px; }
+  .hamburger:hover{ border-color:var(--border-strong); }
+  .hamburger:active{ transform:scale(.9); }
+  .menu-backdrop{ position:fixed; inset:0; z-index:40; display:none; }
+  .menu-backdrop.open{ display:block; }
+  .nav-menu{
+    position:absolute; top:calc(100% + 8px); left:0; min-width:210px; background:var(--surface);
+    border:1px solid var(--border-strong); border-top:3px solid #fff; z-index:50;
+    display:none; flex-direction:column; padding:6px;
+  }
+  .nav-menu.open{ display:flex; }
+  .nav-menu a{
+    display:flex; align-items:center; gap:9px; padding:9px 10px; text-decoration:none; color:var(--text-dim);
+    font-size:12.5px; font-weight:600; transition:background .1s ease, color .1s ease;
+  }
+  .nav-menu a:hover{ background:var(--surface-2); color:var(--text); }
+  .nav-menu a:active{ transform:scale(.98); }
+  .nav-menu a.current{ color:#000; background:#fff; }
+  .nav-menu .menu-sep{ height:1px; background:var(--border); margin:5px 2px; }
   .nav-right{ display:flex; align-items:center; gap:10px; }
   .icon-btn{
     width:36px; height:36px; padding:0; border-radius:0; background:var(--surface);
@@ -149,6 +174,9 @@
   .tips ul{ margin:0; padding-left:0; list-style:none; }
   .tips li{ margin-bottom:8px; display:flex; align-items:flex-start; gap:7px; }
   .tip-icon{ width:18px; height:18px; flex:none; margin-top:1px; }
+
+  .crop-demo{ width:100%; max-width:200px; height:auto; display:block; margin:6px 0 4px; }
+  .crop-handle{ fill:#fff; stroke:#000; stroke-width:.8; }
 
   /* ---- middle: stage ---- */
   .stage-body{
@@ -244,15 +272,31 @@
 <div class="page">
 
   <div class="nav">
-    <a class="brand" href="index.html">
-      <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-        <rect width="32" height="32" rx="0" fill="#000" stroke="#fff" stroke-opacity=".2"/>
-        <circle cx="12" cy="15" r="2.4" fill="#fff"/>
-        <circle cx="20" cy="15" r="2.4" fill="#fff"/>
-        <path d="M11 21 Q16 25 21 21" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-      </svg>
-      <span>Doctor Iggy's</span>
-    </a>
+    <div class="nav-left">
+      <button class="hamburger" id="btnMenu" aria-label="Menu" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <a class="brand" href="index.html">
+        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+          <rect width="32" height="32" rx="0" fill="#000" stroke="#fff" stroke-opacity=".2"/>
+          <circle cx="12" cy="15" r="2.4" fill="#fff"/>
+          <circle cx="20" cy="15" r="2.4" fill="#fff"/>
+          <path d="M11 21 Q16 25 21 21" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+        </svg>
+        <span>Dr Iggy's</span>
+      </a>
+      <div class="menu-backdrop" id="menuBackdrop"></div>
+      <div class="nav-menu" id="navMenu">
+        <a href="index.html">Home</a>
+        <div class="menu-sep"></div>
+        <a href="cuarto-oscuro.html" class="current">Film Scanner</a>
+        <a href="photo-editor.html">Photo Editor</a>
+        <a href="lut-lab.html">LUT Lab</a>
+        <a href="convert.html">Image Converter</a>
+        <div class="menu-sep"></div>
+        <a href="terms.html">Terms of Service</a>
+      </div>
+    </div>
     <div class="nav-right">
       <button class="icon-btn" id="btnFullscreen" title="Fullscreen">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
@@ -282,12 +326,12 @@
       <div class="tips" id="tips">
         <h4 data-i18n="tipsTitle">How to photograph a negative</h4>
         <ul>
-          <li><svg class="tip-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" fill="#FFE27A" stroke="#000" stroke-width="1.3"/><g stroke="#000" stroke-width="1.3"><line x1="12" y1="1" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="23"/><line x1="1" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="23" y2="12"/><line x1="4" y1="4" x2="6" y2="6"/><line x1="18" y1="18" x2="20" y2="20"/><line x1="20" y1="4" x2="18" y2="6"/><line x1="6" y1="18" x2="4" y2="20"/></g></svg><span data-i18n="tip1">Backlight it evenly — a lightbox, a tablet showing a plain white screen, or a bright overcast window all work.</span></li>
-          <li><svg class="tip-icon" viewBox="0 0 24 24"><circle cx="10" cy="10" r="7" fill="#DCEEFB" stroke="#000" stroke-width="1.3"/><line x1="15" y1="15" x2="22" y2="22" stroke="#000" stroke-width="2"/></svg><span data-i18n="tip2">Get close (macro or close-focus mode) so the negative fills as much of the frame as possible.</span></li>
-          <li><svg class="tip-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#000" stroke-width="1.3"/><circle cx="12" cy="12" r="5" fill="none" stroke="#000" stroke-width="1.3"/><circle cx="12" cy="12" r="1.5" fill="#C1272D"/></svg><span data-i18n="tip3">Focus manually on the film grain itself, not on the light behind it.</span></li>
-          <li><svg class="tip-icon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="1.5" fill="#fff" stroke="#000" stroke-width="1.3"/><text x="12" y="15" font-size="7" font-weight="bold" text-anchor="middle" fill="#316AC5">RAW</text></svg><span data-i18n="tip4">Shoot RAW if your camera can — it decodes better here than a JPG copy.</span></li>
-          <li><svg class="tip-icon" viewBox="0 0 24 24"><path d="M13 2 L5 14 h5 l-2 8 9-13h-5z" fill="#FCEAA8" stroke="#000" stroke-width="1.2"/><line x1="2" y1="22" x2="22" y2="2" stroke="#C1272D" stroke-width="2"/></svg><span data-i18n="tip5">Turn off flash and any "scene" color correction — a plain, flat capture works best.</span></li>
-          <li><svg class="tip-icon" viewBox="0 0 24 24"><rect x="3" y="14" width="18" height="4" rx="1" fill="#8394B8" stroke="#000" stroke-width="1"/><path d="M4 14 L9 3 L11 3 L8 14 Z" fill="#DCEEFB" stroke="#000" stroke-width="1"/></svg><span data-i18n="tip6">Keep the negative flat (glass or a film holder) and wipe dust off it and the lens first.</span></li>
+          <li><svg class="tip-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" fill="#FFE27A" stroke="#000" stroke-width="1.3"/><g stroke="#000" stroke-width="1.3"><line x1="12" y1="1" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="23"/><line x1="1" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="23" y2="12"/><line x1="4" y1="4" x2="6" y2="6"/><line x1="18" y1="18" x2="20" y2="20"/><line x1="20" y1="4" x2="18" y2="6"/><line x1="6" y1="18" x2="4" y2="20"/></g></svg><span data-i18n="tip1">Backlight it evenly (lightbox, tablet, or a bright window).</span></li>
+          <li><svg class="tip-icon" viewBox="0 0 24 24"><circle cx="10" cy="10" r="7" fill="#DCEEFB" stroke="#000" stroke-width="1.3"/><line x1="15" y1="15" x2="22" y2="22" stroke="#000" stroke-width="2"/></svg><span data-i18n="tip2">Get close — fill the frame with the negative.</span></li>
+          <li><svg class="tip-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#000" stroke-width="1.3"/><circle cx="12" cy="12" r="5" fill="none" stroke="#000" stroke-width="1.3"/><circle cx="12" cy="12" r="1.5" fill="#C1272D"/></svg><span data-i18n="tip3">Focus on the film grain, not the light behind it.</span></li>
+          <li><svg class="tip-icon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="1.5" fill="#fff" stroke="#000" stroke-width="1.3"/><text x="12" y="15" font-size="7" font-weight="bold" text-anchor="middle" fill="#316AC5">RAW</text></svg><span data-i18n="tip4">Shoot RAW if your camera can.</span></li>
+          <li><svg class="tip-icon" viewBox="0 0 24 24"><path d="M13 2 L5 14 h5 l-2 8 9-13h-5z" fill="#FCEAA8" stroke="#000" stroke-width="1.2"/><line x1="2" y1="22" x2="22" y2="2" stroke="#C1272D" stroke-width="2"/></svg><span data-i18n="tip5">Flash off, no auto color correction.</span></li>
+          <li><svg class="tip-icon" viewBox="0 0 24 24"><rect x="3" y="14" width="18" height="4" rx="1" fill="#8394B8" stroke="#000" stroke-width="1"/><path d="M4 14 L9 3 L11 3 L8 14 Z" fill="#DCEEFB" stroke="#000" stroke-width="1"/></svg><span data-i18n="tip6">Keep it flat and dust-free.</span></li>
         </ul>
       </div>
     </div>
@@ -295,7 +339,7 @@
     <div class="win stage-win">
       <div class="win-title"><span data-i18n="preview">Preview</span></div>
       <div class="stage-body" id="stage">
-        <div class="stage-empty" id="stageEmpty" data-i18n="stageEmpty">Drag your first photo here, or use the box on the left, to get started.</div>
+        <div class="stage-empty" id="stageEmpty" data-i18n="stageEmpty">Drag a photo here to start.</div>
       </div>
     </div>
 
@@ -318,7 +362,7 @@
           <span class="step-num" data-i18n="stepExtra">EXTRA — ENHANCE QUALITY</span>
           <div class="checkbox-row">
             <input type="checkbox" id="qualityBoost">
-            <label for="qualityBoost"><strong data-i18n="qualityBoostLabel">Extra quality enhancement</strong><span data-i18n="qualityBoostDesc"> — boosts fine local contrast and detail, on top of the sliders below</span></label>
+            <label for="qualityBoost"><strong data-i18n="qualityBoostLabel">Extra quality enhancement</strong><span data-i18n="qualityBoostDesc"> — extra contrast &amp; detail</span></label>
           </div>
         </div>
 
@@ -327,8 +371,39 @@
         <div class="group">
           <span class="step-num" data-i18n="step1">1 — CROP</span>
           <p style="font-size:11.5px;color:var(--ink-dim);margin:0" data-i18n="step1desc">
-            Each photo is cropped automatically on upload. If it's off, drag the 4 corners by hand or try auto-detect again.
+            Auto-cropped on upload — drag a corner to adjust:
           </p>
+          <svg class="crop-demo" viewBox="0 0 120 90" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <defs>
+              <linearGradient id="cropDemoGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#3a3a3a"/>
+                <stop offset="1" stop-color="#141414"/>
+              </linearGradient>
+            </defs>
+            <rect x="10" y="10" width="100" height="70" fill="url(#cropDemoGrad)"/>
+            <rect x="6" y="6" width="108" height="78" fill="none" stroke="#fff" stroke-width="1.6" stroke-dasharray="4 3">
+              <animate attributeName="x" values="6;6;18;18;6;6" keyTimes="0;0.2;0.45;0.7;0.95;1" dur="4s" repeatCount="indefinite"/>
+              <animate attributeName="y" values="6;6;16;16;6;6" keyTimes="0;0.2;0.45;0.7;0.95;1" dur="4s" repeatCount="indefinite"/>
+              <animate attributeName="width" values="108;108;84;84;108;108" keyTimes="0;0.2;0.45;0.7;0.95;1" dur="4s" repeatCount="indefinite"/>
+              <animate attributeName="height" values="78;78;58;58;78;78" keyTimes="0;0.2;0.45;0.7;0.95;1" dur="4s" repeatCount="indefinite"/>
+            </rect>
+            <circle class="crop-handle" r="3.2">
+              <animate attributeName="cx" values="6;6;18;18;6;6" keyTimes="0;0.2;0.45;0.7;0.95;1" dur="4s" repeatCount="indefinite"/>
+              <animate attributeName="cy" values="6;6;16;16;6;6" keyTimes="0;0.2;0.45;0.7;0.95;1" dur="4s" repeatCount="indefinite"/>
+            </circle>
+            <circle class="crop-handle" r="3.2">
+              <animate attributeName="cx" values="114;114;102;102;114;114" keyTimes="0;0.2;0.45;0.7;0.95;1" dur="4s" repeatCount="indefinite"/>
+              <animate attributeName="cy" values="6;6;16;16;6;6" keyTimes="0;0.2;0.45;0.7;0.95;1" dur="4s" repeatCount="indefinite"/>
+            </circle>
+            <circle class="crop-handle" r="3.2">
+              <animate attributeName="cx" values="6;6;18;18;6;6" keyTimes="0;0.2;0.45;0.7;0.95;1" dur="4s" repeatCount="indefinite"/>
+              <animate attributeName="cy" values="84;84;74;74;84;84" keyTimes="0;0.2;0.45;0.7;0.95;1" dur="4s" repeatCount="indefinite"/>
+            </circle>
+            <circle class="crop-handle" r="3.2">
+              <animate attributeName="cx" values="114;114;102;102;114;114" keyTimes="0;0.2;0.45;0.7;0.95;1" dur="4s" repeatCount="indefinite"/>
+              <animate attributeName="cy" values="84;84;74;74;84;84" keyTimes="0;0.2;0.45;0.7;0.95;1" dur="4s" repeatCount="indefinite"/>
+            </circle>
+          </svg>
           <button id="resetCorners" data-i18n="resetCorners">Reset corners</button>
           <button id="autoCrop" data-i18n="autoCrop">Auto-detect crop</button>
         </div>
@@ -339,7 +414,7 @@
           <span class="step-num" data-i18n="step2">2 — DEVELOP</span>
           <div class="checkbox-row">
             <input type="checkbox" id="isNegative" checked>
-            <label for="isNegative" data-i18n="isNegative">This is a color negative (invert + remove orange mask)</label>
+            <label for="isNegative" data-i18n="isNegative">Color negative (invert + remove mask)</label>
           </div>
         </div>
 
@@ -393,7 +468,7 @@
   </div>
 
   <div class="site-footer">
-    © 2026 Free Online Film Scanner — Doctor Iggy's. <a class="linklike" href="terms.html" data-i18n="terms">Terms of Service</a>.
+    © 2026 Free Online Film Scanner — Dr Iggy's. <a class="linklike" href="terms.html" data-i18n="terms">Terms of Service</a>.
   </div>
 
 </div>
@@ -409,20 +484,20 @@ const I18N = {
     filmRoll:'Film Roll', preview:'Preview', controls:'Settings',
     dropLine1:'Drag your photos here', dropLine2:'or click to choose', dropLine3:'(JPG, PNG or RAW: CR3/CR2/NEF/ARW/DNG…)',
     tipsTitle:'How to photograph a negative',
-    tip1:'Backlight it evenly — a lightbox, a tablet showing a plain white screen, or a bright overcast window all work.',
-    tip2:'Get close (macro or close-focus mode) so the negative fills as much of the frame as possible.',
-    tip3:'Focus manually on the film grain itself, not on the light behind it.',
-    tip4:'Shoot RAW if your camera can — it decodes better here than a JPG copy.',
-    tip5:'Turn off flash and any "scene" color correction — a plain, flat capture works best.',
-    tip6:'Keep the negative flat (glass or a film holder) and wipe dust off it and the lens first.',
-    stageEmpty:'Drag your first photo here, or use the box on the left, to get started.',
+    tip1:'Backlight it evenly (lightbox, tablet, or a bright window).',
+    tip2:'Get close — fill the frame with the negative.',
+    tip3:'Focus on the film grain, not the light behind it.',
+    tip4:'Shoot RAW if your camera can.',
+    tip5:'Flash off, no auto color correction.',
+    tip6:'Keep it flat and dust-free.',
+    stageEmpty:'Drag a photo here to start.',
     processOne:'Process this photo', downloadOne:'Download this one', downloadAll:'Download all (.zip)',
     editInPhotoEditor:'Edit in Photo Editor',
     stepExtra:'EXTRA — ENHANCE QUALITY', qualityBoostLabel:'Extra quality enhancement',
-    qualityBoostDesc:' — boosts fine local contrast and detail, on top of the sliders below',
-    step1:'1 — CROP', step1desc:"Each photo is cropped automatically on upload. If it's off, drag the 4 corners by hand or try auto-detect again.",
+    qualityBoostDesc:' — extra contrast & detail',
+    step1:'1 — CROP', step1desc:'Auto-cropped on upload — drag a corner to adjust:',
     resetCorners:'Reset corners', autoCrop:'Auto-detect crop',
-    step2:'2 — DEVELOP', isNegative:'This is a color negative (invert + remove orange mask)',
+    step2:'2 — DEVELOP', isNegative:'Color negative (invert + remove mask)',
     step3:'3 — BALANCE', brightness:'Brightness', contrast:'Contrast', saturation:'Saturation',
     step4:'4 — RESTORATION', sharpen:'Sharpen', despeckle:'Remove dust / scratches', grain:'Grain reduction',
     wholeRoll:'FOR THE WHOLE ROLL', copyToAll:'Copy settings to all', processAll:'Process all',
@@ -443,20 +518,20 @@ const I18N = {
     filmRoll:'Rollo de película', preview:'Vista previa', controls:'Ajustes',
     dropLine1:'Arrastrá tus fotos acá', dropLine2:'o hacé clic para elegir', dropLine3:'(JPG, PNG o RAW: CR3/CR2/NEF/ARW/DNG…)',
     tipsTitle:'Cómo fotografiar un negativo',
-    tip1:'Iluminalo parejo desde atrás — una mesa de luz, una tablet mostrando una pantalla blanca, o una ventana con luz difusa funcionan bien.',
-    tip2:'Acercate (modo macro o enfoque cercano) para que el negativo ocupe la mayor parte del cuadro posible.',
-    tip3:'Enfocá manualmente sobre el grano de la película, no sobre la luz de atrás.',
-    tip4:'Sacá en RAW si tu cámara puede — acá se decodifica mejor que una copia JPG.',
-    tip5:'Apagá el flash y cualquier corrección de color de "escena" — una captura plana funciona mejor.',
-    tip6:'Mantené el negativo plano (vidrio o un portanegativos) y limpiá el polvo de él y del lente antes.',
-    stageEmpty:'Arrastrá tu primera foto acá, o usá la caja de la izquierda, para empezar.',
+    tip1:'Iluminalo parejo (mesa de luz, tablet, o ventana luminosa).',
+    tip2:'Acercate — que el negativo ocupe todo el cuadro.',
+    tip3:'Enfocá el grano de la película, no la luz de atrás.',
+    tip4:'Sacá en RAW si tu cámara puede.',
+    tip5:'Sin flash ni corrección de color automática.',
+    tip6:'Mantenelo plano y sin polvo.',
+    stageEmpty:'Arrastrá una foto acá para empezar.',
     processOne:'Procesar esta foto', downloadOne:'Descargar esta', downloadAll:'Descargar todas (.zip)',
     editInPhotoEditor:'Editar en Photo Editor',
     stepExtra:'EXTRA — MEJORAR CALIDAD', qualityBoostLabel:'Mejora extra de calidad',
-    qualityBoostDesc:' — realza el contraste local fino y el detalle, además de los controles de abajo',
-    step1:'1 — RECORTE', step1desc:'Cada foto se recorta sola al subirla. Si queda mal, arrastrá los 4 puntos a mano o probá la detección automática de nuevo.',
+    qualityBoostDesc:' — más contraste y detalle',
+    step1:'1 — RECORTE', step1desc:'Recortado solo al subir — arrastrá una esquina para ajustar:',
     resetCorners:'Reiniciar esquinas', autoCrop:'Detectar recorte automático',
-    step2:'2 — REVELADO', isNegative:'Es un negativo a color (invierte + quita la máscara naranja)',
+    step2:'2 — REVELADO', isNegative:'Negativo a color (invierte + quita máscara)',
     step3:'3 — BALANCE', brightness:'Brillo', contrast:'Contraste', saturation:'Saturación',
     step4:'4 — RESTAURACIÓN', sharpen:'Nitidez', despeckle:'Quitar polvo / rayones', grain:'Reducción de grano',
     wholeRoll:'PARA TODO EL ROLLO', copyToAll:'Copiar ajustes a todas', processAll:'Procesar todas',
@@ -736,6 +811,19 @@ document.getElementById('btnFullscreen').addEventListener('click', ()=>{
   if(document.fullscreenElement) document.exitFullscreen?.().catch(()=>{});
   else document.documentElement.requestFullscreen?.().catch(()=>{});
 });
+
+const btnMenu = document.getElementById('btnMenu');
+const navMenu = document.getElementById('navMenu');
+const menuBackdrop = document.getElementById('menuBackdrop');
+function toggleMenu(open){
+  const willOpen = open !== undefined ? open : !navMenu.classList.contains('open');
+  navMenu.classList.toggle('open', willOpen);
+  menuBackdrop.classList.toggle('open', willOpen);
+  btnMenu.setAttribute('aria-expanded', String(willOpen));
+}
+btnMenu.addEventListener('click', ()=> toggleMenu());
+menuBackdrop.addEventListener('click', ()=> toggleMenu(false));
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') toggleMenu(false); });
 
 // A clean "‹ prev  3 / 12  next ›" row so switching frames doesn't require
 // hunting through the filmstrip thumbnails.
