@@ -135,9 +135,9 @@
   .type-cursor{ display:inline-block; width:6px; height:1em; background:var(--text-dim); margin-left:1px; vertical-align:-2px; animation:blink 1s steps(1) infinite; }
   @keyframes blink{ 50%{ opacity:0; } }
 
-  .mascot-corner-wrap{ position:absolute; top:-76px; z-index:5; }
-  .mascot-corner-wrap.pos-left{ left:-6px; }
-  .mascot-corner-wrap.pos-right{ right:-6px; }
+  .mascot-corner-wrap{ position:absolute; top:-10px; z-index:5; }
+  .mascot-corner-wrap.pos-left{ left:-1px; }
+  .mascot-corner-wrap.pos-right{ right:-1px; }
   .mascot-corner{
     width:58px; height:auto; display:block; cursor:pointer;
     transition:transform .12s ease; user-select:none; -webkit-user-drag:none;
@@ -163,13 +163,17 @@
     100%{ transform:translate(-50%,-80px) scale(1); opacity:0; }
   }
   @media (max-width:520px){
-    .mascot-corner-wrap{ top:-60px; }
+    .mascot-corner-wrap{ top:-8px; }
     .mascot-corner{ width:44px; }
   }
 
   .paper-plane{ position:fixed; top:0; left:0; width:38px; height:38px; z-index:0; pointer-events:none; opacity:.16; will-change:transform; }
 
-  .tools{ position:relative; display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .tools-box{ position:relative; border:1px solid var(--border); padding:18px; padding-top:92px; }
+  @media (max-width:520px){
+    .tools-box{ padding:12px; padding-top:70px; }
+  }
+  .tools{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   @media (min-width:860px){
     .tools{ grid-template-columns:repeat(3,1fr); }
   }
@@ -338,10 +342,11 @@
 
   <p class="tools-label" id="toolsSection" data-i18n="toolsLabel">Tools</p>
 
-  <div class="tools">
+  <div class="tools-box">
     <div class="mascot-corner-wrap" id="mascotWrap">
       <img class="mascot-corner" id="mascotBtn" src="/mascot.png" alt="Iggy, the site mascot — click for a surprise">
     </div>
+    <div class="tools">
     <a class="tool-tile c-orange" href="/convert">
       <div class="tool-tile-top">
         <div class="tool-icon-tile">
@@ -459,6 +464,7 @@
       <div class="tool-desc" data-i18n="qrGeneratorDesc">Links, styled and downloadable.</div>
       <div class="tool-cta"><span data-i18n="openTool">Open</span><span class="arrow">→</span></div>
     </a>
+    </div>
   </div>
 
   <div class="site-footer">
