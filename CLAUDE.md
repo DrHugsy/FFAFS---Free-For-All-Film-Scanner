@@ -1,10 +1,10 @@
-# Dr Iggy's — Free Design Tools
+# Doctor Iggy's — Free Design Tools
 
 Este archivo es el contexto que Claude Code lee automáticamente al abrir esta carpeta. Léelo entero antes de tocar cualquier cosa — hay convenciones y trampas específicas de este proyecto que no son obvias a simple vista.
 
 ## Qué es esto
 
-Un hub personal ("Dr Iggy's") de herramientas gratis, sin registro, hecho por y para un usuario no-programador que viene guiando el desarrollo por chat con Claude durante muchas sesiones. El estilo de trabajo hasta ahora: pedidos conversacionales, iteración visual constante, y mucho cuidado en no romper lo que ya funciona.
+Un hub personal ("Doctor Iggy's" — el nombre es por Iggy de JoJo's Bizarre Adventure, **no** por una iguana, aunque un asistente anterior asumió eso y hasta le dibujó una mascota de iguana; ver la sección de identidad visual) de herramientas gratis, sin registro, hecho por y para un usuario no-programador que viene guiando el desarrollo por chat con Claude durante muchas sesiones. El estilo de trabajo hasta ahora: pedidos conversacionales, iteración visual constante, y mucho cuidado en no romper lo que ya funciona.
 
 **Filosofía del proyecto — importante:**
 - Todo tiene que seguir siendo **gratis** (ni para el usuario, ni idealmente para el dueño). No propongas soluciones pagas como primera opción.
@@ -21,7 +21,8 @@ Un hub personal ("Dr Iggy's") de herramientas gratis, sin registro, hecho por y 
 |---|---|---|
 | `index.html` | El hub — lista las herramientas disponibles | Terminado, en producción |
 | `cuarto-oscuro.html` | **Free Online Film Scanner** — sube fotos de negativos, las recorta, revela e invierte el color | Terminado, en producción, muy probado |
-| `photo-editor.html` | **Lite Photo Editor** — mini editor con capas, selección, pincel, ajustes tipo Lightroom | Recién armado, probado en local con Playwright, **nunca desplegado ni probado con RAW/IA reales** |
+| `photo-editor.html` | **Lite Photo Editor** — editor no-destructivo estilo Lightroom (exposición, color, curva de tonos, mezclador HSL, tonificación dividida, recorte, quitar fondo con IA, biblioteca de varias fotos) | Terminado, en producción, probado con IA/RAW reales |
+| `lut-lab.html` | **LUT Lab** — galería de LUTs (12 presets originales, generados por nuestro propio motor de color — no son de terceros, ver notas de licencia en el historial de commits), subir/crear/exportar `.cube` reales, enviar la foto editada al Photo Editor | Terminado, en producción |
 | `terms.html` | Términos de servicio | Terminado |
 | `server_prod.py` | Backend Flask — sirve los HTML y decodifica archivos RAW vía `rawpy`/LibRaw | Terminado, en producción |
 | `requirements.txt` | Dependencias Python | — |
@@ -31,20 +32,24 @@ Un hub personal ("Dr Iggy's") de herramientas gratis, sin registro, hecho por y 
 
 ## Identidad visual — no la cambies sin permiso explícito
 
-Todo el sitio comparte una estética deliberada de **Windows XP retro** (ventanas con barra de título en degradado azul, botones biselados grises, tipografía Tahoma, fondo de paisaje SVG con lomas verdes y cielo celeste, bordes marcados). Esto fue una decisión de diseño muy discutida — en un momento se probó reemplazarlo por un estilo minimalista editorial y el usuario **lo rechazó explícitamente** y pidió volver atrás. No propongas "modernizar" la interfaz.
+**Esta sección cambió por completo en septiembre 2026.** El sitio tuvo originalmente una estética "Windows XP retro" (ventanas con barra de título en degradado azul, tipografía Tahoma, fondo de lomas verdes) que estuvo mucho tiempo, y luego pasó brevemente por un rediseño "premium" violeta/degradados antes de asentarse en el sistema actual. Si ves referencias a `--titlebar-1/2/3` azules, degradados violeta, o un `<svg class="bg-scene">` de lomas y cielo en algún commit viejo o en tu memoria de una sesión anterior, **está obsoleto — no lo reintroduzcas.**
 
-Colores/variables ya establecidos (reusalos, no inventes nuevos sin necesidad):
-- Ventanas de herramientas: degradado azul (`--titlebar-1/2/3`: `#3E7BEB → #1E4FC4 → #0F3AA8`)
-- Barra superior de marca ("Dr Iggy's" + "← More Tools"): degradado violeta (`--violet-1/2/3`: `#A88CF0 → #7452D6 → #4C2E9E`)
-- Fondo de ventana: `#ECE9D8`, borde: `#0A246A`
-- Fuente: `Tahoma, 'Segoe UI', Verdana, sans-serif`
-- El fondo SVG de lomas+cielo se repite igual en las 4 páginas (buscá `<svg class="bg-scene"` para copiarlo tal cual a cualquier página nueva)
+El sistema actual está inspirado en **cobalt.tools** (referencia explícita del usuario, no calcada): negro y blanco, tipografía monoespaciada, todo plano y con bordes finos, sin degradados ni sombras de color. Variables (`:root`) compartidas entre las 5 páginas:
+- `--bg:#000000` (negro puro), `--surface:#0E0E0E` / `--surface-2:#1A1A1A` / `--surface-3:#242424` (paneles, apenas más claros que el fondo)
+- `--border:rgba(255,255,255,.14)`, `--border-strong:rgba(255,255,255,.32)` — bordes finos, nada de sombras
+- `--text:#F2F2F2`, `--text-dim:#9A9A9A`, `--text-faint:#5C5C5C`
+- Fuente: **JetBrains Mono** (Google Fonts, `<link>` directo — no hace falta build step) para todo, títulos y cuerpo
+- Estado activo/primario = **blanco sólido con texto negro** (no degradados de color) — así se ven los botones primarios, el toggle EN/ES activo, y el tag "Available"
+- Algunas variables viejas (`--violet-1/2/3`, `--titlebar-*`, `--ink`, `--window`, etc.) siguen existiendo como *alias* apuntando a la paleta nueva, para no tener que tocar cada selector del CSS. Si agregás una herramienta nueva, mejor usar los nombres nuevos directamente (`--bg`, `--surface`, `--text`, etc.) en vez de esos alias legacy.
+- Ícono de marca / favicon: un fantasmita simple de trazo blanco (dos ojos redondos + sonrisa), compartido igual en las 5 páginas. Es el placeholder de la mascota "Iggy" — el usuario lo va a redibujar él mismo; cuando lo haga, hay que reemplazar el SVG en las 5 páginas (buscá el `<svg class="mascot"` en `index.html` para la versión grande, y el `<svg viewBox="0 0 32 32">` dentro de `.brand` / el `<link rel="icon">` en cada página para la versión chica).
+- El chrome de ventana falso (barra de título con minimizar/maximizar/cerrar decorativo, estilo Windows) **ya no existe** — se reemplazó por un nav simple (marca + un botón real de pantalla completa + toggle EN/ES). No lo reintroduzcas tampoco.
+- El layout de cada herramienta (toolbar arriba, panel de ajustes a la derecha, filmstrip abajo, etc.) sí se mantiene — lo que cambió es solo la piel visual, no la estructura.
 
 ## Convenciones de código específicas de este proyecto
 
 1. **i18n casero**: cada página tiene un objeto `I18N = { en:{...}, es:{...} }` y una función `t(key, vars)`. El idioma se guarda en `localStorage` bajo la clave `drIggyLang` y **se comparte entre todas las páginas** — si cambiás el idioma en una herramienta, tiene que reflejarse en las demás. Los botones de idioma son dos (`EN`/`ES`), no un toggle único.
 
-2. **Botones de ventana funcionales**: `_` (minimizar) sale de pantalla completa, `▢` (maximizar) entra a pantalla completa, `×` es decorativo (no hace nada — los navegadores no dejan cerrar pestañas que no abriste por script, así que ni lo intentes).
+2. **Botón de pantalla completa**: cada página tiene un solo ícono (`#btnFullscreen`) en el nav que hace toggle real de fullscreen (entra si no está, sale si ya está). Ya no hay minimizar/maximizar/cerrar por separado — eso era del chrome de ventana viejo (ver "Identidad visual").
 
 3. **El `Dockerfile` usa `COPY . .`, no `COPY *.html .` ni listas de archivos.** Hubo un bug real y doloroso donde se listaban archivos por extensión y un archivo nuevo (`robots.txt`, `sitemap.xml`) no se copiaba al contenedor. No vuelvas a ese patrón.
 
@@ -81,10 +86,10 @@ Esta carpeta debería ser un `git clone` real del repositorio de GitHub del usua
 
 ## Qué falta / próximos pasos conocidos
 
-1. **`photo-editor.html` nunca se probó con RAW real ni con la función de "Remove Background (AI)" funcionando de punta a punta** (solo se armó el código y se probó la parte que no depende de red externa). Antes de darlo por terminado, probalo en un entorno con servidor + internet real.
-2. **`photo-editor.html` todavía no está desplegado** — hay que subirlo al repositorio de GitHub (el pipeline de auto-deploy ya existente lo va a levantar solo).
-3. El editor de fotos es una v1 acotada a propósito (así lo pidió el usuario): sin guardado de proyecto tipo `.psd`, sin capas con transformación/tamaño propio (todas las capas comparten el tamaño del documento), curva de tonos simplificada (interpolación lineal, no spline), sin marca/nombre de producto definitivo todavía.
-4. El usuario puede pedir seguir sumando herramientas al hub — el patrón para agregar una nueva es: crear el `.html` con el mismo esqueleto visual (copiá el `<style>` y el `bg-scene` SVG de cualquier página existente), agregar su tarjeta en `index.html`, y si necesita RAW o cualquier otro endpoint de servidor, reusar `server_prod.py` en vez de crear un backend nuevo.
+1. **La mascota "Iggy" es un placeholder** (un fantasmita de trazo blanco) — el usuario la va a redibujar él mismo y después hay que recrearla/adaptarla al resto del sitio las veces que haga falta.
+2. El editor de fotos es no-destructivo (parámetros de ajuste, no capas con pixeles horneados) a propósito, y ya no tiene capas tipo Photoshop — se transformó en un editor tipo Lightroom (así lo pidió el usuario). Curva de tonos simplificada (interpolación lineal, no spline). RAW y "Remove Background (AI)" ya están probados funcionando de punta a punta en producción.
+3. El usuario puede pedir seguir sumando herramientas al hub — el patrón para agregar una nueva es: crear el `.html` con el mismo esqueleto visual (copiá el `<style>` de `:root` en adelante y el nav/mascota de cualquier página existente — ver "Identidad visual"), agregar su tarjeta en `index.html`, y si necesita RAW o cualquier otro endpoint de servidor, reusar `server_prod.py` en vez de crear un backend nuevo.
+4. Si el usuario pide investigar fuentes de LUTs gratis de terceros para bundlear en `lut-lab.html`: ya se investigó a fondo (ver el commit que agrega LUT Lab) y la conclusión fue que casi todos los packs "gratis" prohíben redistribuir el archivo, y los pocos con licencia abierta (Q-DDL con CC-BY, o colecciones MIT en GitHub) tenían problemas propios (descarga por links acortados con publicidad, o el propio autor no garantiza el origen). Por eso los 12 LUTs iniciales son generados por nuestro propio motor de color. No vuelvas a proponer bundlear un pack de terceros sin verificar la licencia real vos mismo.
 
 ## Cómo interactuar con este usuario
 
