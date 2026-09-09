@@ -59,7 +59,7 @@
   h1,h2,h3{ font-family:var(--font-display); margin:0; }
   a{ color:inherit; }
 
-  .page{ max-width:760px; margin:0 auto; position:relative; z-index:1; padding:0 20px 60px; }
+  .page{ max-width:920px; margin:0 auto; position:relative; z-index:1; padding:0 20px 60px; }
 
   .nav{ display:flex; align-items:center; justify-content:space-between; padding:22px 0; margin-bottom:8px; }
   .nav-left{ display:flex; align-items:center; gap:12px; position:relative; }
@@ -101,9 +101,31 @@
   .lang-toggle button.active{ background:#fff; color:#000; }
   .lang-toggle button:active{ transform:scale(.9); }
 
-  .hero{ text-align:center; padding:28px 0 34px; }
-  .hero .mascot{ width:128px; height:auto; display:block; margin:0 auto 14px; animation:mascotFloat 3.4s ease-in-out infinite; }
-  @keyframes mascotFloat{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-7px); } }
+  .hero{ text-align:center; padding:28px 0 34px; position:relative; }
+  .hero .mascot{
+    width:128px; height:auto; display:block; margin:0 auto 14px; cursor:pointer;
+    transition:transform .12s ease; user-select:none; -webkit-user-drag:none;
+  }
+  .hero .mascot:active{ transform:scale(.94); }
+  .hero .mascot.wiggle{ animation:mascotWiggle .5s ease; }
+  @keyframes mascotWiggle{
+    0%,100%{ transform:rotate(0); }
+    20%{ transform:rotate(-6deg) scale(1.03); }
+    40%{ transform:rotate(5deg) scale(1.03); }
+    60%{ transform:rotate(-3deg); }
+    80%{ transform:rotate(2deg); }
+  }
+  .woof-text{
+    position:absolute; left:50%; top:70px; pointer-events:none; z-index:20;
+    font-family:var(--font-display); font-weight:700; font-size:20px; color:#fff;
+    text-shadow:0 0 10px rgba(0,0,0,.8); animation:woofFloat 1.1s ease-out forwards;
+    white-space:nowrap;
+  }
+  @keyframes woofFloat{
+    0%{ transform:translate(-50%,0) scale(.5); opacity:0; }
+    18%{ transform:translate(-50%,-18px) scale(1.15); opacity:1; }
+    100%{ transform:translate(-50%,-90px) scale(1); opacity:0; }
+  }
   .hero h1{ font-size:clamp(20px,4vw,28px); font-weight:700; letter-spacing:-.01em; margin-bottom:10px; }
   .hero h1 .hi{ color:var(--text-dim); font-weight:400; }
   .hero p{ margin:0 auto; max-width:420px; color:var(--text-dim); font-size:13.5px; min-height:2.2em; }
@@ -111,14 +133,17 @@
   @keyframes blink{ 50%{ opacity:0; } }
 
   .tools{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  @media (min-width:860px){
+    .tools{ grid-template-columns:repeat(3,1fr); }
+  }
   .tool-tile{
     position:relative; display:flex; flex-direction:column; gap:10px; padding:16px;
     text-decoration:none; color:var(--text); background:var(--surface); border:1px solid var(--border);
     border-top:3px solid var(--border-strong);
     transition:border-color .14s ease, background .14s ease, transform .08s ease;
   }
-  .tool-tile:hover{ border-color:var(--border-strong); border-top-color:#fff; background:var(--surface-2); }
-  .tool-tile:active{ transform:scale(.97); background:var(--surface-2); border-top-color:#fff; }
+  .tool-tile:hover{ border-color:var(--border-strong); border-top-color:#fff; }
+  .tool-tile:active{ transform:scale(.97); border-top-color:#fff; }
   .tool-tile-top{ display:flex; align-items:flex-start; justify-content:space-between; }
   .tool-icon-tile{
     width:42px; height:42px; flex:none; background:var(--surface-2);
@@ -126,12 +151,30 @@
     transition:background .14s ease, border-color .14s ease;
   }
   .tool-icon-tile svg{ width:26px; height:26px; }
-  .tool-tile.c-blue .tool-icon-tile{ background:rgba(74,125,238,.20); border-color:rgba(74,125,238,.5); }
-  .tool-tile.c-green .tool-icon-tile{ background:rgba(127,203,104,.20); border-color:rgba(127,203,104,.5); }
-  .tool-tile.c-violet .tool-icon-tile{ background:rgba(176,115,255,.20); border-color:rgba(176,115,255,.5); }
-  .tool-tile.c-orange .tool-icon-tile{ background:rgba(255,138,91,.20); border-color:rgba(255,138,91,.5); }
-  .tool-tile.c-pink .tool-icon-tile{ background:rgba(255,111,165,.20); border-color:rgba(255,111,165,.5); }
-  .tool-tile.c-teal .tool-icon-tile{ background:rgba(77,208,192,.20); border-color:rgba(77,208,192,.5); }
+
+  .tool-tile.c-blue{ background:rgba(74,125,238,.13); }
+  .tool-tile.c-blue:hover, .tool-tile.c-blue:active{ background:rgba(74,125,238,.22); }
+  .tool-tile.c-blue .tool-icon-tile{ background:rgba(74,125,238,.35); border-color:rgba(74,125,238,.6); }
+
+  .tool-tile.c-green{ background:rgba(127,203,104,.13); }
+  .tool-tile.c-green:hover, .tool-tile.c-green:active{ background:rgba(127,203,104,.22); }
+  .tool-tile.c-green .tool-icon-tile{ background:rgba(127,203,104,.35); border-color:rgba(127,203,104,.6); }
+
+  .tool-tile.c-violet{ background:rgba(176,115,255,.13); }
+  .tool-tile.c-violet:hover, .tool-tile.c-violet:active{ background:rgba(176,115,255,.22); }
+  .tool-tile.c-violet .tool-icon-tile{ background:rgba(176,115,255,.35); border-color:rgba(176,115,255,.6); }
+
+  .tool-tile.c-orange{ background:rgba(255,138,91,.13); }
+  .tool-tile.c-orange:hover, .tool-tile.c-orange:active{ background:rgba(255,138,91,.22); }
+  .tool-tile.c-orange .tool-icon-tile{ background:rgba(255,138,91,.35); border-color:rgba(255,138,91,.6); }
+
+  .tool-tile.c-pink{ background:rgba(255,111,165,.13); }
+  .tool-tile.c-pink:hover, .tool-tile.c-pink:active{ background:rgba(255,111,165,.22); }
+  .tool-tile.c-pink .tool-icon-tile{ background:rgba(255,111,165,.35); border-color:rgba(255,111,165,.6); }
+
+  .tool-tile.c-teal{ background:rgba(77,208,192,.13); }
+  .tool-tile.c-teal:hover, .tool-tile.c-teal:active{ background:rgba(77,208,192,.22); }
+  .tool-tile.c-teal .tool-icon-tile{ background:rgba(77,208,192,.35); border-color:rgba(77,208,192,.6); }
   .tool-tag{
     font-size:9.5px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:#000;
     background:#fff; padding:3px 7px; white-space:nowrap; flex:none;
@@ -451,6 +494,73 @@ async function runTypewriter(){
   await wait(150);
   await typeText(textNode, correctWord + after, token, 34);
 }
+
+// Easter egg: click Iggy, hear a "bark" (synthesized — no audio files needed)
+// and see a little "Woof!" pop up. A few randomized variants for some variety.
+let sharedAudioCtx = null;
+function getAudioCtx(){
+  if(!sharedAudioCtx){
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if(!Ctx) return null;
+    sharedAudioCtx = new Ctx();
+  }
+  if(sharedAudioCtx.state === 'suspended') sharedAudioCtx.resume();
+  return sharedAudioCtx;
+}
+const BARK_VARIANTS = [
+  { dur:0.16, f0:950,  f1:260, gain:0.30 },
+  { dur:0.12, f0:1300, f1:380, gain:0.26 },
+  { dur:0.20, f0:700,  f1:170, gain:0.34 },
+  { dur:0.14, f0:1050, f1:300, gain:0.28 },
+];
+function playBark(){
+  const ctx = getAudioCtx();
+  if(!ctx) return;
+  const v = BARK_VARIANTS[Math.floor(Math.random() * BARK_VARIANTS.length)];
+  const now = ctx.currentTime;
+
+  const osc = ctx.createOscillator();
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(v.f0, now);
+  osc.frequency.exponentialRampToValueAtTime(v.f1, now + v.dur);
+  const oscGain = ctx.createGain();
+  oscGain.gain.setValueAtTime(0.0001, now);
+  oscGain.gain.exponentialRampToValueAtTime(v.gain, now + 0.012);
+  oscGain.gain.exponentialRampToValueAtTime(0.0001, now + v.dur);
+  const lp = ctx.createBiquadFilter();
+  lp.type = 'lowpass';
+  lp.frequency.value = v.f0 * 1.4;
+  osc.connect(lp); lp.connect(oscGain); oscGain.connect(ctx.destination);
+  osc.start(now); osc.stop(now + v.dur + 0.02);
+
+  const noiseBuf = ctx.createBuffer(1, Math.max(1, Math.floor(ctx.sampleRate * v.dur)), ctx.sampleRate);
+  const data = noiseBuf.getChannelData(0);
+  for(let i=0;i<data.length;i++) data[i] = (Math.random()*2-1);
+  const noise = ctx.createBufferSource();
+  noise.buffer = noiseBuf;
+  const bp = ctx.createBiquadFilter();
+  bp.type = 'bandpass'; bp.frequency.value = v.f0; bp.Q.value = 0.9;
+  const noiseGain = ctx.createGain();
+  noiseGain.gain.setValueAtTime(v.gain * 0.5, now);
+  noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + v.dur);
+  noise.connect(bp); bp.connect(noiseGain); noiseGain.connect(ctx.destination);
+  noise.start(now);
+}
+const mascotEl = document.querySelector('.hero .mascot');
+const heroEl = document.querySelector('.hero');
+mascotEl.addEventListener('click', ()=>{
+  try{ playBark(); }catch(e){}
+  mascotEl.classList.remove('wiggle');
+  void mascotEl.offsetWidth;
+  mascotEl.classList.add('wiggle');
+  const woof = document.createElement('span');
+  woof.className = 'woof-text';
+  woof.textContent = 'Woof!';
+  woof.style.transform = `translateX(${(Math.random()*40-20)}px)`;
+  woof.style.setProperty('--rot', (Math.random()*16-8) + 'deg');
+  heroEl.appendChild(woof);
+  setTimeout(()=> woof.remove(), 1200);
+});
 
 applyLanguage();
 </script>
