@@ -16,7 +16,7 @@ No necesitás tocar este archivo para nada de esto — ya viene configurado.
 import io
 import os
 
-from flask import Flask, request, send_file, send_from_directory, abort
+from flask import Flask, request, send_file, send_from_directory, abort, redirect
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
@@ -42,6 +42,16 @@ RAW_EXTS = {".cr3", ".cr2", ".crw", ".nef", ".arw", ".raf", ".rw2", ".orf", ".dn
 MAX_OUTPUT_DIM = 2400
 
 
+# Nombres de archivo viejos que se renombraron — si alguien tiene un link o
+# marcador guardado con la URL vieja, lo mandamos a la nueva (301).
+OLD_SLUG_REDIRECTS = {
+    "cuarto-oscuro.html": "/film-scanner",
+    "cuarto-oscuro": "/film-scanner",
+    "favicon-gen.html": "/favicon-generator",
+    "favicon-gen": "/favicon-generator",
+}
+
+
 @app.route("/")
 def index():
     return send_from_directory(BASE_DIR, HTML_FILE)
@@ -49,10 +59,22 @@ def index():
 
 @app.route("/<path:filename>")
 def static_files(filename):
+    if filename in OLD_SLUG_REDIRECTS:
+        return redirect(OLD_SLUG_REDIRECTS[filename], code=301)
+
     full_path = os.path.abspath(os.path.join(BASE_DIR, filename))
-    if not full_path.startswith(BASE_DIR) or not os.path.isfile(full_path):
+    if not full_path.startswith(BASE_DIR):
         abort(404)
-    return send_from_directory(BASE_DIR, filename)
+    if os.path.isfile(full_path):
+        return send_from_directory(BASE_DIR, filename)
+
+    # URL limpia sin extensión: /film-scanner -> sirve film-scanner.html.
+    if not filename.endswith(".html"):
+        html_path = full_path + ".html"
+        if html_path.startswith(BASE_DIR) and os.path.isfile(html_path):
+            return send_from_directory(BASE_DIR, filename + ".html")
+
+    abort(404)
 
 
 @app.route("/api/decode-raw", methods=["POST"])

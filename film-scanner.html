@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Free Online Film Scanner — Dr Iggy's</title>
 <meta name="description" content="Turn photographed film negatives into full-color photos for free, right in your browser. Automatic crop, color correction, and restoration — no signup, no download, no limit on photos.">
-<link rel="canonical" href="https://www.driggys.com/cuarto-oscuro.html">
+<link rel="canonical" href="https://www.driggys.com/film-scanner">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Free Online Film Scanner — Dr Iggy's">
 <meta property="og:description" content="Turn photographed film negatives into full-color photos for free, right in your browser. No signup, no download, no limit on photos.">
-<meta property="og:url" content="https://www.driggys.com/cuarto-oscuro.html">
+<meta property="og:url" content="https://www.driggys.com/film-scanner">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Free Online Film Scanner — Dr Iggy's">
 <meta name="twitter:description" content="Turn photographed film negatives into full-color photos for free, right in your browser.">
@@ -18,7 +18,7 @@
   "@context": "https://schema.org",
   "@type": "WebApplication",
   "name": "Free Online Film Scanner",
-  "url": "https://www.driggys.com/cuarto-oscuro.html",
+  "url": "https://www.driggys.com/film-scanner",
   "applicationCategory": "PhotoApplication",
   "operatingSystem": "Any (runs in browser)",
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
@@ -276,7 +276,7 @@
       <button class="hamburger" id="btnMenu" aria-label="Menu" aria-expanded="false">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
       </button>
-      <a class="brand" href="index.html">
+      <a class="brand" href="/">
         <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
           <rect width="32" height="32" rx="0" fill="#000" stroke="#fff" stroke-opacity=".2"/>
           <circle cx="12" cy="15" r="2.4" fill="#fff"/>
@@ -287,16 +287,16 @@
       </a>
       <div class="menu-backdrop" id="menuBackdrop"></div>
       <div class="nav-menu" id="navMenu">
-        <a href="index.html">Home</a>
+        <a href="/">Home</a>
         <div class="menu-sep"></div>
-        <a href="cuarto-oscuro.html" class="current">Film Scanner</a>
-        <a href="photo-editor.html">Photo Editor</a>
-        <a href="lut-lab.html">LUT Lab</a>
-        <a href="convert.html">Image Converter</a>
-        <a href="favicon-gen.html">Favicon Generator</a>
-        <a href="qr-generator.html">QR Generator</a>
+        <a href="/film-scanner" class="current">Film Scanner</a>
+        <a href="/photo-editor">Photo Editor</a>
+        <a href="/lut-lab">LUT Lab</a>
+        <a href="/convert">Image Converter</a>
+        <a href="/favicon-generator">Favicon Generator</a>
+        <a href="/qr-generator">QR Generator</a>
         <div class="menu-sep"></div>
-        <a href="terms.html">Terms of Service</a>
+        <a href="/terms">Terms of Service</a>
       </div>
     </div>
     <div class="nav-right">
@@ -470,7 +470,7 @@
   </div>
 
   <div class="site-footer">
-    © 2026 Free Online Film Scanner — Dr Iggy's. <a class="linklike" href="terms.html" data-i18n="terms">Terms of Service</a>.
+    © 2026 Free Online Film Scanner — Dr Iggy's. <a class="linklike" href="/terms" data-i18n="terms">Terms of Service</a>.
   </div>
 
 </div>
@@ -1527,7 +1527,7 @@ document.getElementById('editInPhotoEditor').addEventListener('click', async ()=
     tx.objectStore(HANDOFF_STORE).put(blob, 'pending');
     tx.oncomplete = resolve; tx.onerror = ()=>reject(tx.error);
   });
-  window.location.href = 'photo-editor.html';
+  window.location.href = '/photo-editor';
 });
 
 document.getElementById('downloadAll').addEventListener('click', async ()=>{

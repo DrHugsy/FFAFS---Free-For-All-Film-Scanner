@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "flask-local",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-c", "from server_prod import app; app.run(port=5050)"],
+      "port": 5050
+    }
+  ]
+}
