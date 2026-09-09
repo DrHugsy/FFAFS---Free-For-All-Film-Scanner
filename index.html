@@ -51,6 +51,7 @@
     --accent-2:#FF8FA3;
   }
   *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
   html,body{ height:100%; }
   body{
     margin:0; background:var(--bg); color:var(--text); font-family:var(--font-body);
@@ -59,9 +60,9 @@
   h1,h2,h3{ font-family:var(--font-display); margin:0; }
   a{ color:inherit; }
 
-  .page{ max-width:920px; margin:0 auto; position:relative; z-index:1; padding:0 20px 60px; }
+  .page{ max-width:920px; margin:0 auto; position:relative; z-index:1; padding:0 20px 60px; display:flex; flex-direction:column; }
 
-  .nav{ display:flex; align-items:center; justify-content:space-between; padding:22px 0; margin-bottom:8px; }
+  .nav{ display:flex; align-items:center; justify-content:space-between; padding:22px 0; margin-bottom:8px; flex:none; }
   .nav-left{ display:flex; align-items:center; gap:12px; position:relative; }
   .brand{ display:flex; align-items:center; gap:10px; text-decoration:none; }
   .brand img{ width:28px; height:28px; flex:none; }
@@ -101,7 +102,21 @@
   .lang-toggle button.active{ background:#fff; color:#000; }
   .lang-toggle button:active{ transform:scale(.9); }
 
-  .hero{ text-align:center; padding:28px 0 34px; position:relative; }
+  .hero{
+    text-align:center; position:relative; flex:none;
+    min-height:82vh; min-height:82svh;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:70px 0 50px;
+  }
+  .scroll-cue{
+    position:absolute; left:50%; bottom:6px; transform:translateX(-50%);
+    display:flex; flex-direction:column; align-items:center; gap:4px;
+    color:var(--text-faint); text-decoration:none; font-size:10px; letter-spacing:.05em; text-transform:uppercase;
+    animation:scrollCueBob 2s ease-in-out infinite; transition:color .15s ease;
+  }
+  .scroll-cue:hover{ color:var(--text-dim); }
+  .scroll-cue svg{ width:16px; height:16px; }
+  @keyframes scrollCueBob{ 0%,100%{ transform:translateX(-50%) translateY(0); } 50%{ transform:translateX(-50%) translateY(6px); } }
   .hero .mascot{
     width:128px; height:auto; display:block; margin:0 auto 14px; cursor:pointer;
     transition:transform .12s ease; user-select:none; -webkit-user-drag:none;
@@ -190,7 +205,7 @@
   .tool-tile:hover .tool-cta, .tool-tile:focus-visible .tool-cta{ color:#fff; gap:8px; }
   .tool-tile:hover .tool-cta .arrow, .tool-tile:focus-visible .tool-cta .arrow{ transform:translateX(2px); }
 
-  .tools-label{ font-size:11.5px; color:var(--text-faint); margin:0 0 10px; letter-spacing:.02em; text-transform:uppercase; }
+  .tools-label{ font-size:11.5px; color:var(--text-faint); margin:0 0 10px; letter-spacing:.02em; text-transform:uppercase; scroll-margin-top:24px; }
 
   .site-footer{ text-align:center; font-size:12px; color:var(--text-faint); padding:32px 0 6px; }
   .site-footer a{ color:var(--text-dim); text-decoration:underline; text-underline-offset:2px; }
@@ -198,7 +213,7 @@
 
   @media (max-width:520px){
     .tools{ grid-template-columns:1fr; }
-    .hero{ padding:18px 0 26px; }
+    .hero{ min-height:78vh; min-height:78svh; padding:40px 0 46px; }
     .hero .mascot{ width:104px; height:auto; }
   }
 </style>
@@ -241,9 +256,13 @@
     <img class="mascot" src="/mascot.png" alt="Iggy, the site mascot">
     <h1><span data-i18n="heroTitleA">Dr Iggy's</span> <span class="hi" data-i18n="heroTitleB">free design tools</span></h1>
     <p id="heroTyped" aria-label="Small, free, no-signup tools. No account, no upload limits, nothing to install."></p>
+    <a class="scroll-cue" href="#toolsSection">
+      <span data-i18n="scrollCue">Tools</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+    </a>
   </div>
 
-  <p class="tools-label" data-i18n="toolsLabel">Tools</p>
+  <p class="tools-label" id="toolsSection" data-i18n="toolsLabel">Tools</p>
 
   <div class="tools">
     <a class="tool-tile c-blue" href="/film-scanner">
@@ -374,7 +393,7 @@
 <script>
 const I18N = {
   en:{
-    menuHome:'Home', menuAbout:'About', toolsLabel:'Tools',
+    menuHome:'Home', menuAbout:'About', toolsLabel:'Tools', scrollCue:'Tools',
     heroTitleA:"Dr Iggy's", heroTitleB:'free design tools',
     heroDesc:'Small, free, no-signup tools. No account, no upload limits, nothing to install.',
     filmScannerName:'Film Scanner',
@@ -392,7 +411,7 @@ const I18N = {
     available:'Available', soon:'Soon', terms:'Terms of Service', openTool:'Open',
   },
   es:{
-    menuHome:'Inicio', menuAbout:'Acerca de', toolsLabel:'Herramientas',
+    menuHome:'Inicio', menuAbout:'Acerca de', toolsLabel:'Herramientas', scrollCue:'Herramientas',
     heroTitleA:"Dr Iggy's", heroTitleB:'herramientas gratis de diseño',
     heroDesc:'Herramientas chicas, gratis, sin registro. Sin cuenta, sin límite de subida, sin instalar nada.',
     filmScannerName:'Escáner de Negativos',
