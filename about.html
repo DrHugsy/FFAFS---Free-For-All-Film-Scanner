@@ -39,8 +39,10 @@
   .wrap{ max-width:680px; margin:0 auto; position:relative; z-index:1; padding:24px 20px 60px; }
   .nav{ display:flex; align-items:center; justify-content:space-between; margin-bottom:28px; }
   .nav-left{ display:flex; align-items:center; gap:12px; position:relative; }
-  .brand{ display:flex; align-items:center; gap:10px; text-decoration:none; }
-  .brand img{ width:28px; height:28px; }
+  .brand{ display:flex; align-items:center; gap:10px; text-decoration:none; padding:4px 8px; margin:-4px -8px; border-radius:8px; transition:background .15s ease; }
+  .brand:hover{ background:var(--surface-2); }
+  .brand:hover img{ transform:scale(1.08) rotate(-3deg); }
+  .brand img{ width:28px; height:28px; transition:transform .15s ease; }
   .brand span{ font-family:var(--font-display); font-weight:600; font-size:16px; color:var(--text); }
 
   button{ font-family:var(--font-body); }
@@ -115,6 +117,9 @@
         <a href="/convert">Image Converter</a>
         <a href="/favicon-generator">Favicon Generator</a>
         <a href="/qr-generator">QR Generator</a>
+        <a href="/palette">Color Palette</a>
+        <a href="/watermark">Watermark</a>
+        <a href="/gif-maker">GIF Maker</a>
         <div class="menu-sep"></div>
         <a href="/settings">Settings</a>
         <a href="/settings#feedback">Feedback</a>

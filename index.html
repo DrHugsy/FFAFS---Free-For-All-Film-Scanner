@@ -64,11 +64,12 @@
 
   .side-nav{
     position:fixed; left:18px; top:0; bottom:0; width:70px; z-index:15;
-    display:none; flex-direction:column; align-items:center; gap:6px;
-    padding-top:104px;
+    display:none; flex-direction:column; align-items:center; gap:3px;
+    padding-top:76px; padding-bottom:16px; overflow-y:auto; scrollbar-width:none;
   }
+  .side-nav::-webkit-scrollbar{ display:none; }
   .side-nav a{
-    display:flex; flex-direction:column; align-items:center; gap:5px; width:100%; padding:8px 2px;
+    display:flex; flex-direction:column; align-items:center; gap:4px; width:100%; padding:6px 2px; flex:none;
     text-decoration:none; color:var(--text-faint); transition:color .15s ease, background .15s ease, transform .08s ease;
   }
   .side-nav a svg{ width:18px; height:18px; flex:none; }
@@ -126,8 +127,8 @@
   .lang-toggle button:active{ transform:scale(.9); }
 
   .hero{ text-align:center; position:relative; flex:none; padding:54px 0 38px; }
-  .hero h1{ font-size:clamp(20px,4vw,28px); font-weight:700; letter-spacing:-.01em; margin-bottom:10px; }
-  .hero h1 .hi{ color:var(--text-dim); font-weight:400; }
+  .hero h1{ font-size:clamp(38px,8vw,72px); font-weight:800; letter-spacing:-.02em; margin-bottom:12px; line-height:1.05; }
+  .hero h1 .hi{ display:block; color:var(--text-dim); font-weight:400; font-size:.36em; letter-spacing:0; margin-top:8px; }
   .hero p{ margin:0; color:var(--text-dim); font-size:13.5px; white-space:nowrap; line-height:1.55; }
   @media (max-width:900px){
     .hero p{ white-space:normal; max-width:420px; margin:0 auto; min-height:3.1em; }
@@ -167,7 +168,7 @@
     .mascot-corner{ width:44px; }
   }
 
-  .paper-plane{ position:fixed; top:0; left:0; width:38px; height:38px; z-index:0; pointer-events:none; opacity:.16; will-change:transform; }
+  #bgParticles{ position:fixed; inset:0; width:100%; height:100%; z-index:0; pointer-events:none; }
 
   .tools-box{ position:relative; border:1px solid var(--border); padding:18px; padding-top:76px; }
   @media (max-width:520px){
@@ -216,11 +217,24 @@
   .tool-tile.c-teal{ background:rgba(77,208,192,.13); }
   .tool-tile.c-teal:hover, .tool-tile.c-teal:active{ background:rgba(77,208,192,.22); }
   .tool-tile.c-teal .tool-icon-tile{ background:rgba(77,208,192,.35); border-color:rgba(77,208,192,.6); }
+
+  .tool-tile.c-gold{ background:rgba(255,210,63,.13); }
+  .tool-tile.c-gold:hover, .tool-tile.c-gold:active{ background:rgba(255,210,63,.22); }
+  .tool-tile.c-gold .tool-icon-tile{ background:rgba(255,210,63,.35); border-color:rgba(255,210,63,.6); }
+
+  .tool-tile.c-indigo{ background:rgba(108,123,255,.13); }
+  .tool-tile.c-indigo:hover, .tool-tile.c-indigo:active{ background:rgba(108,123,255,.22); }
+  .tool-tile.c-indigo .tool-icon-tile{ background:rgba(108,123,255,.35); border-color:rgba(108,123,255,.6); }
+
+  .tool-tile.c-red{ background:rgba(255,92,92,.13); }
+  .tool-tile.c-red:hover, .tool-tile.c-red:active{ background:rgba(255,92,92,.22); }
+  .tool-tile.c-red .tool-icon-tile{ background:rgba(255,92,92,.35); border-color:rgba(255,92,92,.6); }
   .tool-tag{
     font-size:9.5px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:#000;
     background:#fff; padding:3px 7px; white-space:nowrap; flex:none;
   }
   .tool-tag.soon{ background:none; color:var(--text-faint); border:1px solid var(--border); }
+  .tool-tag.hot{ background:var(--accent-2); color:#000; }
   .tool-name{ font-family:var(--font-display); font-weight:600; font-size:14.5px; }
   .tool-desc{ font-size:11.5px; color:var(--text-dim); line-height:1.4; }
   .tool-cta{
@@ -245,11 +259,7 @@
 </head>
 <body>
 
-<svg class="paper-plane" id="paperPlane" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-  <path d="M92 52 L6 14 L44 52 L6 90 Z" fill="none" stroke="#fff" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M44 52 L92 52" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity=".6"/>
-</svg>
-<svg id="planeTrail" style="position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; pointer-events:none;" aria-hidden="true"></svg>
+<canvas id="bgParticles" aria-hidden="true"></canvas>
 
 <nav class="side-nav" id="sideNav" aria-label="Site navigation">
   <a href="/" class="current">
@@ -280,6 +290,18 @@
   <a href="/qr-generator">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="21" y2="14"/><line x1="14" y1="21" x2="21" y2="21"/><line x1="17.5" y1="14" x2="17.5" y2="21"/></svg>
     <span data-i18n="sideQr">QR Code</span>
+  </a>
+  <a href="/palette">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z"/><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/></svg>
+    <span data-i18n="sidePalette">Palette</span>
+  </a>
+  <a href="/watermark">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></svg>
+    <span data-i18n="sideWatermark">Watermark</span>
+  </a>
+  <a href="/gif-maker">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+    <span data-i18n="sideGif">GIF</span>
   </a>
   <div class="side-sep side-sep-push"></div>
   <a href="/settings">
@@ -322,6 +344,9 @@
         <a href="/convert" data-i18n="convertName">Image Converter</a>
         <a href="/favicon-generator" data-i18n="faviconGenName">Favicon Generator</a>
         <a href="/qr-generator" data-i18n="qrGeneratorName">QR Generator</a>
+        <a href="/palette" data-i18n="paletteName">Color Palette</a>
+        <a href="/watermark" data-i18n="watermarkName">Watermark</a>
+        <a href="/gif-maker" data-i18n="gifMakerName">GIF Maker</a>
         <div class="menu-sep"></div>
         <a href="/settings" data-i18n="menuSettings">Settings</a>
         <a href="/settings#feedback" data-i18n="menuFeedback">Feedback</a>
@@ -358,7 +383,6 @@
             <text x="42" y="27" font-size="9" font-weight="bold" text-anchor="middle" fill="#fff" font-family="monospace">B</text>
           </svg>
         </div>
-        <span class="tool-tag" data-i18n="available">Available</span>
       </div>
       <div class="tool-name" data-i18n="convertName">Image Converter</div>
       <div class="tool-desc" data-i18n="convertDesc">Any format, in bulk.</div>
@@ -379,7 +403,7 @@
             </g>
           </svg>
         </div>
-        <span class="tool-tag" data-i18n="available">Available</span>
+        <span class="tool-tag hot" data-i18n="hot">Popular</span>
       </div>
       <div class="tool-name" data-i18n="photoEditorName">Photo Editor</div>
       <div class="tool-desc" data-i18n="photoEditorDesc">Lightroom-style editing.</div>
@@ -397,7 +421,6 @@
             <circle cx="22" cy="36" r="5" fill="#40C060"/>
           </svg>
         </div>
-        <span class="tool-tag" data-i18n="available">Available</span>
       </div>
       <div class="tool-name" data-i18n="lutLabName">LUT Lab</div>
       <div class="tool-desc" data-i18n="lutLabDesc">Browse, apply, build LUTs.</div>
@@ -417,7 +440,6 @@
             <circle cx="28" cy="28" r="6" fill="#FCEAA8" stroke="#0F3AA8" stroke-width="1.5"/>
           </svg>
         </div>
-        <span class="tool-tag" data-i18n="available">Available</span>
       </div>
       <div class="tool-name" data-i18n="filmScannerName">Film Scanner</div>
       <div class="tool-desc" data-i18n="filmScannerDesc">Negatives → full-color photos.</div>
@@ -433,7 +455,6 @@
             <rect x="23" y="23" width="10" height="10" rx="2" fill="#7FCB68"/>
           </svg>
         </div>
-        <span class="tool-tag" data-i18n="available">Available</span>
       </div>
       <div class="tool-name" data-i18n="faviconGenName">Favicon Generator</div>
       <div class="tool-desc" data-i18n="faviconGenDesc">One image, every icon size.</div>
@@ -458,10 +479,59 @@
             <rect x="34" y="40" width="6" height="6" fill="#000"/>
           </svg>
         </div>
-        <span class="tool-tag" data-i18n="available">Available</span>
       </div>
       <div class="tool-name" data-i18n="qrGeneratorName">QR Generator</div>
       <div class="tool-desc" data-i18n="qrGeneratorDesc">Links, styled and downloadable.</div>
+      <div class="tool-cta"><span data-i18n="openTool">Open</span><span class="arrow">→</span></div>
+    </a>
+
+    <a class="tool-tile c-gold" href="/palette">
+      <div class="tool-tile-top">
+        <div class="tool-icon-tile">
+          <svg viewBox="0 0 56 56">
+            <path d="M28 6C14 6 4 15 4 27c0 7 5 11 11 11 3 0 4-2 4-4s-2-3-2-6c0-3 3-5 7-5h8c8 0 14-5 14-12C46 12 38 6 28 6z" fill="#fff" stroke="#0A246A" stroke-width="2"/>
+            <circle cx="16" cy="22" r="4" fill="#E04040"/>
+            <circle cx="26" cy="16" r="4" fill="#40A0E0"/>
+            <circle cx="37" cy="20" r="4" fill="#FFD23F"/>
+            <circle cx="15" cy="33" r="4" fill="#7FCB68"/>
+          </svg>
+        </div>
+      </div>
+      <div class="tool-name" data-i18n="paletteName">Color Palette</div>
+      <div class="tool-desc" data-i18n="paletteDesc">Extract or generate color palettes.</div>
+      <div class="tool-cta"><span data-i18n="openTool">Open</span><span class="arrow">→</span></div>
+    </a>
+
+    <a class="tool-tile c-indigo" href="/watermark">
+      <div class="tool-tile-top">
+        <div class="tool-icon-tile">
+          <svg viewBox="0 0 56 56">
+            <path d="M28 6C28 6 14 24 14 34a14 14 0 0 0 28 0C42 24 28 6 28 6z" fill="#6C7BFF"/>
+            <path d="M28 6C28 6 14 24 14 34a14 14 0 0 0 28 0C42 24 28 6 28 6z" fill="none" stroke="#fff" stroke-width="2"/>
+            <text x="28" y="40" font-size="15" font-weight="bold" text-anchor="middle" fill="#fff" font-family="monospace">W</text>
+          </svg>
+        </div>
+      </div>
+      <div class="tool-name" data-i18n="watermarkName">Watermark</div>
+      <div class="tool-desc" data-i18n="watermarkDesc">Text or logo, applied in bulk.</div>
+      <div class="tool-cta"><span data-i18n="openTool">Open</span><span class="arrow">→</span></div>
+    </a>
+
+    <a class="tool-tile c-red" href="/gif-maker">
+      <div class="tool-tile-top">
+        <div class="tool-icon-tile">
+          <svg viewBox="0 0 56 56">
+            <rect x="4" y="12" width="48" height="32" rx="3" fill="#231F20"/>
+            <g fill="#F2E9D8">
+              <rect x="8" y="16" width="4" height="4"/><rect x="8" y="26" width="4" height="4"/><rect x="8" y="36" width="4" height="4"/>
+              <rect x="44" y="16" width="4" height="4"/><rect x="44" y="26" width="4" height="4"/><rect x="44" y="36" width="4" height="4"/>
+            </g>
+            <path d="M22 20 L36 28 L22 36 Z" fill="#FF5C5C"/>
+          </svg>
+        </div>
+      </div>
+      <div class="tool-name" data-i18n="gifMakerName">GIF Maker</div>
+      <div class="tool-desc" data-i18n="gifMakerDesc">Video → trimmed, captioned GIF.</div>
       <div class="tool-cta"><span data-i18n="openTool">Open</span><span class="arrow">→</span></div>
     </a>
     </div>
@@ -478,7 +548,7 @@ const I18N = {
   en:{
     menuHome:'Home', menuAbout:'About', toolsLabel:'Tools', scrollCue:'Tools',
     sideHome:'Home', sideFilmScanner:'Scanner', sidePhotoEditor:'Editor', sideLutLab:'LUT Lab',
-    sideConvert:'Convert', sideFavicon:'Favicon', sideQr:'QR Code', sideAbout:'About', sideTerms:'Terms',
+    sideConvert:'Convert', sideFavicon:'Favicon', sideQr:'QR Code', sidePalette:'Palette', sideWatermark:'Watermark', sideGif:'GIF', sideAbout:'About', sideTerms:'Terms',
     sideSettings:'Settings', sideFeedback:'Feedback', menuSettings:'Settings', menuFeedback:'Feedback',
     heroTitleA:"Dr Iggy's", heroTitleB:'free design tools',
     heroDesc:'Small, free, no-signup tools. No account, no upload limits, nothing to install.',
@@ -494,12 +564,18 @@ const I18N = {
     faviconGenDesc:'One image, every icon size.',
     qrGeneratorName:'QR Generator',
     qrGeneratorDesc:'Links, styled and downloadable.',
-    available:'Available', soon:'Soon', terms:'Terms of Service', openTool:'Open',
+    paletteName:'Color Palette',
+    paletteDesc:'Extract or generate color palettes.',
+    watermarkName:'Watermark',
+    watermarkDesc:'Text or logo, applied in bulk.',
+    gifMakerName:'GIF Maker',
+    gifMakerDesc:'Video → trimmed, captioned GIF.',
+    available:'Available', soon:'Soon', hot:'Popular', terms:'Terms of Service', openTool:'Open',
   },
   es:{
     menuHome:'Inicio', menuAbout:'Acerca de', toolsLabel:'Herramientas', scrollCue:'Herramientas',
     sideHome:'Inicio', sideFilmScanner:'Escáner', sidePhotoEditor:'Editor', sideLutLab:'LUT Lab',
-    sideConvert:'Convertir', sideFavicon:'Favicon', sideQr:'Código QR', sideAbout:'Acerca de', sideTerms:'Términos',
+    sideConvert:'Convertir', sideFavicon:'Favicon', sideQr:'Código QR', sidePalette:'Paleta', sideWatermark:'Marca de agua', sideGif:'GIF', sideAbout:'Acerca de', sideTerms:'Términos',
     sideSettings:'Ajustes', sideFeedback:'Feedback', menuSettings:'Ajustes', menuFeedback:'Feedback',
     heroTitleA:"Dr Iggy's", heroTitleB:'herramientas gratis de diseño',
     heroDesc:'Herramientas chicas, gratis, sin registro. Sin cuenta, sin límite de subida, sin instalar nada.',
@@ -515,7 +591,13 @@ const I18N = {
     faviconGenDesc:'Una imagen, todos los tamaños.',
     qrGeneratorName:'Generador de QR',
     qrGeneratorDesc:'Links, con estilo y para descargar.',
-    available:'Disponible', soon:'Pronto', terms:'Términos de servicio', openTool:'Abrir',
+    paletteName:'Paleta de Colores',
+    paletteDesc:'Extraé o generá paletas de colores.',
+    watermarkName:'Marca de Agua',
+    watermarkDesc:'Texto o logo, aplicado en lote.',
+    gifMakerName:'Creador de GIFs',
+    gifMakerDesc:'Video → GIF recortado, con texto.',
+    available:'Disponible', soon:'Pronto', hot:'Popular', terms:'Términos de servicio', openTool:'Abrir',
   }
 };
 const LANG_KEY = 'drIggyLang';
@@ -664,60 +746,58 @@ mascotEl.addEventListener('click', ()=>{
   mascotEl.classList.add('wiggle');
   const woof = document.createElement('span');
   woof.className = 'woof-text';
-  woof.textContent = 'Woof!';
+  woof.textContent = Math.random() < 0.15 ? '¡The Fool!' : 'Woof!';
   woof.style.transform = `translateX(${(Math.random()*30-15)}px)`;
   mascotWrap.appendChild(woof);
   setTimeout(()=> woof.remove(), 1200);
 });
 
-// subtle background paper plane, bouncing DVD-screensaver style, with a faint fading trail
+// subtle background: a faint field of slowly drifting, softly twinkling dots
 (function(){
-  const plane = document.getElementById('paperPlane');
-  const trailSvg = document.getElementById('planeTrail');
-  if(!plane) return;
-  const size = 38;
-  let x = Math.random() * Math.max(1, window.innerWidth - size);
-  let y = Math.random() * Math.max(1, window.innerHeight - size);
-  let vx = (Math.random() < 0.5 ? -1 : 1) * (0.32 + Math.random() * 0.22);
-  let vy = (Math.random() < 0.5 ? -1 : 1) * (0.32 + Math.random() * 0.22);
+  const canvas = document.getElementById('bgParticles');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const DPR = Math.min(window.devicePixelRatio || 1, 2);
+  let w = 0, h = 0;
+  let dots = [];
 
-  const TRAIL_LEN = 6;
-  const trailDots = [];
-  if(trailSvg){
-    for(let i=0;i<TRAIL_LEN;i++){
-      const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      c.setAttribute('fill', '#fff');
-      c.style.opacity = '0';
-      trailSvg.appendChild(c);
-      trailDots.push(c);
-    }
+  function makeDots(){
+    const area = window.innerWidth * window.innerHeight;
+    const count = Math.max(24, Math.min(70, Math.round(area / 22000)));
+    dots = Array.from({ length: count }, () => ({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
+      r: 0.6 + Math.random() * 1.3,
+      vx: (Math.random() - 0.5) * 0.06,
+      vy: (Math.random() - 0.5) * 0.06,
+      phase: Math.random() * Math.PI * 2,
+      speed: 0.006 + Math.random() * 0.01,
+    }));
   }
-  let history = [];
-  let frameCount = 0;
 
+  function resize(){
+    w = window.innerWidth; h = window.innerHeight;
+    canvas.width = w * DPR; canvas.height = h * DPR;
+    canvas.style.width = w + 'px'; canvas.style.height = h + 'px';
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    makeDots();
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  let t = 0;
   function frame(){
-    const maxX = window.innerWidth - size;
-    const maxY = window.innerHeight - size;
-    x += vx; y += vy;
-    if(x <= 0){ x = 0; vx = Math.abs(vx); }
-    else if(x >= maxX){ x = maxX; vx = -Math.abs(vx); }
-    if(y <= 0){ y = 0; vy = Math.abs(vy); }
-    else if(y >= maxY){ y = maxY; vy = -Math.abs(vy); }
-    const angle = Math.atan2(vy, vx) * 180 / Math.PI;
-    plane.style.transform = `translate(${x}px, ${y}px) rotate(${angle}deg)`;
-
-    frameCount++;
-    if(trailDots.length && frameCount % 3 === 0){
-      history.unshift({ x: x + size/2, y: y + size/2 });
-      if(history.length > TRAIL_LEN) history.length = TRAIL_LEN;
-      history.forEach((pos, i)=>{
-        const dot = trailDots[i];
-        const t = 1 - (i + 1) / (TRAIL_LEN + 1);
-        dot.setAttribute('cx', pos.x);
-        dot.setAttribute('cy', pos.y);
-        dot.setAttribute('r', (2.2 * t + 0.4).toFixed(2));
-        dot.style.opacity = (0.12 * t).toFixed(3);
-      });
+    t++;
+    ctx.clearRect(0, 0, w, h);
+    for(const d of dots){
+      d.x += d.vx; d.y += d.vy;
+      if(d.x < -5) d.x = w + 5; else if(d.x > w + 5) d.x = -5;
+      if(d.y < -5) d.y = h + 5; else if(d.y > h + 5) d.y = -5;
+      const twinkle = 0.18 + 0.14 * Math.sin(d.phase + t * d.speed);
+      ctx.beginPath();
+      ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${twinkle.toFixed(3)})`;
+      ctx.fill();
     }
     requestAnimationFrame(frame);
   }
