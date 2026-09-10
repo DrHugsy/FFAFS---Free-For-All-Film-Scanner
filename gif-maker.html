@@ -157,8 +157,8 @@
   .pos-btn.active .dot{ background:#000; }
 
   .filmstrip-wrap{ position:relative; border:1px solid var(--border); background:var(--surface-2); padding:3px; }
-  .filmstrip{ display:flex; gap:2px; }
-  .filmstrip canvas{ display:block; height:36px; width:auto; flex:none; opacity:.55; }
+  .filmstrip{ display:flex; gap:2px; width:100%; }
+  .filmstrip canvas{ display:block; height:36px; width:auto; flex:1 1 0; min-width:0; opacity:.55; object-fit:cover; }
   .filmstrip-highlight{
     position:absolute; top:2px; bottom:2px; border:2px solid #fff; background:rgba(255,255,255,.18);
     pointer-events:none;
@@ -583,9 +583,22 @@ function loadVideoFile(file){
 }
 
 function seekVideo(time){
+  // Some mobile browsers (notably iOS Safari) don't reliably fire 'seeked'
+  // when the target time is very close to the current one, which would
+  // otherwise hang this forever. A timeout fallback guarantees we always
+  // move on instead of freezing the whole flow.
   return new Promise(resolve=>{
-    const onSeeked = ()=>{ video.removeEventListener('seeked', onSeeked); resolve(); };
+    let done = false;
+    const finish = ()=>{
+      if(done) return;
+      done = true;
+      video.removeEventListener('seeked', onSeeked);
+      clearTimeout(timer);
+      resolve();
+    };
+    const onSeeked = ()=> finish();
     video.addEventListener('seeked', onSeeked);
+    const timer = setTimeout(finish, 800);
     video.currentTime = time;
   });
 }
@@ -698,17 +711,21 @@ function stopPreviewPlayback(){
   video.pause();
   setPlayPauseUI(false);
 }
-btnPlayPause.addEventListener('click', async ()=>{
+btnPlayPause.addEventListener('click', ()=>{
   if(!videoDuration) return;
   if(isPlaying){
     stopPreviewPlayback();
-    await seekVideo(+trimStart.value);
+    video.currentTime = +trimStart.value;
   } else {
     isPlaying = true;
     setPlayPauseUI(true);
+    video.currentTime = +trimStart.value;
     video.playbackRate = +speedSlider.value;
-    await seekVideo(+trimStart.value);
-    video.play().catch(()=>{});
+    // iOS Safari only allows .play() when it's called synchronously inside
+    // the click handler — no `await` before it, or the browser silently
+    // refuses playback (which looked like "the button does nothing").
+    const playPromise = video.play();
+    if(playPromise && playPromise.catch) playPromise.catch(()=>{});
     requestAnimationFrame(previewLoopTick);
   }
 });
