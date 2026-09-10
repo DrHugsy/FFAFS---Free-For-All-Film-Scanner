@@ -146,7 +146,8 @@
   .controls-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; }
   .row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
 
-  .pos-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:4px; width:96px; }
+  .pos-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:4px; width:96px; transition:opacity .15s ease; }
+  .pos-grid.disabled{ opacity:.35; pointer-events:none; }
   .pos-btn{
     width:28px; height:28px; padding:0; min-height:auto; background:var(--surface-2);
     border:1px solid var(--border); display:flex; align-items:center; justify-content:center;
@@ -154,6 +155,26 @@
   .pos-btn .dot{ width:6px; height:6px; border-radius:50%; background:var(--text-faint); }
   .pos-btn.active{ background:#fff; border-color:transparent; }
   .pos-btn.active .dot{ background:#000; }
+
+  .filmstrip-wrap{ position:relative; border:1px solid var(--border); background:var(--surface-2); padding:3px; }
+  .filmstrip{ display:flex; gap:2px; }
+  .filmstrip canvas{ display:block; height:36px; width:auto; flex:none; opacity:.55; }
+  .filmstrip-highlight{
+    position:absolute; top:2px; bottom:2px; border:2px solid #fff; background:rgba(255,255,255,.18);
+    pointer-events:none;
+  }
+
+  .checkbox-row{ display:flex; align-items:center; gap:7px; font-size:12px; color:var(--text-dim); cursor:pointer; user-select:none; }
+  .checkbox-row input{ width:15px; height:15px; cursor:pointer; }
+
+  .text-box-card{ border:1px solid var(--border); background:var(--surface-2); padding:12px; display:flex; flex-direction:column; gap:10px; }
+  .text-box-card-top{ display:flex; align-items:center; justify-content:space-between; }
+  .text-box-card-top span{ font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.03em; }
+  .text-box-remove{
+    width:22px; height:22px; padding:0; min-height:auto; font-size:10px; background:var(--surface-3);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .text-boxes-list{ display:flex; flex-direction:column; gap:10px; }
 
   .progress-wrap{ display:none; flex-direction:column; gap:6px; }
   .progress-wrap.show{ display:flex; }
@@ -236,6 +257,10 @@
 
       <div class="section" id="trimSection" style="display:none">
         <div class="section-title" data-i18n="trimLabel">Trim</div>
+        <div class="filmstrip-wrap">
+          <div class="filmstrip" id="filmstrip"></div>
+          <div class="filmstrip-highlight" id="filmstripHighlight"></div>
+        </div>
         <div class="controls-grid">
           <div class="field">
             <label data-i18n="startTime">Start: <span id="v-start">0.0</span>s</label>
@@ -250,39 +275,23 @@
             <input type="range" id="speedSlider" min="0.25" max="3" step="0.25" value="1">
           </div>
         </div>
+        <div class="row">
+          <button id="btnPlayPause">
+            <svg class="ic" id="playIcon" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+            <svg class="ic" id="pauseIcon" viewBox="0 0 24 24" fill="currentColor" style="display:none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+            <span id="playPauseLabel" data-i18n="playPreview">Play preview (loop)</span>
+          </button>
+        </div>
       </div>
 
       <div class="section" id="textSection" style="display:none">
-        <div class="section-title" data-i18n="textLabel">Text Caption (optional)</div>
-        <div class="controls-grid">
-          <div class="field">
-            <label data-i18n="captionText">Text</label>
-            <input type="text" id="capText" placeholder="" maxlength="60">
-          </div>
-          <div class="field">
-            <label data-i18n="font">Font</label>
-            <select id="capFont">
-              <option value="'Cascadia Mono',monospace">Cascadia Mono</option>
-              <option value="Arial,sans-serif">Arial</option>
-              <option value="Impact,sans-serif">Impact</option>
-              <option value="'Courier New',monospace">Courier New</option>
-              <option value="'Bebas Neue',sans-serif">Bebas Neue</option>
-              <option value="'Permanent Marker',cursive">Permanent Marker</option>
-              <option value="'Pacifico',cursive">Pacifico</option>
-            </select>
-          </div>
-          <div class="field">
-            <label data-i18n="color">Color</label>
-            <input type="color" id="capColor" value="#ffffff">
-          </div>
-          <div class="field">
-            <label data-i18n="fontSize">Size: <span id="v-capsize">28</span>px</label>
-            <input type="range" id="capSize" min="10" max="80" value="28">
-          </div>
-        </div>
-        <div class="field">
-          <label data-i18n="position">Position</label>
-          <div class="pos-grid" id="posGrid"></div>
+        <div class="section-title" data-i18n="textLabel">Text Boxes (optional)</div>
+        <div class="text-boxes-list" id="textBoxesList"></div>
+        <div class="row">
+          <button id="btnAddText">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+            <span data-i18n="addText">Add Text Box</span>
+          </button>
         </div>
       </div>
 
@@ -329,13 +338,16 @@ const I18N = {
     previewPlaceholder:'Pick a video to get started.',
     trimLabel:'Trim', startTime:'Start: <span id="v-start">{n}</span>s', endTime:'End: <span id="v-end">{n}</span>s',
     speedLabel:'Speed: <span id="v-speed">{n}</span>x',
-    textLabel:'Text Caption (optional)', captionText:'Text', font:'Font', color:'Color',
-    fontSize:'Size: <span id="v-capsize">{n}</span>px', position:'Position',
+    playPreview:'Play preview (loop)', pausePreview:'Pause preview',
+    textLabel:'Text Boxes (optional)', addText:'Add Text Box', removeText:'Remove',
+    captionText:'Text', font:'Font', color:'Color', outline:'Outline',
+    fontSize:'Size: {n}px', position:'Position',
     convertBtn:'Convert to GIF',
     sizeNote:'GIFs are capped at 480px wide and ~10 frames/sec to keep conversion fast in your browser.',
     downloadGif:'Download GIF', terms:'Terms of Service',
     capturing:'Capturing frame {i} of {n}…', encoding:'Encoding GIF…',
     videoError:"Your browser couldn't play this video. Try an MP4 (H.264) or WebM file.",
+    textBoxLabel:'Text {n}',
   },
   es: {
     winTitle:'Creador de GIFs',
@@ -343,13 +355,16 @@ const I18N = {
     previewPlaceholder:'Elegí un video para empezar.',
     trimLabel:'Recorte', startTime:'Inicio: <span id="v-start">{n}</span>s', endTime:'Fin: <span id="v-end">{n}</span>s',
     speedLabel:'Velocidad: <span id="v-speed">{n}</span>x',
-    textLabel:'Texto (opcional)', captionText:'Texto', font:'Fuente', color:'Color',
-    fontSize:'Tamaño: <span id="v-capsize">{n}</span>px', position:'Posición',
+    playPreview:'Previsualizar (en loop)', pausePreview:'Pausar',
+    textLabel:'Cajas de Texto (opcional)', addText:'Agregar Texto', removeText:'Quitar',
+    captionText:'Texto', font:'Fuente', color:'Color', outline:'Contorno',
+    fontSize:'Tamaño: {n}px', position:'Posición',
     convertBtn:'Convertir a GIF',
     sizeNote:'Los GIFs se limitan a 480px de ancho y ~10 cuadros/seg para que la conversión sea rápida en el navegador.',
     downloadGif:'Descargar GIF', terms:'Términos de servicio',
     capturing:'Capturando cuadro {i} de {n}…', encoding:'Codificando GIF…',
     videoError:'Tu navegador no pudo reproducir este video. Probá un archivo MP4 (H.264) o WebM.',
+    textBoxLabel:'Texto {n}',
   }
 };
 const LANG_KEY = 'drIggyLang';
@@ -371,7 +386,8 @@ function applyLanguage(){
   document.querySelector('label[data-i18n="startTime"]').innerHTML = t('startTime',{n: trimStart.value});
   document.querySelector('label[data-i18n="endTime"]').innerHTML = t('endTime',{n: trimEnd.value});
   document.querySelector('label[data-i18n="speedLabel"]').innerHTML = t('speedLabel',{n: speedSlider.value});
-  document.querySelector('label[data-i18n="fontSize"]').innerHTML = t('fontSize',{n: capSize.value});
+  document.getElementById('playPauseLabel').textContent = isPlaying ? t('pausePreview') : t('playPreview');
+  renderTextBoxes();
 }
 document.getElementById('btnLangEn').addEventListener('click', ()=> setLanguage('en'));
 document.getElementById('btnLangEs').addEventListener('click', ()=> setLanguage('es'));
@@ -402,22 +418,110 @@ const ANCHOR_MAP = {
   midLeft:{h:'left',v:'middle'}, center:{h:'center',v:'middle'}, midRight:{h:'right',v:'middle'},
   bottomLeft:{h:'left',v:'bottom'}, bottomCenter:{h:'center',v:'bottom'}, bottomRight:{h:'right',v:'bottom'},
 };
-let capPosition = 'bottomCenter';
-(function buildPosGrid(){
-  const grid = document.getElementById('posGrid');
+function buildPosGrid(container, box){
+  container.innerHTML = '';
+  container.classList.toggle('disabled', !box.text);
   ANCHORS.forEach(a=>{
     const b = document.createElement('button');
-    b.type='button'; b.className='pos-btn'+(a===capPosition?' active':'');
+    b.type='button'; b.className='pos-btn'+(a===box.position?' active':'');
     b.innerHTML = '<span class="dot"></span>';
     b.addEventListener('click', ()=>{
-      capPosition = a;
-      document.querySelectorAll('.pos-btn').forEach(x=>x.classList.remove('active'));
+      if(!box.text) return;
+      box.position = a;
+      container.querySelectorAll('.pos-btn').forEach(x=>x.classList.remove('active'));
       b.classList.add('active');
       renderPreviewFrame();
     });
-    grid.appendChild(b);
+    container.appendChild(b);
   });
-})();
+}
+
+// ============================================================
+// text boxes (multiple captions, each with its own font/color/size/stroke/position)
+// ============================================================
+const FONT_OPTIONS = [
+  { value:"'Cascadia Mono',monospace", family:'Cascadia Mono' },
+  { value:'Arial,sans-serif', family:'Arial' },
+  { value:'Impact,sans-serif', family:'Impact' },
+  { value:"'Courier New',monospace", family:'Courier New' },
+  { value:"'Bebas Neue',sans-serif", family:'Bebas Neue' },
+  { value:"'Permanent Marker',cursive", family:'Permanent Marker' },
+  { value:"'Pacifico',cursive", family:'Pacifico' },
+];
+let textBoxes = [];
+function uidTb(){ return 'tb'+Math.random().toString(36).slice(2,8); }
+function newTextBox(){
+  return { id: uidTb(), text:'', font: FONT_OPTIONS[0].value, color:'#ffffff', size:28, stroke:true, position:'bottomCenter' };
+}
+function renderTextBoxes(){
+  const list = document.getElementById('textBoxesList');
+  list.innerHTML = '';
+  textBoxes.forEach((box, idx)=>{
+    const card = document.createElement('div');
+    card.className = 'text-box-card';
+    card.innerHTML = `
+      <div class="text-box-card-top">
+        <span>${t('textBoxLabel',{n: idx+1})}</span>
+        <button type="button" class="text-box-remove" title="${t('removeText')}">&#10005;</button>
+      </div>
+      <div class="field">
+        <label>${t('captionText')}</label>
+        <input type="text" class="tb-text" maxlength="60" value="${box.text.replace(/"/g,'&quot;')}">
+      </div>
+      <div class="controls-grid">
+        <div class="field">
+          <label>${t('font')}</label>
+          <select class="tb-font"></select>
+        </div>
+        <div class="field">
+          <label>${t('color')}</label>
+          <input type="color" class="tb-color" value="${box.color}">
+        </div>
+        <div class="field">
+          <label class="tb-size-label">${t('fontSize',{n:box.size})}</label>
+          <input type="range" class="tb-size" min="10" max="80" value="${box.size}">
+        </div>
+      </div>
+      <label class="checkbox-row"><input type="checkbox" class="tb-stroke" ${box.stroke?'checked':''}> ${t('outline')}</label>
+      <div class="field">
+        <label>${t('position')}</label>
+        <div class="pos-grid tb-pos"></div>
+      </div>
+    `;
+    const fontSel = card.querySelector('.tb-font');
+    FONT_OPTIONS.forEach(f=>{
+      const opt = document.createElement('option');
+      opt.value = f.value; opt.textContent = f.family;
+      if(f.value === box.font) opt.selected = true;
+      fontSel.appendChild(opt);
+    });
+    fontSel.addEventListener('input', ()=>{ box.font = fontSel.value; renderPreviewFrame(); });
+    card.querySelector('.tb-text').addEventListener('input', (e)=>{
+      box.text = e.target.value;
+      card.querySelector('.tb-pos').classList.toggle('disabled', !box.text);
+      renderPreviewFrame();
+    });
+    card.querySelector('.tb-color').addEventListener('input', (e)=>{ box.color = e.target.value; renderPreviewFrame(); });
+    card.querySelector('.tb-size').addEventListener('input', (e)=>{
+      box.size = +e.target.value;
+      card.querySelector('.tb-size-label').textContent = t('fontSize',{n:box.size});
+      renderPreviewFrame();
+    });
+    card.querySelector('.tb-stroke').addEventListener('change', (e)=>{ box.stroke = e.target.checked; renderPreviewFrame(); });
+    card.querySelector('.text-box-remove').addEventListener('click', ()=>{
+      textBoxes = textBoxes.filter(b=> b.id !== box.id);
+      renderTextBoxes();
+      renderPreviewFrame();
+    });
+    buildPosGrid(card.querySelector('.tb-pos'), box);
+    list.appendChild(card);
+  });
+}
+document.getElementById('btnAddText').addEventListener('click', ()=>{
+  textBoxes.push(newTextBox());
+  renderTextBoxes();
+  renderPreviewFrame();
+});
 
 // ============================================================
 // video loading
@@ -432,19 +536,24 @@ els.fileInput.addEventListener('change', e=>{ if(e.target.files[0]) loadVideoFil
 const trimStart = document.getElementById('trimStart');
 const trimEnd = document.getElementById('trimEnd');
 const speedSlider = document.getElementById('speedSlider');
-const capText = document.getElementById('capText');
-const capFont = document.getElementById('capFont');
-const capColor = document.getElementById('capColor');
-const capSize = document.getElementById('capSize');
 
 let videoDuration = 0;
 let outW = 0, outH = 0;
+let isPlaying = false;
+
+// Preload the custom web fonts once up front — canvas silently falls back
+// to a default font (with the wrong metrics for the stroke width we
+// compute) if you draw text before the font finishes loading, which is
+// what made the outline look glitchy on first draw.
+Promise.all(FONT_OPTIONS.map(f => document.fonts.load(`40px "${f.family}"`).catch(()=>{})))
+  .then(()=> renderPreviewFrame());
 
 function loadVideoFile(file){
+  stopPreviewPlayback();
   document.getElementById('errorNote').classList.remove('show');
   const url = URL.createObjectURL(file);
   video.src = url;
-  video.onloadedmetadata = ()=>{
+  video.onloadedmetadata = async ()=>{
     videoDuration = video.duration;
     const endDefault = Math.min(videoDuration, 5);
     trimStart.min = 0; trimStart.max = videoDuration; trimStart.step = 0.1; trimStart.value = 0;
@@ -461,6 +570,8 @@ function loadVideoFile(file){
     document.getElementById('textSection').style.display = 'flex';
     document.getElementById('btnConvert').disabled = false;
     document.getElementById('resultWrap').classList.remove('show');
+    updateFilmstripHighlight();
+    await buildFilmstrip();
     video.currentTime = 0;
   };
   video.onerror = ()=>{
@@ -468,7 +579,7 @@ function loadVideoFile(file){
     document.getElementById('errorNote').classList.add('show');
     document.getElementById('btnConvert').disabled = true;
   };
-  video.onseeked = ()=> renderPreviewFrame();
+  video.onseeked = ()=>{ if(!isPlaying) renderPreviewFrame(); };
 }
 
 function seekVideo(time){
@@ -479,24 +590,56 @@ function seekVideo(time){
   });
 }
 
-function drawCaption(ctx, w, h){
-  const text = capText.value || '';
-  if(!text) return;
-  const margin = Math.max(8, Math.round(Math.min(w,h) * 0.05));
-  const anchor = ANCHOR_MAP[capPosition];
-  const size = +capSize.value * (w/outW || 1);
-  ctx.save();
-  ctx.font = size+'px '+capFont.value;
-  ctx.fillStyle = capColor.value;
-  ctx.strokeStyle = 'rgba(0,0,0,.55)';
-  ctx.lineWidth = Math.max(2, size*0.12);
-  ctx.textAlign = anchor.h;
-  ctx.textBaseline = anchor.v === 'middle' ? 'middle' : anchor.v;
-  const x = anchor.h==='left'? margin : anchor.h==='right'? w-margin : w/2;
-  const y = anchor.v==='top'? margin : anchor.v==='bottom'? h-margin : h/2;
-  ctx.strokeText(text, x, y);
-  ctx.fillText(text, x, y);
-  ctx.restore();
+async function buildFilmstrip(){
+  const strip = document.getElementById('filmstrip');
+  strip.innerHTML = '';
+  const THUMBS = 10;
+  const wasTime = video.currentTime;
+  for(let i=0;i<THUMBS;i++){
+    const t = videoDuration * (i/(THUMBS-1||1));
+    await seekVideo(Math.min(t, videoDuration - 0.01));
+    const c = document.createElement('canvas');
+    const th = 36, tw = Math.max(1, Math.round(th * (video.videoWidth/video.videoHeight || 1.6)));
+    c.width = tw; c.height = th;
+    c.getContext('2d').drawImage(video, 0, 0, tw, th);
+    strip.appendChild(c);
+  }
+  await seekVideo(wasTime);
+}
+
+function updateFilmstripHighlight(){
+  if(!videoDuration) return;
+  const hl = document.getElementById('filmstripHighlight');
+  const startPct = (+trimStart.value / videoDuration) * 100;
+  const endPct = (+trimEnd.value / videoDuration) * 100;
+  hl.style.left = startPct + '%';
+  hl.style.width = Math.max(1, endPct - startPct) + '%';
+}
+
+function drawAllCaptions(ctx, w, h){
+  textBoxes.forEach(box=>{
+    const text = box.text || '';
+    if(!text) return;
+    const margin = Math.max(8, Math.round(Math.min(w,h) * 0.05));
+    const anchor = ANCHOR_MAP[box.position];
+    const size = box.size * (w/outW || 1);
+    ctx.save();
+    ctx.font = size+'px '+box.font;
+    ctx.fillStyle = box.color;
+    ctx.textAlign = anchor.h;
+    ctx.textBaseline = anchor.v === 'middle' ? 'middle' : anchor.v;
+    const x = anchor.h==='left'? margin : anchor.h==='right'? w-margin : w/2;
+    const y = anchor.v==='top'? margin : anchor.v==='bottom'? h-margin : h/2;
+    if(box.stroke){
+      ctx.strokeStyle = 'rgba(0,0,0,.55)';
+      ctx.lineWidth = Math.max(2, size*0.1);
+      ctx.lineJoin = 'round';
+      ctx.miterLimit = 2;
+      ctx.strokeText(text, x, y);
+    }
+    ctx.fillText(text, x, y);
+    ctx.restore();
+  });
 }
 
 async function renderPreviewFrame(){
@@ -508,22 +651,67 @@ async function renderPreviewFrame(){
   canvas.width = outW; canvas.height = outH;
   const ctx = canvas.getContext('2d');
   ctx.drawImage(video, 0, 0, outW, outH);
-  drawCaption(ctx, outW, outH);
+  drawAllCaptions(ctx, outW, outH);
 }
 
 trimStart.addEventListener('input', async ()=>{
   if(+trimStart.value >= +trimEnd.value) trimStart.value = Math.max(0, +trimEnd.value - 0.1);
   document.getElementById('v-start').textContent = (+trimStart.value).toFixed(1);
-  await seekVideo(+trimStart.value);
+  updateFilmstripHighlight();
+  if(!isPlaying) await seekVideo(+trimStart.value);
 });
 trimEnd.addEventListener('input', async ()=>{
   if(+trimEnd.value <= +trimStart.value) trimEnd.value = Math.min(videoDuration, +trimStart.value + 0.1);
   document.getElementById('v-end').textContent = (+trimEnd.value).toFixed(1);
-  await seekVideo(+trimEnd.value);
+  updateFilmstripHighlight();
+  if(!isPlaying) await seekVideo(+trimEnd.value);
 });
-speedSlider.addEventListener('input', ()=>{ document.getElementById('v-speed').textContent = (+speedSlider.value).toFixed(2).replace(/0$/,'').replace(/\.$/,'.0'); });
-capSize.addEventListener('input', ()=>{ document.getElementById('v-capsize').textContent = capSize.value; renderPreviewFrame(); });
-[capText, capFont, capColor].forEach(el=> el.addEventListener('input', renderPreviewFrame));
+speedSlider.addEventListener('input', ()=>{
+  document.getElementById('v-speed').textContent = (+speedSlider.value).toFixed(2).replace(/0$/,'').replace(/\.$/,'.0');
+  if(isPlaying) video.playbackRate = +speedSlider.value;
+});
+
+// ============================================================
+// play/pause loop preview
+// ============================================================
+const btnPlayPause = document.getElementById('btnPlayPause');
+function setPlayPauseUI(playing){
+  document.getElementById('playIcon').style.display = playing ? 'none' : '';
+  document.getElementById('pauseIcon').style.display = playing ? '' : 'none';
+  document.getElementById('playPauseLabel').textContent = playing ? t('pausePreview') : t('playPreview');
+}
+function previewLoopTick(){
+  if(!isPlaying) return;
+  const canvas = document.getElementById('previewCanvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = outW; canvas.height = outH;
+  ctx.drawImage(video, 0, 0, outW, outH);
+  drawAllCaptions(ctx, outW, outH);
+  if(video.currentTime >= +trimEnd.value - 0.03 || video.ended){
+    video.currentTime = +trimStart.value;
+  }
+  requestAnimationFrame(previewLoopTick);
+}
+function stopPreviewPlayback(){
+  if(!isPlaying) return;
+  isPlaying = false;
+  video.pause();
+  setPlayPauseUI(false);
+}
+btnPlayPause.addEventListener('click', async ()=>{
+  if(!videoDuration) return;
+  if(isPlaying){
+    stopPreviewPlayback();
+    await seekVideo(+trimStart.value);
+  } else {
+    isPlaying = true;
+    setPlayPauseUI(true);
+    video.playbackRate = +speedSlider.value;
+    await seekVideo(+trimStart.value);
+    video.play().catch(()=>{});
+    requestAnimationFrame(previewLoopTick);
+  }
+});
 
 // ============================================================
 // conversion
@@ -541,6 +729,8 @@ async function getWorkerBlobUrl(){
   return _workerBlobUrl;
 }
 document.getElementById('btnConvert').addEventListener('click', async ()=>{
+  stopPreviewPlayback();
+  await document.fonts.ready;
   const btn = document.getElementById('btnConvert');
   btn.disabled = true;
   document.getElementById('resultWrap').classList.remove('show');
@@ -573,7 +763,7 @@ document.getElementById('btnConvert').addEventListener('click', async ()=>{
     await seekVideo(Math.min(time, end));
     cctx.clearRect(0,0,outW,outH);
     cctx.drawImage(video, 0, 0, outW, outH);
-    drawCaption(cctx, outW, outH);
+    drawAllCaptions(cctx, outW, outH);
     gif.addFrame(cctx, { copy:true, delay: baseDelay });
     progressFill.style.width = Math.round(((i+1)/frameCount)*70) + '%';
     progressLabel.textContent = t('capturing', {i:i+1, n:frameCount});
