@@ -325,7 +325,7 @@
 
 </div>
 
-<video id="srcVideo" style="display:none" muted playsinline></video>
+<video id="srcVideo" style="position:fixed; top:0; left:0; width:1px; height:1px; opacity:0; pointer-events:none; z-index:-1;" muted playsinline webkit-playsinline></video>
 
 <script>
 // ============================================================
@@ -551,6 +551,8 @@ Promise.all(FONT_OPTIONS.map(f => document.fonts.load(`40px "${f.family}"`).catc
 function loadVideoFile(file){
   stopPreviewPlayback();
   document.getElementById('errorNote').classList.remove('show');
+  video.muted = true;
+  video.setAttribute('muted', '');
   const url = URL.createObjectURL(file);
   video.src = url;
   video.onloadedmetadata = async ()=>{
