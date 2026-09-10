@@ -152,6 +152,14 @@
   .dl-row{ display:flex; gap:8px; }
   .qr-empty{ color:var(--text-faint); font-size:12.5px; text-align:center; max-width:280px; }
 
+  .brand-toggle{ display:flex; align-items:center; gap:8px; font-size:11.5px; color:var(--text-dim); cursor:pointer; user-select:none; }
+  .brand-toggle input{ cursor:pointer; }
+  .qr-frame{ background:#fff; display:flex; flex-direction:column; align-items:center; }
+  .qr-frame-header{ display:flex; align-items:center; gap:8px; padding:14px 16px 10px; border-bottom:1px solid rgba(0,0,0,.12); width:100%; box-sizing:border-box; justify-content:center; }
+  .qr-frame-header img{ width:20px; height:20px; flex:none; }
+  .qr-frame-header span{ font-family:var(--font-display); font-weight:700; font-size:15px; color:#000; }
+  .qr-frame-footer{ padding:8px 16px 16px; font-size:10.5px; font-weight:600; color:rgba(0,0,0,.55); text-align:center; }
+
   .site-footer{ text-align:center; font-size:12px; color:var(--text-faint); padding:20px 0 6px; }
   .site-footer a{ color:var(--text-dim); text-decoration:underline; text-underline-offset:2px; }
 
@@ -259,7 +267,18 @@
     <div class="win">
       <div class="win-title" data-i18n="preview">Preview</div>
       <div class="preview-pane">
-        <div id="qrHolder"></div>
+        <label class="brand-toggle">
+          <input type="checkbox" id="chkBrand" checked>
+          <span data-i18n="brandFrame">Add Dr Iggy's frame</span>
+        </label>
+        <div class="qr-frame" id="qrFrame">
+          <div class="qr-frame-header" id="qrFrameHeader">
+            <img src="/brand-icon.png" alt="Iggy">
+            <span>Dr Iggy's</span>
+          </div>
+          <div id="qrHolder"></div>
+          <div class="qr-frame-footer" id="qrFrameFooter">driggys.com</div>
+        </div>
         <div class="dl-row">
           <button class="primary" id="btnDownloadPng" disabled>
             <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 19v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1"/></svg>
@@ -291,7 +310,7 @@ const I18N = {
     privacyNote:'Everything happens in your browser — the text/link you enter is never sent anywhere.',
     preview:'Preview', downloadPng:'Download PNG', downloadSvg:'Download SVG', terms:'Terms of Service',
     styleSquare:'Square', styleDots:'Dots', styleRounded:'Rounded', styleClassy:'Classy',
-    openFailAlert:'Could not read that image.',
+    openFailAlert:'Could not read that image.', brandFrame:"Add Dr Iggy's frame",
   },
   es:{
     winTitle:'Generador de Códigos QR', contentLabel:'Link o texto a codificar',
@@ -301,7 +320,7 @@ const I18N = {
     privacyNote:'Todo pasa en tu navegador — el texto/link que pongas nunca se envía a ningún lado.',
     preview:'Vista previa', downloadPng:'Descargar PNG', downloadSvg:'Descargar SVG', terms:'Términos de servicio',
     styleSquare:'Cuadrado', styleDots:'Puntos', styleRounded:'Redondeado', styleClassy:'Clásico',
-    openFailAlert:'No pude leer esa imagen.',
+    openFailAlert:'No pude leer esa imagen.', brandFrame:"Agregar marco de Dr Iggy's",
   }
 };
 const LANG_KEY = 'drIggyLang';
@@ -421,14 +440,124 @@ document.getElementById('btnRemoveLogo').addEventListener('click', ()=>{
   scheduleUpdate();
 });
 
-// ---------------- downloads ----------------
-async function downloadAs(ext, mime){
-  if(!qr) return;
-  const blob = await qr.getRawData(ext);
+// ---------------- branded frame ----------------
+const BRAND_KEY = 'drIggyQrBrand';
+let brandIconImg = null;
+let brandIconDataUrl = null;
+(function(){
+  const img = new Image();
+  img.onload = ()=>{ brandIconImg = img; };
+  img.src = '/brand-icon.png';
+  fetch('/brand-icon.png').then(r=>r.blob()).then(blob=>{
+    const reader = new FileReader();
+    reader.onload = ()=>{ brandIconDataUrl = reader.result; };
+    reader.readAsDataURL(blob);
+  }).catch(()=>{});
+})();
+const chkBrand = document.getElementById('chkBrand');
+const qrFrameHeader = document.getElementById('qrFrameHeader');
+const qrFrameFooter = document.getElementById('qrFrameFooter');
+function applyBrandToggle(){
+  const on = chkBrand.checked;
+  qrFrameHeader.style.display = on ? 'flex' : 'none';
+  qrFrameFooter.style.display = on ? 'block' : 'none';
+  try{ localStorage.setItem(BRAND_KEY, on ? '1' : '0'); }catch(e){}
+}
+try{
+  const saved = localStorage.getItem(BRAND_KEY);
+  if(saved !== null) chkBrand.checked = saved === '1';
+}catch(e){}
+chkBrand.addEventListener('change', applyBrandToggle);
+applyBrandToggle();
+
+const FRAME_PAD_X = 24, FRAME_PAD_TOP = 20, FRAME_PAD_BOTTOM = 20, FRAME_HEADER_H = 40, FRAME_FOOTER_H = 30;
+
+async function buildBrandedCanvas(){
+  const qrCanvas = document.querySelector('#qrHolder canvas');
+  if(!qrCanvas) return null;
+  try{ await document.fonts.load('700 16px "Cascadia Mono"'); await document.fonts.load('600 11px "Cascadia Mono"'); await document.fonts.ready; }catch(e){}
+  const qrSize = qrCanvas.width;
+  const cardW = qrSize + FRAME_PAD_X*2;
+  const cardH = FRAME_PAD_TOP + FRAME_HEADER_H + qrSize + FRAME_FOOTER_H + FRAME_PAD_BOTTOM;
+  const canvas = document.createElement('canvas');
+  canvas.width = cardW; canvas.height = cardH;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, cardW, cardH);
+  const iconSize = 22;
+  const headerCenterY = FRAME_PAD_TOP + FRAME_HEADER_H/2;
+  let hx = FRAME_PAD_X;
+  if(brandIconImg){
+    ctx.drawImage(brandIconImg, hx, headerCenterY - iconSize/2, iconSize, iconSize);
+    hx += iconSize + 8;
+  }
+  ctx.fillStyle = '#000';
+  ctx.font = '700 16px "Cascadia Mono", monospace';
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'left';
+  ctx.fillText("Dr Iggy's", hx, headerCenterY + 1);
+  ctx.strokeStyle = 'rgba(0,0,0,.14)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(FRAME_PAD_X, FRAME_PAD_TOP + FRAME_HEADER_H);
+  ctx.lineTo(cardW - FRAME_PAD_X, FRAME_PAD_TOP + FRAME_HEADER_H);
+  ctx.stroke();
+  ctx.drawImage(qrCanvas, FRAME_PAD_X, FRAME_PAD_TOP + FRAME_HEADER_H, qrSize, qrSize);
+  ctx.fillStyle = 'rgba(0,0,0,.55)';
+  ctx.font = '600 11px "Cascadia Mono", monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('driggys.com', cardW/2, FRAME_PAD_TOP + FRAME_HEADER_H + qrSize + FRAME_FOOTER_H/2 + 1);
+  return canvas;
+}
+
+async function buildBrandedSvgText(){
+  const rawBlob = await qr.getRawData('svg');
+  const rawText = await rawBlob.text();
+  const doc = new DOMParser().parseFromString(rawText, 'image/svg+xml');
+  const svgEl = doc.documentElement;
+  const qrW = parseFloat(svgEl.getAttribute('width')) || 320;
+  const qrH = parseFloat(svgEl.getAttribute('height')) || 320;
+  const inner = svgEl.innerHTML;
+  const cardW = qrW + FRAME_PAD_X*2;
+  const cardH = FRAME_PAD_TOP + FRAME_HEADER_H + qrH + FRAME_FOOTER_H + FRAME_PAD_BOTTOM;
+  const iconSize = 22;
+  const headerCenterY = FRAME_PAD_TOP + FRAME_HEADER_H/2;
+  const iconTag = brandIconDataUrl ? `<image href="${brandIconDataUrl}" x="${FRAME_PAD_X}" y="${headerCenterY - iconSize/2}" width="${iconSize}" height="${iconSize}"/>` : '';
+  const textX = brandIconDataUrl ? FRAME_PAD_X + iconSize + 8 : FRAME_PAD_X;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${cardW}" height="${cardH}" viewBox="0 0 ${cardW} ${cardH}">
+<rect width="${cardW}" height="${cardH}" fill="#ffffff"/>
+${iconTag}
+<text x="${textX}" y="${headerCenterY}" dominant-baseline="middle" font-family="'Cascadia Mono', monospace" font-weight="700" font-size="16" fill="#000000">Dr Iggy's</text>
+<line x1="${FRAME_PAD_X}" y1="${FRAME_PAD_TOP + FRAME_HEADER_H}" x2="${cardW - FRAME_PAD_X}" y2="${FRAME_PAD_TOP + FRAME_HEADER_H}" stroke="rgba(0,0,0,.14)"/>
+<g transform="translate(${FRAME_PAD_X}, ${FRAME_PAD_TOP + FRAME_HEADER_H})">${inner}</g>
+<text x="${cardW/2}" y="${FRAME_PAD_TOP + FRAME_HEADER_H + qrH + FRAME_FOOTER_H/2}" dominant-baseline="middle" text-anchor="middle" font-family="'Cascadia Mono', monospace" font-weight="600" font-size="11" fill="rgba(0,0,0,.55)">driggys.com</text>
+</svg>`;
+}
+
+function triggerDownload(blob, filename){
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = 'qr-code.' + ext; a.click();
+  a.href = url; a.download = filename; a.click();
   setTimeout(()=> URL.revokeObjectURL(url), 3000);
+}
+
+// ---------------- downloads ----------------
+async function downloadAs(ext){
+  if(!qr) return;
+  const branded = chkBrand.checked;
+  if(branded && ext === 'png'){
+    const canvas = await buildBrandedCanvas();
+    if(!canvas) return;
+    canvas.toBlob(blob=> triggerDownload(blob, 'qr-code-driggys.png'), 'image/png');
+    return;
+  }
+  if(branded && ext === 'svg'){
+    const svgText = await buildBrandedSvgText();
+    triggerDownload(new Blob([svgText], {type:'image/svg+xml'}), 'qr-code-driggys.svg');
+    return;
+  }
+  const blob = await qr.getRawData(ext);
+  triggerDownload(blob, 'qr-code.' + ext);
 }
 document.getElementById('btnDownloadPng').addEventListener('click', ()=> downloadAs('png'));
 document.getElementById('btnDownloadSvg').addEventListener('click', ()=> downloadAs('svg'));
