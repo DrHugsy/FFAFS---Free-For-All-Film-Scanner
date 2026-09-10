@@ -548,14 +548,32 @@ let isPlaying = false;
 Promise.all(FONT_OPTIONS.map(f => document.fonts.load(`40px "${f.family}"`).catch(()=>{})))
   .then(()=> renderPreviewFrame());
 
+let _metadataTimer = null;
+function showVideoError(detail){
+  clearTimeout(_metadataTimer);
+  const note = document.getElementById('errorNote');
+  note.textContent = t('videoError') + (detail ? ' ('+detail+')' : '');
+  note.classList.add('show');
+  document.getElementById('btnConvert').disabled = true;
+}
 function loadVideoFile(file){
   stopPreviewPlayback();
   document.getElementById('errorNote').classList.remove('show');
+  clearTimeout(_metadataTimer);
   video.muted = true;
   video.setAttribute('muted', '');
+  video.preload = 'auto';
   const url = URL.createObjectURL(file);
   video.src = url;
+  video.load();
+  // Some mobile browsers never fire loadedmetadata or error for a file
+  // they can't actually decode — they just sit there silently. Without
+  // this, that looks exactly like "nothing happens" with zero feedback.
+  _metadataTimer = setTimeout(()=>{
+    showVideoError('timed out reading the file — ' + (file.type || 'unknown type'));
+  }, 9000);
   video.onloadedmetadata = async ()=>{
+    clearTimeout(_metadataTimer);
     videoDuration = video.duration;
     const endDefault = Math.min(videoDuration, 5);
     trimStart.min = 0; trimStart.max = videoDuration; trimStart.step = 0.1; trimStart.value = 0;
@@ -577,9 +595,9 @@ function loadVideoFile(file){
     video.currentTime = 0;
   };
   video.onerror = ()=>{
-    document.getElementById('errorNote').textContent = t('videoError');
-    document.getElementById('errorNote').classList.add('show');
-    document.getElementById('btnConvert').disabled = true;
+    const codes = {1:'aborted', 2:'network error', 3:'decode error — unsupported codec', 4:'format not supported'};
+    const code = video.error && video.error.code;
+    showVideoError((codes[code] || 'error') + ', ' + (file.type || 'unknown type'));
   };
   video.onseeked = ()=>{ if(!isPlaying) renderPreviewFrame(); };
 }
